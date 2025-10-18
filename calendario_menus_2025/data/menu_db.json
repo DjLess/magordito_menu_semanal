@@ -1,0 +1,190 @@
+{
+  "platos_principales": [
+    {
+      "nombre": "Fideos con salsa",
+      "carbohidratos": [
+        "Pasta Espirales / Corbatas",
+        "Pasta Spaguetti"
+      ],
+      "principales": [
+        "Camarones (100g) pp + crema 100g",
+        "Bologonesa",
+        "Mongoliana o Chapsui Carne 80-100g pp)",
+        "Mongoliana o Chapsui Pollo 80-100g pp)"
+      ],
+      "verduras": [
+        "Lechuga"
+      ]
+    },
+    {
+      "nombre": "Arroz Verdura Prot",
+      "carbohidratos": [
+        "Arroz graneado"
+      ],
+      "principales": [
+        "Salmón/ Pescado congelado (80g - 150g) pp",
+        "Croqueta /empanizado (100 -140 g) pp",
+        "Pollo (120 - 150 g) + mostaza",
+        "Carne V (p.ros/ ganso 100 - 200g) pp",
+        "Hamburguesa",
+        "Mongoliana o Chapsui Carne 80-100g pp)",
+        "Mongoliana o Chapsui Pollo 80-100g pp)"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga",
+        "Zapallo Italiano",
+        "Guiso",
+        "Salteado Verduras X",
+        "Salteado Verduras Y"
+      ]
+    },
+    {
+      "nombre": "Papa Verdura Prot",
+      "carbohidratos": [
+        "Papa cocida",
+        "Puré de papa"
+      ],
+      "principales": [
+        "Salmón/ Pescado congelado (80g - 150g) pp",
+        "Croqueta /empanizado (100 -140 g) pp",
+        "Pollo (120 - 150 g) + mostaza",
+        "Carne V (p.ros/ ganso 100 - 200g) pp",
+        "Hamburguesa"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga",
+        "Guiso",
+        "Salteado Verduras X",
+        "Salteado Verduras Y"
+      ]
+    },
+    {
+      "nombre": "Garbanzos Verdura Prot",
+      "carbohidratos": [
+        "Garbanzos Cocidos (Caja, lata, en casa)"
+      ],
+      "principales": [
+        "Salmón/ Pescado congelado (80g - 150g) pp",
+        "Croqueta /empanizado (100 -140 g) pp",
+        "Pollo (120 - 150 g) + mostaza",
+        "Carne V (p.ros/ ganso 100 - 200g) pp"
+      ],
+      "verduras": [
+        "Zapallo Italiano",
+        "Salteado Verduras X",
+        "Tomate Lechuga Palta"
+      ]
+    },
+    {
+      "nombre": "Porotos Verdura Prot",
+      "carbohidratos": [
+        "Porotos negros en caja"
+      ],
+      "principales": [
+        "Salmón/ Pescado congelado (80g - 150g) pp",
+        "Croqueta /empanizado (100 -140 g) pp",
+        "Pollo (120 - 150 g) + mostaza",
+        "Carne V (p.ros/ ganso 100 - 200g) pp"
+      ],
+      "verduras": [
+        "Zapallo Italiano",
+        "Salteado Verduras X",
+        "Tomate Lechuga Palta"
+      ]
+    },
+    {
+      "nombre": "Hamburguesa",
+      "carbohidratos": [
+        "Pan"
+      ],
+      "principales": [
+        "Hamburguesa"
+      ],
+      "verduras": [
+        "Tomate Lechuga Palta"
+      ]
+    },
+    {
+      "nombre": "Sandwich",
+      "carbohidratos": [
+        "Pan"
+      ],
+      "principales": [
+        "Pollo (120 - 150 g) + mostaza",
+        "Carne V (p.ros/ ganso 100 - 200g) pp"
+      ],
+      "verduras": [
+        "Tomate Lechuga Palta"
+      ]
+    },
+    {
+      "nombre": "Legumbres",
+      "carbohidratos": [
+        "-"
+      ],
+      "principales": [
+        "Legumbre"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga"
+      ]
+    },
+    {
+      "nombre": "Pizza Casera",
+      "carbohidratos": [
+        "-"
+      ],
+      "principales": [
+        "Pizza"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga"
+      ]
+    },
+    {
+      "nombre": "Tallarines con salsa Alfredo",
+      "carbohidratos": [
+        "Pasta Espirales / Corbatas",
+        "Pasta Spaguetti"
+      ],
+      "principales": [
+        "Salsa Alfredo"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga"
+      ]
+    },
+    {
+      "nombre": "Charquican",
+      "carbohidratos": [
+        "-"
+      ],
+      "principales": [
+        "Charquican"
+      ],
+      "verduras": [
+        "-"
+      ]
+    },
+    {
+      "nombre": "Papas fritas con guiso",
+      "carbohidratos": [
+        "Papa frita"
+      ],
+      "principales": [
+        "Guiso Carne Molida + Verduras"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga",
+        "Palta",
+        "Brocoli"
+      ]
+    }
+  ]
+}

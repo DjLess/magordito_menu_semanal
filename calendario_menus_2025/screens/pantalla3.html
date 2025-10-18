@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop - Reordenamiento Horizontal y Rebalanceo (Final)</title>
+    <style>
+        /* ---------------------------------- */
+        /* ESTILOS CSS */
+        /* ---------------------------------- */
+        html {
+            box-sizing: border-box;
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        h2 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        /* Contenedor principal a 2 columnas */
+        #drop-zones-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 95%;
+            max-width: 600px;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background-color: #161b22;
+        }
+
+        /* Contenedor (drop-zone) */
+        .drop-zone {
+            background-color: #1f242c;
+            border: 2px solid #30363d;
+            border-radius: 4px;
+            min-height: 90px; 
+            overflow: hidden;
+            
+            display: flex;
+            flex-direction: row; /* Diseño horizontal */
+            align-items: flex-start; 
+            flex-wrap: wrap; 
+            padding: 5px;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .zone-label {
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 5px; 
+            font-size: 0.8em;
+            align-self: flex-start;
+            width: 100%; 
+            padding-left: 5px;
+        }
+
+        /* Tarjeta (card) a 49px x 70px */
+        .card {
+            background-color: #2b313a;
+            border: 1px solid #484f58;
+            border-radius: 4px;
+            padding: 3px; 
+            margin: 0 3px; 
+            
+            width: 49px; 
+            height: 70px; 
+            
+            font-size: 0.7em; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            font-weight: 500;
+            cursor: move; 
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .dragging {
+            opacity: 0.1;
+            transform: scale(0.9);
+        }
+        
+        .placeholder {
+            opacity: 0;
+            width: 49px; 
+            height: 70px;
+            margin: 0 3px; 
+            transition: none;
+        }
+        
+        .drag-over {
+            border-color: #f75555;
+            background-color: #242931;
+        }
+    </style>
+</head>
+<body>
+    <h2>Reordenamiento de Plan de Comidas (Pantalla 2)</h2>
+
+    <div id="drop-zones-container">
+        <div class="drop-zone" data-day="Lunes">
+            <div class="zone-label">Lunes</div>
+            <div class="card" draggable="true" data-card-id="1-almuerzo">1 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="1-cena">1 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Martes">
+            <div class="zone-label">Martes</div>
+            <div class="card" draggable="true" data-card-id="2-almuerzo">2 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="2-cena">2 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Miércoles">
+            <div class="zone-label">Miércoles</div>
+            <div class="card" draggable="true" data-card-id="3-almuerzo">3 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="3-cena">3 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Jueves">
+            <div class="zone-label">Jueves</div>
+            <div class="card" draggable="true" data-card-id="4-almuerzo">4 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="4-cena">4 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Viernes">
+            <div class="zone-label">Viernes</div>
+            <div class="card" draggable="true" data-card-id="5-almuerzo">5 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="5-cena">5 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Sábado">
+            <div class="zone-label">Sábado</div>
+            <div class="card" draggable="true" data-card-id="6-almuerzo">6 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="6-cena">6 - Cena</div>
+        </div>
+        <div class="drop-zone" data-day="Domingo">
+            <div class="zone-label">Domingo</div>
+            <div class="card" draggable="true" data-card-id="7-almuerzo">7 - Almuerzo</div>
+            <div class="card" draggable="true" data-card-id="7-cena">7 - Cena</div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('drop-zones-container');
+        const allZones = Array.from(document.querySelectorAll('.drop-zone'));
+        // Función auxiliar para obtener todas las tarjetas visibles
+        const getAllCards = () => Array.from(document.querySelectorAll('.card:not(.placeholder)')); 
+        const CARDS_PER_ZONE = 2; 
+
+        let draggedCard = null;
+        let sourceZone = null;
+        let targetElement = null;
+        let insertPosition = null;
+        let placeholder = null; 
+
+        function clearLiveTransforms() {
+            const allCards = getAllCards();
+            allCards.forEach(card => {
+                card.style.transition = '';
+                card.style.transform = '';
+                card.classList.remove('dragging');
+            });
+            allZones.forEach(z => z.classList.remove('drag-over'));
+            
+            if (placeholder) {
+                placeholder.remove();
+            }
+            placeholder = null;
+
+            targetElement = null;
+            insertPosition = null;
+            draggedCard = null; 
+            sourceZone = null;
+        }
+
+        // Configuración de Drag Start/End
+        getAllCards().forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                draggedCard = card;
+                sourceZone = card.parentElement;
+                card.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', card.getAttribute('data-card-id'));
+                e.dataTransfer.effectAllowed = 'move'; 
+                
+                placeholder = document.createElement('div');
+                placeholder.classList.add('card', 'placeholder');
+                placeholder.style.height = `${draggedCard.offsetHeight}px`; 
+                placeholder.style.width = `${draggedCard.offsetWidth}px`;
+            });
+            card.addEventListener('dragend', clearLiveTransforms);
+        });
+
+        // Lógica para determinar el punto de inserción exacto (Horizontal basado en X)
+        function getClosestElement(container, x) {
+            const cardsInContainer = Array.from(container.querySelectorAll('.card:not(.placeholder)'))
+                .filter(card => card !== draggedCard); 
+            
+            // Caso 1: Contenedor vacío
+            if (cardsInContainer.length === 0) {
+                return { element: container.querySelector('.zone-label'), position: 'AFTER_LABEL' };
+            }
+
+            let closest = { element: null, distance: Infinity, position: null };
+
+            for (const card of cardsInContainer) {
+                const rect = card.getBoundingClientRect();
+                
+                // Calculamos la distancia horizontal del cursor (x) al centro de la tarjeta
+                const cardCenter = rect.left + rect.width / 2;
+                const distanceX = Math.abs(x - cardCenter);
+                
+                if (distanceX < closest.distance) {
+                    closest.distance = distanceX;
+                    closest.element = card;
+                    // Determinamos si el cursor está a la izquierda (BEFORE) o derecha (AFTER) del centro.
+                    closest.position = (x < cardCenter) ? 'BEFORE' : 'AFTER'; 
+                }
+            }
+            
+            // CORRECCIÓN de Límites: Aseguramos que si el cursor está muy a la derecha del último
+            // elemento (pero aún sobre la zona), siempre se devuelva la posición 'AFTER' del último.
+             if (cardsInContainer.length > 0) {
+                const lastCardRect = cardsInContainer[cardsInContainer.length - 1].getBoundingClientRect();
+                 if (x > lastCardRect.right && closest.element === cardsInContainer[cardsInContainer.length - 1]) {
+                    closest.position = 'AFTER';
+                 }
+            }
+
+            return closest;
+        }
+        
+        // Uso de listeners para dragover/drop
+        allZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move'; 
+
+                if (!draggedCard || !placeholder) return;
+
+                zone.classList.add('drag-over');
+
+                const currentX = e.clientX;
+
+                // ⭐️ Solo pasamos la coordenada X para la lógica horizontal
+                const closestResult = getClosestElement(zone, currentX); 
+                
+                targetElement = closestResult.element;
+                insertPosition = closestResult.position;
+                
+                // Mover el placeholder (sin restricción de capacidad)
+                if (targetElement) {
+                    const parent = targetElement.parentElement;
+                    if (insertPosition === 'BEFORE' && targetElement.classList.contains('card')) {
+                        parent.insertBefore(placeholder, targetElement);
+                    } else if (insertPosition === 'AFTER' && targetElement.classList.contains('card')) {
+                        parent.insertBefore(placeholder, targetElement.nextSibling);
+                    } 
+                    else if (insertPosition === 'AFTER_LABEL' && targetElement.classList.contains('zone-label')) {
+                        parent.insertBefore(placeholder, targetElement.nextSibling);
+                    }
+                }
+                
+                // Animación FLIP (FIRST, INVERT, PLAY) para el movimiento suave
+                const allCards = getAllCards();
+                const firstPositions = new Map();
+                allCards.forEach(card => {
+                    firstPositions.set(card, card.getBoundingClientRect()); 
+                });
+                
+                const updatedCards = getAllCards();
+                updatedCards.forEach(card => {
+                    if (card === draggedCard) return;
+                    const firstRect = firstPositions.get(card);
+                    if (!firstRect) return;
+                    const newRect = card.getBoundingClientRect();
+                    const deltaX = firstRect.left - newRect.left;
+                    const deltaY = firstRect.top - newRect.top;
+
+                    card.style.transition = 'none';
+                    card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                });
+
+                void document.body.offsetHeight; 
+
+                updatedCards.forEach(card => {
+                    card.style.transition = '';
+                    card.style.transform = ''; 
+                });
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                 // Simplificación de dragleave para mayor robustez
+                 if (!zone.contains(e.relatedTarget) || !e.relatedTarget || e.relatedTarget.id === 'drop-zones-container' || e.relatedTarget.tagName === 'BODY') {
+                     zone.classList.remove('drag-over');
+                }
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                
+                if (!draggedCard) {
+                    clearLiveTransforms(); 
+                    return;
+                }
+
+                // 1. FIRST (Guardar la posición para la animación)
+                const allCardsIncludingPlaceholder = Array.from(container.querySelectorAll('.card:not(.dragging)'));
+                const finalPositions = new Map();
+                allCardsIncludingPlaceholder.forEach(card => {
+                    finalPositions.set(card, card.getBoundingClientRect()); 
+                    card.style.transition = 'none';
+                });
+                
+                // 2. LAST (Mover la tarjeta arrastrada al DOM)
+                const dropTargetZone = placeholder?.parentElement;
+                if (dropTargetZone) {
+                    dropTargetZone.insertBefore(draggedCard, placeholder);
+                    placeholder.remove(); 
+                } else {
+                    clearLiveTransforms();
+                    return;
+                }
+                
+                // 3. Obtener el nuevo orden lineal de TODAS las tarjetas.
+                let newLinearOrder = allZones.flatMap(z =>
+                    Array.from(z.querySelectorAll('.card:not(.zone-label):not(.placeholder)'))
+                ); 
+                
+                // 4. Aplicar el REBALANCEO de 2 tarjetas por zona (el comportamiento esperado)
+                let currentZoneIndex = 0;
+                let cardsPlacedInZone = 0;
+
+                // Limpiar zonas antes de reinsertar
+                allZones.forEach(z => {
+                    Array.from(z.querySelectorAll('.card')).forEach(card => card.remove());
+                });
+
+                newLinearOrder.forEach(card => {
+                    if (currentZoneIndex >= allZones.length) return; 
+                    
+                    // Si la zona actual ya tiene 2 tarjetas, pasar a la siguiente zona (día)
+                    if (cardsPlacedInZone >= CARDS_PER_ZONE) {
+                        currentZoneIndex++;
+                        cardsPlacedInZone = 0;
+                        if (currentZoneIndex >= allZones.length) return;
+                    }
+                    
+                    allZones[currentZoneIndex].appendChild(card);
+                    cardsPlacedInZone++;
+                });
+
+                // 5. INVERT & PLAY (Animación Final)
+                const updatedCards = getAllCards(); 
+                updatedCards.forEach(card => {
+                    const firstRect = finalPositions.get(card);
+                    if (!firstRect) return;
+
+                    const newRect = card.getBoundingClientRect();
+                    const deltaX = firstRect.left - newRect.left;
+                    const deltaY = firstRect.top - newRect.top;
+
+                    if (deltaX !== 0 || deltaY !== 0) {
+                        card.style.transition = 'none';
+                        card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                    }
+                });
+
+                void document.body.offsetHeight; 
+
+                updatedCards.forEach(card => {
+                    card.style.transition = '';
+                    card.style.transform = '';
+                });
+
+                clearLiveTransforms();
+            });
+        });
+
+        // Listeners globales
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault(); 
+        });
+        document.addEventListener('drop', clearLiveTransforms); 
+        
+    </script>
+</body>
+</html>

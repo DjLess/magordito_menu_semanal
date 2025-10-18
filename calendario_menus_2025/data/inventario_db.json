@@ -1,0 +1,202 @@
+{
+  "inventario": [
+    {
+      "nombre": "Pasta Espirales / Corbatas",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Pasta Spaguetti",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Arroz graneado",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Papa cocida",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Puré de papa",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Papa frita",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Garbanzos Cocidos (Caja, lata, en casa)",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Porotos negros en caja",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Pan",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "-",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Camarones (100g) pp + crema 100g",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Salmón/ Pescado congelado (80g - 150g) pp",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Croqueta /empanizado (100 -140 g) pp",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Pollo (120 - 150 g) + mostaza",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Carne V (p.ros/ ganso 100 - 200g) pp",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Hamburguesa",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Bologonesa",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Legumbre",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Mongoliana o Chapsui Carne 80-100g pp)",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Mongoliana o Chapsui Pollo 80-100g pp)",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Pizza",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Charquican",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Guiso Carne Molida + Verduras",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Salsa Alfredo",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Tomate",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Lechuga",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Palta",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Zapallo Italiano",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Guiso",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Salteado Verduras X",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Tomate Lechuga Palta",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Salteado Verduras Y",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    },
+    {
+      "nombre": "Brocoli",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 2
+    }
+  ]
+}

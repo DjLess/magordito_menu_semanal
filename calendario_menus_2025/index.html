@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Nueva App</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="notch"></div>
+
+        <div class="top-bar">
+            <div class="user-avatar">FL</div>
+            <span class="text-title">Mi Nueva App</span>
+        </div>
+
+        <div class="main-content">
+            <h2 class="title">Menú principal</h2>
+            <div class="button-group">
+                <button onclick="loadContent('screens/pantalla1.html')">Abrir Pantalla 1</button>
+                <button onclick="loadContent('screens/pantalla2.html')">Abrir Pantalla 2</button>
+                <button onclick="loadContent('screens/pantalla3.html')">Abrir Pantalla 3</button>
+                <button onclick="loadContent('screens/pantalla4.html')">Abrir Pantalla 4</button>
+                <button onclick="loadContent('screens/pantalla5.html')">Abrir Pantalla 5</button>
+                <button onclick="loadContent('screens/pantalla6.html')">Abrir Pantalla 6</button>
+                <button onclick="loadContent('screens/pantalla7.html')">Abrir Pantalla 7</button>
+                <button disabled style="background-color:#eee; color:#666;">Próximamente</button>
+            </div>
+        </div>
+
+        <div id="content-display-overlay" class="hidden">
+            <button id="close-overlay-button" class="close-button">X</button>
+            <div id="loaded-content-area">
+                </div>
+        </div>
+    </div>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
