@@ -4,199 +4,232 @@
       "nombre": "Pasta Espirales / Corbatas",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍝"
     },
     {
       "nombre": "Pasta Spaguetti",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍝"
     },
     {
       "nombre": "Arroz graneado",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍚"
     },
     {
       "nombre": "Papa cocida",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥔"
     },
     {
       "nombre": "Puré de papa",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥣"
     },
     {
       "nombre": "Papa frita",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍟"
     },
     {
       "nombre": "Garbanzos Cocidos (Caja, lata, en casa)",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥜"
     },
     {
       "nombre": "Porotos negros en caja",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🫘"
     },
     {
       "nombre": "Pan",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍞"
     },
     {
       "nombre": "-",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "⬜"
     },
     {
       "nombre": "Camarones (100g) pp + crema 100g",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍤"
     },
     {
       "nombre": "Salmón/ Pescado congelado (80g - 150g) pp",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🐟"
     },
     {
       "nombre": "Croqueta /empanizado (100 -140 g) pp",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍘"
     },
     {
       "nombre": "Pollo (120 - 150 g) + mostaza",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍗"
     },
     {
       "nombre": "Carne V (p.ros/ ganso 100 - 200g) pp",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥩"
     },
     {
       "nombre": "Hamburguesa",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍔"
     },
     {
       "nombre": "Bologonesa",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥩"
     },
     {
       "nombre": "Legumbre",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🫘"
     },
     {
       "nombre": "Mongoliana o Chapsui Carne 80-100g pp)",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥢"
     },
     {
       "nombre": "Mongoliana o Chapsui Pollo 80-100g pp)",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥢"
     },
     {
       "nombre": "Pizza",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍕"
     },
     {
       "nombre": "Charquican",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍲"
     },
     {
       "nombre": "Guiso Carne Molida + Verduras",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍲"
     },
     {
       "nombre": "Salsa Alfredo",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🧀"
     },
     {
       "nombre": "Tomate",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🍅"
     },
     {
       "nombre": "Lechuga",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥬"
     },
     {
       "nombre": "Palta",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥑"
     },
     {
       "nombre": "Zapallo Italiano",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥒"
     },
     {
       "nombre": "Guiso",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥕"
     },
     {
       "nombre": "Salteado Verduras X",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥦"
     },
     {
       "nombre": "Tomate Lechuga Palta",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥗"
     },
     {
       "nombre": "Salteado Verduras Y",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🫑"
     },
     {
       "nombre": "Brocoli",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2
+      "cantidad_disponible": 2,
+      "emoji": "🥦"
     }
   ]
 }
