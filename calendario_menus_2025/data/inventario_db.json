@@ -2,7 +2,7 @@
   "inventario": [
     {
       "nombre": "Pasta Espirales / Corbatas",
-      "categoria": "carbohidrato",
+      "categoria": "carbohidhidrato",
       "activo": true,
       "cantidad_disponible": 2,
       "emoji": "🍝",
@@ -263,6 +263,83 @@
       "vegano": false,
       "pesciboro": true,
       "gourmet": true
+    },
+    {
+      "nombre": "Bolognesa de Soya",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🍝",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Salteado Verduras",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🥢",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Tofu",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "⬜",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Lentejas estofadas",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🍲",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Hamburguesas de legumbres",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🍔",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Chorizo de soya",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🌭",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Chapsui de verduras",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 2,
+      "emoji": "🥢",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
     },
     {
       "nombre": "Tomate",
