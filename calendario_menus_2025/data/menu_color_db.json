@@ -1,0 +1,146 @@
+{
+  "colores_menu": {
+    "NEUTRO_NULO": {
+      "valor": "#484f58",
+      "descripcion": "Color del borde/fondo, indica ausencia o ingrediente nulo."
+    },
+    "carbohidratos": [
+      {
+        "ingrediente": "Pasta Espirales / Corbatas",
+        "color": "#FFD700"
+      },
+      {
+        "ingrediente": "Pasta Spaguetti",
+        "color": "#FFD700"
+      },
+      {
+        "ingrediente": "Arroz graneado",
+        "color": "#F0F6FC"
+      },
+      {
+        "ingrediente": "Papa cocida",
+        "color": "#C39D72"
+      },
+      {
+        "ingrediente": "Puré de papa",
+        "color": "#C39D72"
+      },
+      {
+        "ingrediente": "Papa frita",
+        "color": "#C39D72"
+      },
+      {
+        "ingrediente": "Garbanzos Cocidos (Caja, lata, en casa)",
+        "color": "#8B4513"
+      },
+      {
+        "ingrediente": "Porotos negros en caja",
+        "color": "#8B4513"
+      },
+      {
+        "ingrediente": "Pan",
+        "color": "#B57339"
+      },
+      {
+        "ingrediente": "-",
+        "color": "#484f58"
+      }
+    ],
+    "principales": [
+      {
+        "ingrediente": "Salmón/ Pescado congelado (80g - 150g) pp",
+        "color": "#FF7F50"
+      },
+      {
+        "ingrediente": "Pollo (120 - 150 g) + mostaza",
+        "color": "#DAA520"
+      },
+      {
+        "ingrediente": "Carne V (p.ros/ ganso 100 - 200g) pp",
+        "color": "#8B0000"
+      },
+      {
+        "ingrediente": "Croqueta /empanizado (100 -140 g) pp",
+        "color": "#F4A460"
+      },
+      {
+        "ingrediente": "Hamburguesa",
+        "color": "#A9A9A9"
+      },
+      {
+        "ingrediente": "Camarones (100g) pp + crema 100g",
+        "color": "#FF69B4"
+      },
+      {
+        "ingrediente": "Bologonesa",
+        "color": "#B22222"
+      },
+      {
+        "ingrediente": "Guiso Carne Molida + Verduras",
+        "color": "#B22222"
+      },
+      {
+        "ingrediente": "Mongoliana o Chapsui Carne 80-100g pp)",
+        "color": "#5F9EA0"
+      },
+      {
+        "ingrediente": "Mongoliana o Chapsui Pollo 80-100g pp)",
+        "color": "#5F9EA0"
+      },
+      {
+        "ingrediente": "Legumbre",
+        "color": "#6B8E23"
+      },
+      {
+        "ingrediente": "Pizza",
+        "color": "#DCDCDC"
+      },
+      {
+        "ingrediente": "Charquican",
+        "color": "#DCDCDC"
+      },
+      {
+        "ingrediente": "Salsa Alfredo",
+        "color": "#DCDCDC"
+      }
+    ],
+    "verduras": [
+      {
+        "ingrediente": "Lechuga",
+        "color": "#6B8E23"
+      },
+      {
+        "ingrediente": "Tomate",
+        "color": "#FF6347"
+      },
+      {
+        "ingrediente": "Zapallo Italiano",
+        "color": "#3CB371"
+      },
+      {
+        "ingrediente": "Guiso",
+        "color": "#4682B4"
+      },
+      {
+        "ingrediente": "Salteado Verduras X",
+        "color": "#556B2F"
+      },
+      {
+        "ingrediente": "Salteado Verduras Y",
+        "color": "#556B2F"
+      },
+      {
+        "ingrediente": "Tomate Lechuga Palta",
+        "color": "#8FBC8F"
+      },
+      {
+        "ingrediente": "Brocoli",
+        "color": "#008000"
+      },
+      {
+        "ingrediente": "-",
+        "color": "#484f58"
+      }
+    ]
+  }
+}
