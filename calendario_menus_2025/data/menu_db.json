@@ -9,6 +9,7 @@
       "principales": [
         "Camarones (100g) pp + crema 100g",
         "Bologonesa",
+        "Bolognesa de Soya",
         "Mongoliana o Chapsui Carne 80-100g pp)",
         "Mongoliana o Chapsui Pollo 80-100g pp)"
       ],
@@ -27,6 +28,7 @@
         "Pollo (120 - 150 g) + mostaza",
         "Carne V (p.ros/ ganso 100 - 200g) pp",
         "Hamburguesa",
+        "Tofu",
         "Mongoliana o Chapsui Carne 80-100g pp)",
         "Mongoliana o Chapsui Pollo 80-100g pp)"
       ],
@@ -50,7 +52,8 @@
         "Croqueta /empanizado (100 -140 g) pp",
         "Pollo (120 - 150 g) + mostaza",
         "Carne V (p.ros/ ganso 100 - 200g) pp",
-        "Hamburguesa"
+        "Hamburguesa",
+        "Tofu"
       ],
       "verduras": [
         "Tomate",
@@ -95,25 +98,27 @@
       ]
     },
     {
-      "nombre": "Hamburguesa Completa",
+      "nombre": "Hamburguesa Completa (Carne o Vegana)",
       "carbohidratos": [
         "Pan"
       ],
       "principales": [
-        "Hamburguesa"
+        "Hamburguesa",
+        "Hamburguesas de legumbres"
       ],
       "verduras": [
         "Tomate Lechuga Palta"
       ]
     },
     {
-      "nombre": "Sándwich de Proteína",
+      "nombre": "Sándwich de Proteína (Carne o Vegana)",
       "carbohidratos": [
         "Pan"
       ],
       "principales": [
         "Pollo (120 - 150 g) + mostaza",
-        "Carne V (p.ros/ ganso 100 - 200g) pp"
+        "Carne V (p.ros/ ganso 100 - 200g) pp",
+        "Chorizo de soya"
       ],
       "verduras": [
         "Tomate Lechuga Palta"
@@ -125,11 +130,31 @@
         "-"
       ],
       "principales": [
-        "Legumbre"
+        "Legumbre",
+        "Lentejas estofadas"
       ],
       "verduras": [
         "Tomate",
         "Lechuga"
+      ]
+    },
+    {
+      "nombre": "Salteado Vegano Completo",
+      "carbohidratos": [
+        "Arroz graneado",
+        "Pasta Spaguetti"
+      ],
+      "principales": [
+        "Salteado Verduras",
+        "Chapsui de verduras"
+      ],
+      "verduras": [
+        "Tomate",
+        "Lechuga",
+        "Zapallo Italiano",
+        "Guiso",
+        "Salteado Verduras X",
+        "Salteado Verduras Y"
       ]
     },
     {
