@@ -1,7 +1,7 @@
 {
   "platos_principales": [
     {
-      "nombre": "Fideos con salsa",
+      "nombre": "Pasta Clásica con Salsa (a elección)",
       "carbohidratos": [
         "Pasta Espirales / Corbatas",
         "Pasta Spaguetti"
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "nombre": "Arroz Verdura Prot",
+      "nombre": "Bowl de Arroz, Proteína y Vegetales",
       "carbohidratos": [
         "Arroz graneado"
       ],
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "nombre": "Papa Verdura Prot",
+      "nombre": "Proteína con Papa y Ensalada/Guiso",
       "carbohidratos": [
         "Papa cocida",
         "Puré de papa"
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "nombre": "Garbanzos Verdura Prot",
+      "nombre": "Garbanzos y Proteína con Acompañamiento",
       "carbohidratos": [
         "Garbanzos Cocidos (Caja, lata, en casa)"
       ],
@@ -78,7 +78,7 @@
       ]
     },
     {
-      "nombre": "Porotos Verdura Prot",
+      "nombre": "Porotos Negros con Proteína y Vegetales",
       "carbohidratos": [
         "Porotos negros en caja"
       ],
@@ -95,7 +95,7 @@
       ]
     },
     {
-      "nombre": "Hamburguesa",
+      "nombre": "Hamburguesa Completa",
       "carbohidratos": [
         "Pan"
       ],
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "nombre": "Sandwich",
+      "nombre": "Sándwich de Proteína",
       "carbohidratos": [
         "Pan"
       ],
@@ -120,7 +120,7 @@
       ]
     },
     {
-      "nombre": "Legumbres",
+      "nombre": "Plato de Legumbres y Ensalada",
       "carbohidratos": [
         "-"
       ],
@@ -133,7 +133,7 @@
       ]
     },
     {
-      "nombre": "Pizza Casera",
+      "nombre": "Pizza Casera con Ensalada",
       "carbohidratos": [
         "-"
       ],
@@ -146,7 +146,7 @@
       ]
     },
     {
-      "nombre": "Tallarines con salsa Alfredo",
+      "nombre": "Tallarines en Salsa Alfredo con Proteína",
       "carbohidratos": [
         "Pasta Espirales / Corbatas",
         "Pasta Spaguetti"
@@ -160,7 +160,7 @@
       ]
     },
     {
-      "nombre": "Charquican",
+      "nombre": "Charquicán Chileno Tradicional",
       "carbohidratos": [
         "-"
       ],
@@ -172,7 +172,7 @@
       ]
     },
     {
-      "nombre": "Papas fritas con guiso",
+      "nombre": "Papas Fritas con Guiso de Carne Molida",
       "carbohidratos": [
         "Papa frita"
       ],
