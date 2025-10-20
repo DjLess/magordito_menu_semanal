@@ -93,7 +93,7 @@
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🥪",
+      "emoji": "🍞",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -170,7 +170,7 @@
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🍔",
+      "emoji": "🔴",
       "vegetariano": false,
       "vegano": false,
       "pesciboro": false,
@@ -313,7 +313,7 @@
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🍔",
+      "emoji": "🟤",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -390,7 +390,7 @@
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🥕",
+      "emoji": "🍲",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -442,4 +442,5 @@
     }
   ]
 }
+
 
