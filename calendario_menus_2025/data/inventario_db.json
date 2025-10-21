@@ -1,18 +1,7 @@
 {
   "inventario": [
     {
-      "nombre": "Pasta Espirales / Corbatas",
-      "categoria": "carbohidhidrato",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🍝",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Pasta Spaguetti",
+      "nombre": "Pasta Corta",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
@@ -23,10 +12,21 @@
       "gourmet": false
     },
     {
-      "nombre": "Arroz graneado",
+      "nombre": "Pasta Larga",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
+      "emoji": "🍝",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Arroz",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 3,
       "emoji": "🍚",
       "vegetariano": true,
       "vegano": true,
@@ -34,7 +34,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Papa cocida",
+      "nombre": "Papa Cocida",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
@@ -45,10 +45,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Puré de papa",
+      "nombre": "Puré de Papa",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥔",
       "vegetariano": true,
       "vegano": false,
@@ -56,10 +56,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Papa frita",
+      "nombre": "Papas Fritas",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🍟",
       "vegetariano": true,
       "vegano": true,
@@ -67,22 +67,22 @@
       "gourmet": false
     },
     {
-      "nombre": "Garbanzos Cocidos (Caja, lata, en casa)",
+      "nombre": "Garbanzos",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🍲",
+      "emoji": "🫘",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
       "gourmet": false
     },
     {
-      "nombre": "Porotos negros en caja",
+      "nombre": "Porotos Negros",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🍲",
+      "emoji": "🫘",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -100,21 +100,43 @@
       "gourmet": false
     },
     {
-      "nombre": "-",
+      "nombre": "Pan Marraqueta",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "⬜",
+      "emoji": "🥖",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
       "gourmet": false
     },
     {
-      "nombre": "Camarones (100g) pp + crema 100g",
-      "categoria": "principal",
+      "nombre": "Masa Pizza",
+      "categoria": "carbohidrato",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🍕",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Sopa Legumbre",
+      "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
+      "emoji": "🍲",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Camarones con Crema",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 1,
       "emoji": "🍤",
       "vegetariano": false,
       "vegano": false,
@@ -122,7 +144,7 @@
       "gourmet": true
     },
     {
-      "nombre": "Salmón/ Pescado congelado (80g - 150g) pp",
+      "nombre": "Pescado",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
@@ -133,7 +155,7 @@
       "gourmet": true
     },
     {
-      "nombre": "Croqueta /empanizado (100 -140 g) pp",
+      "nombre": "Croqueta/Empanizado",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
@@ -144,10 +166,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Pollo (120 - 150 g) + mostaza",
+      "nombre": "Pollo Asado",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 3,
       "emoji": "🍗",
       "vegetariano": false,
       "vegano": false,
@@ -155,10 +177,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Carne V (p.ros/ ganso 100 - 200g) pp",
+      "nombre": "Carne Asada",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 3,
       "emoji": "🥩",
       "vegetariano": false,
       "vegano": false,
@@ -177,10 +199,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Bologonesa",
+      "nombre": "Boloñesa",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥫",
       "vegetariano": false,
       "vegano": false,
@@ -188,21 +210,21 @@
       "gourmet": false
     },
     {
-      "nombre": "Legumbre",
+      "nombre": "Boloñesa Soya",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🫘",
+      "cantidad_disponible": 1,
+      "emoji": "🥫",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
       "gourmet": false
     },
     {
-      "nombre": "Mongoliana o Chapsui Carne 80-100g pp)",
+      "nombre": "Carne Mongoliana",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥢",
       "vegetariano": false,
       "vegano": false,
@@ -210,10 +232,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Mongoliana o Chapsui Pollo 80-100g pp)",
+      "nombre": "Pollo Mongoliano",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥢",
       "vegetariano": false,
       "vegano": false,
@@ -221,10 +243,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Pizza",
+      "nombre": "Pizza Base",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🍕",
       "vegetariano": true,
       "vegano": false,
@@ -232,46 +254,13 @@
       "gourmet": false
     },
     {
-      "nombre": "Charquican",
+      "nombre": "Huevo Duro",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🍲",
+      "emoji": "🥚",
       "vegetariano": true,
       "vegano": false,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Guiso Carne Molida + Verduras",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🍲",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": false
-    },
-    {
-      "nombre": "Salsa Alfredo",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🫕",
-      "vegetariano": true,
-      "vegano": false,
-      "pesciboro": true,
-      "gourmet": true
-    },
-    {
-      "nombre": "Bolognesa de Soya",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥫",
-      "vegetariano": true,
-      "vegano": true,
       "pesciboro": true,
       "gourmet": false
     },
@@ -279,7 +268,18 @@
       "nombre": "Salteado Verduras",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
+      "emoji": "🥢",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Chapsui Vegetal",
+      "categoria": "principal",
+      "activo": true,
+      "cantidad_disponible": 1,
       "emoji": "🥢",
       "vegetariano": true,
       "vegano": true,
@@ -298,21 +298,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Lentejas estofadas",
+      "nombre": "Hamburguesa Vegetal",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🍲",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Hamburguesas de legumbres",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🟤",
       "vegetariano": true,
       "vegano": true,
@@ -320,10 +309,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Chorizo de soya",
+      "nombre": "Chorizo Soya",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🌭",
       "vegetariano": true,
       "vegano": true,
@@ -331,13 +320,13 @@
       "gourmet": false
     },
     {
-      "nombre": "Chapsui de verduras",
+      "nombre": "Jamón y Queso",
       "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥢",
+      "cantidad_disponible": 1,
+      "emoji": "🧀",
       "vegetariano": true,
-      "vegano": true,
+      "vegano": false,
       "pesciboro": true,
       "gourmet": false
     },
@@ -345,7 +334,7 @@
       "nombre": "Tomate",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 4,
       "emoji": "🍅",
       "vegetariano": true,
       "vegano": true,
@@ -356,7 +345,7 @@
       "nombre": "Lechuga",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 4,
       "emoji": "🥬",
       "vegetariano": true,
       "vegano": true,
@@ -389,7 +378,7 @@
       "nombre": "Guiso",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 3,
       "emoji": "🍲",
       "vegetariano": true,
       "vegano": true,
@@ -397,7 +386,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Salteado Verduras X",
+      "nombre": "Salteado Simple",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 2,
@@ -408,21 +397,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Tomate Lechuga Palta",
+      "nombre": "Salteado Complejo",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥗🥬🍅🥑",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Salteado Verduras Y",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥘🫑",
       "vegetariano": true,
       "vegano": true,
@@ -430,11 +408,132 @@
       "gourmet": false
     },
     {
-      "nombre": "Brocoli",
+      "nombre": "Ensalada Clásica",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 2,
+      "emoji": "🥗",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Cebolla Caramelizada",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🧅",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Chucrut",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🇩🇪",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Cebolla",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🧅",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Pimiento",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🫑",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Aceitunas",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🫒",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Porotos Verdes",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🫛",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Brócoli",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
       "emoji": "🥦",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Zanahoria",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🥕",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Pepino",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🥒",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Choclo",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🌽",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Quinoa",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🌾",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -442,5 +541,3 @@
     }
   ]
 }
-
-
