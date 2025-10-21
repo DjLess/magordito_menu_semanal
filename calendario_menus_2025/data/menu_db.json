@@ -11,7 +11,9 @@
         "Boloñesa",
         "Boloñesa Soya",
         "Carne Mongoliana",
-        "Pollo Mongoliano"
+        "Pollo Mongoliano",
+        "Salsa Alfredo", 
+        "Salsa Pesto" 
       ],
       "verduras": [
         "Tomate",
@@ -23,7 +25,8 @@
     {
       "nombre": "Bowl de Arroz, Proteína y Ensalada",
       "carbohidratos": [
-        "Arroz"
+        "Arroz",
+        "Choclo"
       ],
       "principales": [
         "Pescado",
@@ -33,7 +36,14 @@
         "Hamburguesa",
         "Tofu",
         "Carne Mongoliana",
-        "Pollo Mongoliano"
+        "Pollo Mongoliano",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
       ],
       "verduras": [
         "Tomate",
@@ -47,7 +57,8 @@
     {
       "nombre": "Bowl de Arroz, Salteado y Ensalada",
       "carbohidratos": [
-        "Arroz"
+        "Arroz",
+        "Choclo"
       ],
       "principales": [
         "Salteado Verduras",
@@ -76,7 +87,14 @@
         "Pollo Asado",
         "Carne Asada",
         "Hamburguesa",
-        "Tofu"
+        "Tofu",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
       ],
       "verduras": [
         "Tomate",
@@ -110,7 +128,14 @@
         "Pollo Asado",
         "Carne Asada",
         "Chorizo Soya",
-        "Jamón y Queso"
+        "Jamón y Queso",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
       ],
       "verduras": [
         "Ensalada Clásica",
@@ -121,13 +146,17 @@
       "nombre": "Plato de Sopa (con Legumbres o Proteína)",
       "carbohidratos": [
         "Sopa Legumbre",
-        "Arroz"
+        "Arroz",
+        "Choclo"
       ],
       "principales": [
         "Pollo Asado",
         "Carne Asada",
         "Garbanzos",
-        "Porotos Negros"
+        "Porotos Negros",
+        "Carne al Horno", 
+        "Pollo a la Mostaza",
+        "Lomito de Cerdo"
       ],
       "verduras": [
         "Tomate",
@@ -143,7 +172,9 @@
       "principales": [
         "Pizza Base",
         "Pepperoni",
-        "Jamón"
+        "Jamón",
+        "Tocino",
+        "Lomito de Cerdo"
       ],
       "verduras": [
         "Tomate",
@@ -159,7 +190,8 @@
       ],
       "principales": [
         "Carne Asada",
-        "Huevo Duro"
+        "Huevo Duro",
+        "Carne al Horno"
       ],
       "verduras": [
         "Guiso",
@@ -171,14 +203,21 @@
       "nombre": "Ensalada Completa (Verduras, Garbanzos o porotos, Proteina",
       "carbohidratos": [
         "Garbanzos",
-        "Porotos Negros"
+        "Porotos Negros",
+        "Choclo"
       ],
       "principales": [
         "Pescado",
         "Pollo Asado",
         "Carne Asada",
         "Huevo Duro",
-        "Tofu"
+        "Tofu",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo"
       ],
       "verduras": [
         "Tomate",
@@ -187,10 +226,8 @@
         "Brócoli",
         "Zanahoria",
         "Pepino",
-        "Choclo",
         "Quinoa"
       ]
     }
   ]
 }
-
