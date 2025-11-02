@@ -3,11 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Nueva App (Main-only)</title>
+    <title>Magordito - Pantalla de Inicio</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    </head>
+    
+    <style>
+        /* [ ... ESTILOS CSS DEL SPLASH SCREEN, CARTAS Y BOTÓN INICIAR ... ] */
+        :root {
+            --card-width: 90px; 
+            --card-aspect-ratio: calc(70 / 49); 
+            --card-calculated-height: calc(var(--card-width) * var(--card-aspect-ratio)); 
+            --card-bg-color: #2b313a; 
+            --card-border-color: #484f58;
+            --text-color: #c9d1d9;
+            --success-color: #238636;
+        }
+
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0d1117; z-index: 1000; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.5s ease-out; pointer-events: all;
+        }
+
+        #splash-screen.hidden { opacity: 0; pointer-events: none; }
+
+        #card-animation-container {
+            position: relative; width: 100%; height: 300px; display: flex;
+            justify-content: center; align-items: center; margin-bottom: 30px;
+            perspective: 1000px; overflow: hidden;
+        }
+        
+        .ingredient-card {
+            width: var(--card-width); height: var(--card-calculated-height);
+            background-color: transparent; border: none; border-radius: 10px;
+            position: absolute; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transform-style: preserve-3d; transition: transform 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55), top 1.5s, left 1.5s; 
+        }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 10px; border: 2px solid var(--card-border-color);
+            box-sizing: border-box; background-color: var(--card-bg-color);
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        .card-back { background-color: var(--success-color); transform: rotateY(180deg); border-color: #008000; }
+        
+        .card-front > div { position: absolute; top: 5px; left: 5px; width: calc(100% - 10px); height: calc(100% - 10px); display: flex; flex-direction: column; justify-content: space-around; align-items: center; background-color: #1f242b; border-radius: 6px; box-sizing: border-box; }
+        .card-corner { position: absolute; font-size: 1.1em; font-weight: 700; line-height: 1; z-index: 5; color: var(--text-color); pointer-events: none; }
+        .corner-top-left { top: 7px; left: 7px; }
+        .corner-bottom-right { bottom: 7px; right: 7px; transform: rotate(180deg); }
+        .card-emoji { font-size: 2.5em; line-height: 1; margin-top: 5px; flex-grow: 1; display: flex; align-items: center; }
+        .card-name { font-size: 0.8em; font-weight: 600; text-align: center; padding: 0 3px; height: 2em; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .back-text { font-size: 1.5em; font-weight: 900; color: white; text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.8); }
+
+        .ingredient-card.is-flipped { transform: translateY(0) rotateY(180deg) scale(1.1); z-index: 100; box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+        
+        #start-button {
+            padding: 15px 30px; font-size: 1.5em; font-weight: bold; background-color: var(--success-color);
+            color: white; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0; transform: translateY(20px); transition: opacity 0.5s, transform 0.5s; transition-delay: 0.5s;
+        }
+        
+        #start-button.show { opacity: 1; transform: translateY(0); }
+        
+        .phone-frame.hidden { display: none; }
+    </style>
+</head>
 <body>
-    <div class="phone-frame">
+    
+    <div id="splash-screen">
+        <div id="card-animation-container">
+        </div>
+        <button id="start-button">INICIAR</button>
+    </div>
+    
+    
+    <div class="phone-frame hidden" id="main-app-container"> 
         <div class="notch"></div>
 
         <div class="top-bar">
@@ -45,5 +117,122 @@
     </div>
     
     <script src="assets/js/main.js"></script>
+
+    <script>
+        const INGREDIENTS = [
+            { nombre: "Pasta Corta", categoria: "Carbohidrato", emoji: "🍝" },
+            { nombre: "Pasta Larga", categoria: "Carbohidrato", emoji: "🍝" },
+            { nombre: "Arroz", categoria: "Carbohidrato", emoji: "🍚" },
+            { nombre: "Papa Cocida", categoria: "Carbohidrato", emoji: "🥔" },
+            { nombre: "Carne Asada", categoria: "Principal", emoji: "🥩" },
+            { nombre: "Pollo Asado", categoria: "Principal", emoji: "🍗" },
+            { nombre: "Pescado", categoria: "Principal", emoji: "🐟" },
+            { nombre: "Tofu", categoria: "Principal", emoji: "🫕" },
+            { nombre: "Tomate", categoria: "Verdura", emoji: "🍅" },
+            { nombre: "Lechuga", categoria: "Verdura", emoji: "🥬" }
+        ];
+
+        const animationContainer = document.getElementById('card-animation-container');
+        const splashScreen = document.getElementById('splash-screen');
+        const startButton = document.getElementById('start-button');
+        const mainAppContainer = document.getElementById('main-app-container'); 
+        
+        const CARD_WIDTH = 90; 
+        const CARD_HEIGHT = 90 * (70 / 49); 
+
+        // [ ... Funciones createCardElement() y startSplashAnimation() (Sin cambios funcionales) ... ]
+        function createCardElement(ingredient) {
+            const card = document.createElement('div');
+            const type = ingredient.categoria.charAt(0).toUpperCase() + ingredient.categoria.slice(1);
+            card.className = 'ingredient-card';
+            card.setAttribute('data-type', type);
+            card.innerHTML = `<div class="card-face card-front"><div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-around; align-items: center;"><span class="card-corner corner-top-left">${type.charAt(0)}</span><span class="card-emoji">${ingredient.emoji}</span><span class="card-name">${ingredient.nombre}</span><span class="card-corner corner-bottom-right">${type.charAt(0)}</span></div></div><div class="card-face card-back"><span class="back-text">Magordito</span></div>`;
+            const side = Math.floor(Math.random() * 4); let startTop, startLeft;
+            if (side === 0) { startTop = `${-CARD_HEIGHT - Math.random() * 50}`; startLeft = `${Math.random() * window.innerWidth}`; } 
+            else if (side === 1) { startTop = `${Math.random() * window.innerHeight}`; startLeft = `${window.innerWidth + Math.random() * 50}`; } 
+            else if (side === 2) { startTop = `${window.innerHeight + Math.random() * 50}`; startLeft = `${Math.random() * window.innerWidth}`; } 
+            else { startTop = `${Math.random() * window.innerHeight}`; startLeft = `${-CARD_WIDTH - Math.random() * 50}`; }
+            card.style.top = `${startTop}px`; card.style.left = `${startLeft}px`; card.style.opacity = 0; card.style.transform = `rotate(${Math.random() * 90 - 45}deg)`; 
+            animationContainer.appendChild(card); return card;
+        }
+
+        function startSplashAnimation() {
+            const numCards = INGREDIENTS.length;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const centerLeft = (viewportWidth / 2) - (CARD_WIDTH / 2);
+            const centerTop = (viewportHeight / 2) - (CARD_HEIGHT / 2) - 15;
+            INGREDIENTS.forEach((ingredient, index) => {
+                const card = createCardElement(ingredient);
+                const finalTop = centerTop + (Math.random() * 30 - 15);
+                const finalLeft = centerLeft + (Math.random() * 30 - 15);
+                const finalRotation = Math.random() * 10 - 5; 
+                const delay = index * 120; 
+                setTimeout(() => {
+                    card.style.opacity = 1; card.style.transitionDuration = '1.2s'; 
+                    card.style.top = `${finalTop}px`; card.style.left = `${finalLeft}px`; 
+                    card.style.transform = `rotate(${finalRotation}deg)`; card.style.zIndex = index + 1; 
+                    if (index === numCards - 1) {
+                        setTimeout(() => {
+                            card.classList.add('is-flipped');
+                            startButton.classList.add('show');
+                        }, 1200); 
+                    }
+                }, delay);
+            });
+        }
+        
+        /**
+         * Lógica de inicio de la aplicación, siguiendo la secuencia solicitada:
+         * 1. Oculta splash.
+         * 2. Oculta overlay.
+         * 3. Muestra menú.
+         * 4. Carga pantalla 6.
+         */
+        function startApp() {
+            // 1. Oculta el splash screen
+            splashScreen.classList.add('hidden');
+
+            const overlay = document.getElementById('content-display-overlay');
+
+            // 2. "oculta overlay" (Asegura que el overlay esté oculto)
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            
+            // 3. "llevame a menu" (Muestra el menú principal)
+            mainAppContainer.classList.remove('hidden'); 
+            
+            // 4. "luego a pantalla6" (Carga el contenido. Esto inmediatamente OCULTARÁ el menú y mostrará el overlay.)
+            if (typeof loadContent === 'function') {
+                loadContent('screens/pantalla6.html'); 
+            }
+
+            if (typeof initApp === 'function') {
+                initApp(); 
+            }
+        }
+
+        // ===============================================================
+        // INICIALIZACIÓN
+        // ===============================================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Configuración de la animación para pantalla completa
+            animationContainer.style.width = '100vw'; 
+            animationContainer.style.height = '100vh'; 
+            animationContainer.style.position = 'fixed';
+            animationContainer.style.top = '0';
+            animationContainer.style.left = '0';
+            animationContainer.style.overflow = 'hidden';
+
+            startSplashAnimation();
+            
+            // Asignar el listener al botón INICIAR a la función startApp
+            startButton.addEventListener('click', startApp);
+        });
+
+    </script>
 </body>
 </html>
