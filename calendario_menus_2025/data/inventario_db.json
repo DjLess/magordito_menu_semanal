@@ -100,17 +100,6 @@
       "gourmet": false
     },
     {
-      "nombre": "Masa Pizza",
-      "categoria": "carbohidrato",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🍕",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
       "nombre": "Sopa Legumbre",
       "categoria": "carbohidrato",
       "activo": true,
@@ -431,4 +420,3 @@
     }
   ]
 }
-
