@@ -19,7 +19,25 @@
         "Ensalada Tomate",
         "Ensalada Lechuga",
         "Guiso"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Pasta Clásica con Salsa (a elección) - SIN ENSALADA",
+      "carbohidratos": [
+        "Pasta Corta",
+        "Pasta Larga"
+      ],
+      "principales": [
+        "Camarones con Crema",
+        "Salsa Boloñesa (Carne)",
+        "Salsa Boloñesa (Soya)",
+        "Carne Mongoliana",
+        "Pollo Mongoliano",
+        "Salsa Alfredo", 
+        "Salsa Pesto" 
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Bowl de Arroz, Proteína y Ensalada",
@@ -49,7 +67,33 @@
         "Ensalada Lechuga",
         "Ensalada Palta",
         "Guiso"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Bowl de Arroz, Proteína - SIN ENSALADA",
+      "carbohidratos": [
+        "Arroz",
+        "Choclo"
+      ],
+      "principales": [
+        "Pescado",
+        "Croqueta/Empanizado",
+        "Pollo Asado",
+        "Carne Asada",
+        "Hamburguesa (Carne)",
+        "Tofu",
+        "Carne Mongoliana",
+        "Pollo Mongoliano",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Bowl de Arroz, Salteado y Ensalada",
@@ -69,7 +113,20 @@
         "Ensalada Brócoli",
         "Salteado de Verduras",
         "Salteado de Champiñon"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Bowl de Arroz, Salteado - SIN ENSALADA",
+      "carbohidratos": [
+        "Arroz",
+        "Choclo"
+      ],
+      "principales": [
+        "Mix Verduras Salteadas",
+        "Tofu"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Papas (Cocidas, fritas o puré), Proteína y Ensalada/Guiso",
@@ -97,7 +154,32 @@
         "Ensalada Tomate",
         "Ensalada Lechuga",
         "Guiso"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Papas (Cocidas, fritas o puré), Proteína - SIN ENSALADA/GUISO",
+      "carbohidratos": [
+        "Papa (Base)",
+        "Papa (Puré)",
+        "Papa (Frita)"
+      ],
+      "principales": [
+        "Pescado",
+        "Croqueta/Empanizado",
+        "Pollo Asado",
+        "Carne Asada",
+        "Hamburguesa (Carne)",
+        "Tofu",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Hamburguesa Completa (Carne o Vegetal)",
@@ -113,7 +195,19 @@
         "Ensalada Tomate",
         "Ensalada Lechuga",
         "Ensalada Pepino"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Hamburguesa Simple (Carne o Vegetal) - SIN ENSALADA",
+      "carbohidratos": [
+        "Pan Base"
+      ],
+      "principales": [
+        "Hamburguesa (Carne)",
+        "Hamburguesa (Vegetal)"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Sándwich de Proteína",
@@ -139,7 +233,28 @@
         "Ensalada Lechuga",
         "Ensalada Palta",
         "Ensalada Pepino"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Sándwich de Proteína - SIMPLE",
+      "carbohidratos": [
+        "Pan Base"
+      ],
+      "principales": [
+        "Pollo Asado",
+        "Carne Asada",
+        "Chorizo Soya",
+        "Jamón y Queso",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo",
+        "Tocino"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Plato de Legumbres (con Carbohidrato o Proteína)",
@@ -161,23 +276,26 @@
         "Ensalada Tomate",
         "Ensalada Lechuga",
         "Guiso"
-      ]
+      ],
+      "puntaje": 3
     },
     {
-      "nombre": "Pizza Casera (Carne o Vegetal)",
+      "nombre": "Plato de Legumbres (Carbohidrato y Proteína) - SIN ENSALADA/GUISO",
       "carbohidratos": [
-        "Masa Pizza"
+        "Sopa Legumbre",
+        "Arroz",
+        "Choclo"
       ],
       "principales": [
-        "Pepperoni",
-        "Jamón",
-        "Tocino",
+        "Pollo Asado",
+        "Carne Asada",
+        "Garbanzos",
+        "Porotos Negros",
+        "Carne al Horno", 
+        "Pollo a la Mostaza",
         "Lomito de Cerdo"
       ],
-      "verduras": [
-        "Ensalada Tomate",
-        "Ensalada Lechuga"
-      ]
+      "puntaje": 1
     },
     {
       "nombre": "Charquicán con Ensalada",
@@ -191,7 +309,15 @@
         "Ensalada Clásica",
         "Ensalada Pepino",
         "Ensalada Quinoa y Verduras"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Charquicán - SOLO BASE",
+      "principales": [
+        "Charquicán Base"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Ensalada Completa (Verduras, Garbanzos o porotos, Proteina",
@@ -219,14 +345,36 @@
         "Ensalada Brócoli",
         "Ensalada Pepino",
         "Ensalada Quinoa y Verduras"
-      ]
+      ],
+      "puntaje": 3
+    },
+    {
+      "nombre": "Ensalada Completa (Carbohidrato y Proteína) - SIN VERDURAS",
+      "carbohidratos": [
+        "Garbanzos",
+        "Porotos Negros",
+        "Choclo"
+      ],
+      "principales": [
+        "Pescado",
+        "Pollo Asado",
+        "Carne Asada",
+        "Tofu",
+        "Carne al Horno",
+        "Bistec",
+        "Pollo a la Mostaza",
+        "Filetes de Pollo Salteado",
+        "Chuleta de Cerdo",
+        "Lomito de Cerdo"
+      ],
+      "puntaje": 1
     },
     {
       "nombre": "Pizza Comodín Especial",
       "principales": [
         "Pizza Comodín"
-      ]
+      ],
+      "puntaje": 3
     }
   ]
 }
-
