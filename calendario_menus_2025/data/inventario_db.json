@@ -420,9 +420,9 @@
     },
     {
       "nombre": "Pizza Comodín",
-      "categoria": "comodin",
+      "categoria": "principal",
       "activo": true,
-      "cantidad_disponible": 1,
+      "cantidad_disponible": 2,
       "emoji": "🃏",
       "vegetariano": true,
       "vegano": false,
@@ -431,3 +431,4 @@
     }
   ]
 }
+
