@@ -2,410 +2,1108 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pantalla 2 - Drag and Drop Ajustado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Semanal (Pantalla 4 - Estilo Naipe)</title>
+    
+    <link rel="stylesheet" href="../assets/css/card_styles.css">
+    
     <style>
-        /* ---------------------------------- */
-        /* ESTILOS CSS - AJUSTES DE TAMAÑO Y ESPACIO */
-        /* ---------------------------------- */
+        /* ATENCIÓN: Estos estilos son para la estructura de la pantalla 4. */
         body {
             background-color: #0d1117;
             color: #c9d1d9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 10px; /* Reducido de 30px */
+            padding: 5px; 
             text-align: center;
-            font-size: 0.9em; /* Fuente del cuerpo ligeramente reducida */
+            font-size: 0.8em;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Variables necesarias de pantalla3 para el estilo de los naipes de plato */
+        :root {
+            /* Se asume que card_styles.css ya tiene la base de los .card, pero estas variables ayudan al carrusel */
+            --dish-card-width: 80px;
+            --dish-card-aspect-ratio: calc(70 / 49);
+            --dish-card-calculated-height: calc(var(--dish-card-width) * var(--dish-card-aspect-ratio));
+            --lift-amount: 20px;
+            --success-color: #238636;
         }
 
-        /* 🛑 Título ajustado */
         h2 {
-            font-size: 1.2em; /* Reducido de 2em */
-            margin-bottom: 5px; /* Reducido */
+            font-size: 1.1em; 
+            margin-bottom: 5px;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
-        /* 🛑 Eliminada la bajada de título */
-        p {
+        #randomize-button {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 5px 10px; 
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        #randomize-button:hover {
+            background-color: #2ea043;
+        }
+        
+        .control-label {
+            font-weight: 400;
+            margin-right: 5px;
+        }
+        
+        #consecutive-meals-select {
+            padding: 4px 8px; 
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background-color: #161b22;
+            color: #c9d1d9;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Estilo para el nuevo toggle (1 o 2 comidas) */
+        #meals-per-day-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #1f242c;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+        }
+        
+        /* Estilo para el nuevo control del checkbox (Platos Creados) */
+        #use-created-dishes-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #1f242c;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+        }
+
+        /* Estilo del carrusel/mano de naipes (similar a pantalla3.html) */
+        #dish-hand-carousel {
+            height: calc(var(--dish-card-calculated-height) + var(--lift-amount) + 20px); 
+            display: flex;
+            gap: 0px; 
+            overflow-x: auto; 
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #161b22;
+            align-items: flex-end; 
+            flex-shrink: 0; 
+            position: relative; 
+            justify-content: flex-start;
+            margin-top: 10px; 
+            scrollbar-width: thin; 
+            /* Ocultar por defecto, JS lo muestra en modo creado */
             display: none; 
         }
-
-        #drop-zones-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px; /* Reducido de 20px */
-            width: 95%; /* Ligeramente más ancho para usar el espacio */
-            max-width: 600px;
-            margin: 10px auto; /* Reducido de 30px */
-            padding: 10px; /* Reducido de 15px */
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #161b22;
+        
+        /* Estilo del naipe de la mano (para que se vea como plato creado y se 'levante' al hacer hover) */
+        #dish-hand-carousel .card {
+            flex: 0 0 var(--dish-card-width);
+            width: var(--dish-card-width); 
+            height: 0;
+            padding-bottom: var(--dish-card-calculated-height); 
+            border: 2px solid var(--success-color); /* Borde verde para distinguirlo de la mano */
+            margin-top: var(--lift-amount); 
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+            cursor: grab;
+            margin-right: -15px; /* Superposición ligera */
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s, opacity 0.3s, margin-top 0.2s, margin-right 0.2s;
+        }
+        
+        #dish-hand-carousel .card:hover {
+            transform: translateY(calc(-1 * var(--lift-amount))) !important; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.6), 0 0 10px var(--success-color);
         }
 
+        /* Contenedor principal de 2 columnas para los DÍAS (4 naipes por fila) */
+        #drop-zones-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 2 DÍAS por fila */
+            gap: 5px; /* Espacio entre los días */
+            width: 99%;
+            max-width: 900px;
+            margin: 0px auto;
+            padding: 0px;
+            border: 1px solid #30363d;
+            border-radius: 1px;
+            background-color: #161b22;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+            min-height: 0; 
+        }
+
+        /* Contenedor (drop-zone) para CADA DÍA */
         .drop-zone {
             background-color: #1f242c;
             border: 2px solid #30363d;
             border-radius: 4px;
-            /* Altura fija y overflow hidden (Se mantiene la altura) */
-            height: 110px; /* Ligeramente reducido de 120px */
-            overflow: hidden; 
-            
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 5px; /* Reducido de 10px */
+            min-height: 70px; 
+            width: 100%; /* Ocupa el 100% de su columna en el grid */
+            overflow: visible;
+            padding: 1px;
             transition: border-color 0.2s, background-color 0.2s;
+            
+            /* === Configuración Flex para 2 tarjetas horizontales (IZQUIERDA/DERECHA) === */
+            display: flex;
+            flex-direction: row; /* Asegura el flujo horizontal */
+            flex-wrap: wrap; 
+            justify-content: space-around; /* Distribuye las 2 cartas */
+            align-items: flex-start;
+            position: relative;
+            padding-top: 25px; /* Espacio para el label pegado */
+        }
+        
+        /* Resalte de zona de drop */
+        .drop-zone.drag-over {
+            border-color: #58a6ff;
+            background-color: #242931;
         }
 
-        /* 🛑 Fuente de Contenedor (etiqueta de día) ajustada */
         .zone-label {
             font-weight: 600;
             color: #58a6ff;
-            margin-bottom: 2px; /* Reducido */
-            font-size: 0.8em; /* Reducido de 0.9em */
-            align-self: flex-start;
-            width: 100%;
+            font-size: 0.8em; 
+            width: 100%; /* El label siempre ocupa todo el ancho */
+            text-align: left;
             padding-left: 5px;
-        }
-
-        /* 🛑 Fuente de Tarjetas ajustada */
-        .card {
-            background-color: #2b313a;
-            border: 1px solid #484f58;
-            border-radius: 4px;
-            padding: 5px; /* Reducido de 8px */
-            margin: 3px 0; /* Reducido de 5px */
-            width: 95%;
-            height: 25px; /* Reducido de 30px */
-            font-size: 0.85em; /* Reducido */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 500;
-            cursor: grab;
-            user-select: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10;
-            position: relative;
+            position: absolute; /* POSICIÓN FIJA DENTRO DEL CONTENEDOR DE DÍA */
+            top: 0;
+            left: 0;
+            background-color: #1f242c;
+            z-index: 5;
+            padding-top: 1px; 
+            padding-bottom: 2px;
+            border-bottom: 1px solid #30363d;
         }
         
-        .dragging {
-            opacity: 0.1;
-            transform: scale(0.9);
+        /* Estilos específicos para la tarjeta dentro del contenedor de 2 columnas */
+        .drop-zone .card, .drop-zone .placeholder {
+            /* Los estilos de 'margin' deben asegurar el espacio entre ellas */
+            margin: 5px 3px 5px 3px; 
+            /* Se mantiene el width definido en card_styles.css (ej. 80px) */
         }
+        
+        /* AÑADIDO: Asegura que todas las tarjetas en las zonas de drop tengan el cursor de movimiento */
+        .drop-zone .card {
+            cursor: grab; 
+        }
+
+        /* Responsive para la estructura */
+        @media (max-width: 650px) {
+            #drop-zones-container {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 400px;
+            }
+        }
+        
+        /* Placeholder con estilos de tarjeta para mantener el layout de 2 columnas */
         .placeholder {
-            opacity: 0;
-            height: 31px; /* Ajustado para el nuevo tamaño de tarjeta */
-            margin: 3px 0;
-            transition: none;
+            /* ESTILOS DE card_styles.css */
+            background-color: #58a6ff;
+            border: 1px dashed #58a6ff;
+            opacity: 0.15;
+            transition: opacity 0.3s;
+            cursor: default;
         }
-        .drag-over {
-            border-color: #f75555;
-            background-color: #242931;
+
+        .card.dragging {
+            opacity: 0.1;
         }
+        
     </style>
 </head>
 <body>
-    <h2>Reordenamiento de Plan de Comidas (Pantalla 2)</h2>
+
+    <h2>Menú semanal</h2>
+    
+    <div id="controls">
+        <label for="consecutive-meals-select" class="control-label">Cocino para</label>
+        <select id="consecutive-meals-select">
+            <option value="1">1 comida seguida</option>
+            <option value="2" selected>2 comidas seguidas</option>
+            <option value="3">3 comidas seguidas</option>
+            <option value="4">4 comidas seguidas</option>
+            <option value="5">5 comidas seguidas</option>
+            <option value="6">6 comidas seguidas</option>
+        </select>
+        
+        <div id="meals-per-day-control">
+            <label for="meals-per-day-toggle" class="control-label">1 o 2 Comidas/Día</label>
+            <input type="checkbox" id="meals-per-day-toggle" checked>
+        </div>
+        
+        <div id="use-created-dishes-control">
+            <label for="use-created-dishes-checkbox" class="control-label">Usar Platos Creados 🍳</label>
+            <input type="checkbox" id="use-created-dishes-checkbox">
+        </div>
+        
+        <button id="randomize-button">Randomizar Platos</button>
+    </div>
+
+    <div id="loading-message" style="color: #58a6ff; margin-top: 5px;">Cargando menú desde GitHub...</div>
+    
+    <div id="dish-hand-carousel" style="display: none;">
+        </div>
 
     <div id="drop-zones-container">
         <div class="drop-zone" data-day="Lunes">
             <div class="zone-label">Lunes</div>
-            <div class="card" draggable="true" data-card-id="1-almuerzo">1 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="1-cena">1 - Cena</div>
+            <div class="card" draggable="true" data-dish="Lasaña">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍝</span>
+                        <div class="card-secondary-emojis">🧅🍅</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Lasaña de Carne</p>
+                        <ul class="card-ingredients-list">
+                            <li>Carne Molida</li>
+                            <li>Pasta Lasaña</li>
+                            <li>Tomate</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card" draggable="true" data-dish="Sopa">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍲</span>
+                        <div class="card-secondary-emojis">🥕🥔</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Sopa de Verduras</p>
+                        <ul class="card-ingredients-list">
+                            <li>Pollo</li>
+                            <li>Papa</li>
+                            <li>Zanahoria</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="drop-zone" data-day="Martes">
             <div class="zone-label">Martes</div>
-            <div class="card" draggable="true" data-card-id="2-almuerzo">2 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="2-cena">2 - Cena</div>
+            <div class="card" draggable="true" data-dish="Fideos">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍜</span>
+                        <div class="card-secondary-emojis">🧀🌶️</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Fideos con Queso</p>
+                        <ul class="card-ingredients-list">
+                            <li>Leche</li>
+                            <li>Fideos</li>
+                            <li>Queso</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card" draggable="true" data-dish="Cazuela">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🥣</span>
+                        <div class="card-secondary-emojis">🌽🎃</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Cazuela de Pollo</p>
+                        <ul class="card-ingredients-list">
+                            <li>Pollo</li>
+                            <li>Zapallo</li>
+                            <li>Choclo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="drop-zone" data-day="Miércoles">
             <div class="zone-label">Miércoles</div>
-            <div class="card" draggable="true" data-card-id="3-almuerzo">3 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="3-cena">3 - Cena</div>
         </div>
         <div class="drop-zone" data-day="Jueves">
             <div class="zone-label">Jueves</div>
-            <div class="card" draggable="true" data-card-id="4-almuerzo">4 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="4-cena">4 - Cena</div>
         </div>
         <div class="drop-zone" data-day="Viernes">
             <div class="zone-label">Viernes</div>
-            <div class="card" draggable="true" data-card-id="5-almuerzo">5 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="5-cena">5 - Cena</div>
         </div>
         <div class="drop-zone" data-day="Sábado">
             <div class="zone-label">Sábado</div>
-            <div class="card" draggable="true" data-card-id="6-almuerzo">6 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="6-cena">6 - Cena</div>
         </div>
         <div class="drop-zone" data-day="Domingo">
             <div class="zone-label">Domingo</div>
-            <div class="card" draggable="true" data-card-id="7-almuerzo">7 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="7-cena">7 - Cena</div>
         </div>
     </div>
 
     <script>
-        // ----------------------------------
-        //          LÓGICA JAVASCRIPT (sin cambios funcionales)
-        // ----------------------------------
+        // ===============================================
+        // CONFIGURACIÓN DE DATOS
+        // ===============================================
+        const DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/menu_db.json';
+        const INVENTORY_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/inventario_db.json'; 
+        
+        let CARDS_PER_ZONE = 2; 
+        const DAYS_COUNT = 7;
+        let TOTAL_CARDS = CARDS_PER_ZONE * DAYS_COUNT;
+        
+        let allDishes = []; 
+        let menuData = null; 
+        let allowedDishes = [];
+        const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
+        const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
+        const CREATED_DISHES_STORAGE_KEY = 'dishCreator_successfullyCreatedDishes';
+        let customIngredients = {}; 
+        let selectedComponentsSet = new Set(); 
+        let INGREDIENT_EMOJI_MAP = {}; 
 
         const container = document.getElementById('drop-zones-container');
+        const randomizeButton = document.getElementById('randomize-button');
         const allZones = Array.from(document.querySelectorAll('.drop-zone'));
-        const getAllCards = () => Array.from(document.querySelectorAll('.card:not(.placeholder)')); 
-        const CARDS_PER_ZONE = 2;
+        const loadingMessage = document.getElementById('loading-message');
+        const consecutiveMealsSelect = document.getElementById('consecutive-meals-select');
+        const mealsPerDayToggle = document.getElementById('meals-per-day-toggle'); 
+        
+        const useCreatedDishesCheckbox = document.getElementById('use-created-dishes-checkbox');
+        const dishHandCarousel = document.getElementById('dish-hand-carousel');
+        let createdDishes = [];
 
-        let draggedCard = null;
-        let sourceZone = null;
-        let targetElement = null;
-        let insertPosition = null;
+        // ===============================================
+        // DRAG & DROP VARIABLES GLOBALES (MOVER Y COPIAR)
+        // ===============================================
+        let draggedCard = null; // La tarjeta real (solo para modo MOVER)
         let placeholder = null; 
+        let lastRectMap = new Map(); // Mapa para las posiciones iniciales (FLIP: First)
+        
+        // --- Variables de Throttling (Optimización de Fluidez) ---
+        let isUpdating = false; 
+        let lastDragEventData = { zone: null, clientX: 0, clientY: 0 }; 
+        // ---------------------------------------------------------
 
-        // Helper para limpiar transforms y estados
-        function clearLiveTransforms() {
-            const allCards = getAllCards();
-            allCards.forEach(card => {
-                card.style.transition = '';
-                card.style.transform = '';
-                card.classList.remove('dragging');
-            });
-            allZones.forEach(z => z.classList.remove('drag-over'));
-            
-            if (placeholder) {
-                placeholder.remove();
-                placeholder = null;
+
+        // ===============================================
+        // FUNCIONES DE UTILIDAD D&D (FLIP)
+        // ===============================================
+
+        function getAllCards(includeHand = false) {
+            let selector = '.drop-zone .card:not(.placeholder)';
+            if (includeHand) {
+                selector += ', #dish-hand-carousel .card:not(.placeholder)';
             }
-
-            targetElement = null;
-            insertPosition = null;
+            // Obtiene todas las tarjetas (.card) en las zonas, excluyendo el placeholder.
+            return Array.from(document.querySelectorAll(selector));
         }
 
-        // Configuración de Drag Start
-        getAllCards().forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                draggedCard = card;
-                sourceZone = card.parentElement;
-                card.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', card.getAttribute('data-card-id'));
-                
-                placeholder = document.createElement('div');
-                placeholder.classList.add('card', 'placeholder');
-                placeholder.style.height = `${draggedCard.offsetHeight}px`; 
+        function registerLiveTransforms(includePlaceholder = true) {
+            // FLIP: Captura las posiciones de todas las tarjetas visibles (FIRST).
+            lastRectMap.clear();
+            const allCards = getAllCards(useCreatedDishesCheckbox.checked); // Incluir mano si aplica
+            allCards.forEach(card => {
+                if (window.getComputedStyle(card).display !== 'none') {
+                    lastRectMap.set(card, card.getBoundingClientRect());
+                }
             });
-        });
-
-        // Lógica para determinar el punto de inserción exacto
-        function getClosestElement(container, x, y) {
-            const cardsInContainer = Array.from(container.querySelectorAll('.card:not(.dragging):not(.placeholder)'));
-            
-            if (cardsInContainer.length === 0) {
-                return { element: container, position: 'APPEND' };
+            // También registramos la posición del placeholder
+            if (includePlaceholder && placeholder && placeholder.parentNode) {
+                 lastRectMap.set(placeholder, placeholder.getBoundingClientRect());
             }
+        }
 
-            let closest = { element: null, distance: Infinity, position: null };
+        function applyFLIPAnimation() {
+             // 1. INVERT (Mover visualmente al estado 'FIRST' capturado antes del cambio de DOM)
+            // Recoger todas las tarjetas y el placeholder que participaron en la reordenación.
+            const allElements = Array.from(document.querySelectorAll('.card:not([style*="display: none"]), .placeholder'));
+            
+            allElements.forEach(element => {
+                // Si la tarjeta está siendo arrastrada (draggedCard), la ignoramos
+                if (element === draggedCard) return;
 
-            for (const card of cardsInContainer) {
-                const rect = card.getBoundingClientRect();
+                const firstRect = lastRectMap.get(element); 
+                if (!firstRect) return; // Si no se registró la posición inicial, ignorar
+
+                const lastRect = element.getBoundingClientRect(); // LAST
+
+                const deltaX = firstRect.left - lastRect.left;
+                const deltaY = firstRect.top - lastRect.top;
+
+                if (deltaX !== 0 || deltaY !== 0) {
+                    // INVERT: Mover al "FIRST"
+                    element.style.transition = 'none';
+                    element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+                    // PLAY: Aplicar transición y restaurar posición (animación de movimiento)
+                    requestAnimationFrame(() => {
+                        element.style.transition = 'transform 0.3s ease-in-out';
+                        element.style.transform = '';
+                    });
+                }
+            });
+        }
+
+        function clearLiveTransforms() {
+            // Limpia los estilos de transición y las variables globales.
+            const allCards = getAllCards(true);
+            allCards.forEach(card => card.style.transition = '');
+            
+            if (draggedCard) {
+                draggedCard.classList.remove('dragging');
+                draggedCard.style.display = ''; 
+                draggedCard.style.transform = ''; 
                 
-                const distanceY = Math.abs(y - (rect.top + rect.height / 2));
-                
-                if (distanceY < closest.distance) {
-                    closest.distance = distanceY;
-                    closest.element = card;
-                    closest.position = (y < rect.top + rect.height / 2) ? 'BEFORE' : 'AFTER';
+                // Si la tarjeta venía de la mano y no fue dropeada, hay que reinsertarla.
+                if (!draggedCard.parentNode) {
+                    // Reinsertar en la mano al final
+                    dishHandCarousel.appendChild(draggedCard);
                 }
             }
-            return closest;
-        }
-
-        // 3. Lógica de Vista Previa en Vivo (Dragover)
-        container.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (!draggedCard || !placeholder) return;
-
-            const currentX = e.clientX;
-            const currentY = e.clientY;
-            
-            const hoveredZone = allZones.find(z => {
-                const rect = z.getBoundingClientRect();
-                const padding = 10;
-                return currentX >= rect.left - padding && currentX <= rect.right + padding && currentY >= rect.top - padding && currentY <= rect.bottom + padding;
-            });
-            
-            if (!hoveredZone) {
-                allZones.forEach(z => z.classList.remove('drag-over'));
-                if (placeholder.parentElement) placeholder.remove();
-                targetElement = null;
-                return;
-            }
-
-            allZones.forEach(z => z.classList.remove('drag-over'));
-            hoveredZone.classList.add('drag-over');
-
-            const closestResult = getClosestElement(hoveredZone, currentX, currentY);
-            
-            targetElement = closestResult.element;
-            insertPosition = closestResult.position;
-            
-            // --- INICIO FLIP EN VIVO ---
-            
-            // 1. FIRST: Guardar posiciones ANTES de mover el placeholder
-            const allCards = getAllCards();
-            const firstPositions = new Map();
-            allCards.forEach(card => {
-                firstPositions.set(card, card.getBoundingClientRect()); 
-            });
-
-            // 2. LAST: Mover el placeholder (genera el "LAST" en el DOM visual)
-            if (insertPosition === 'BEFORE') {
-                targetElement.parentElement.insertBefore(placeholder, targetElement);
-            } else if (insertPosition === 'AFTER') {
-                targetElement.parentElement.insertBefore(placeholder, targetElement.nextSibling);
-            } else if (insertPosition === 'APPEND') {
-                targetElement.appendChild(placeholder);
-            }
-            
-            // 3. INVERT y PLAY
-            const updatedCards = getAllCards();
-            
-            updatedCards.forEach(card => {
-                if (card === draggedCard) return;
-
-                const firstRect = firstPositions.get(card);
-                const newRect = card.getBoundingClientRect();
-                
-                const deltaX = firstRect.left - newRect.left;
-                const deltaY = firstRect.top - newRect.top;
-
-                // INVERT: Mover la tarjeta visualmente a su posición anterior
-                card.style.transition = 'none';
-                card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-            });
-
-            // Forzar reflow para la animación
-            void document.body.offsetHeight;
-
-            // PLAY: Animar a la posición final
-            updatedCards.forEach(card => {
-                card.style.transition = '';
-                card.style.transform = ''; 
-            });
-        });
-
-        // 4. Lógica de Confirmación/Reversión (DROP)
-        container.addEventListener('drop', (e) => {
-            e.preventDefault();
-            
-            if (!targetElement) {
-                clearLiveTransforms(); 
-                return;
-            }
-
-            // A. FIRST (Guardar la posición visual del live reordering)
-            const allCards = getAllCards();
-            const finalPositions = new Map();
-            allCards.forEach(card => {
-                finalPositions.set(card, card.getBoundingClientRect()); 
-                card.style.transition = 'none';
-            });
-            
-            if (placeholder) {
+            if (placeholder && placeholder.parentNode) {
                 placeholder.remove();
             }
-
-            // B. LAST (Ejecutar la reorganización del DOM en cadena)
             
-            // Paso 1: Obtener el orden lineal actual (antes de la manipulación)
-            const oldLinearOrder = allZones.flatMap(zone => 
-                Array.from(zone.querySelectorAll('.card:not(.dragging)'))
+            lastRectMap.clear();
+            draggedCard = null;
+            placeholder = null;
+            allZones.forEach(zone => zone.classList.remove('drag-over'));
+            dishHandCarousel.classList.remove('drag-over');
+        }
+
+        function getDragAfterElement(container, x) {
+            // Determina la tarjeta o placeholder después de la cual se debe insertar el placeholder.
+            const elements = Array.from(container.children).filter(
+                element => element !== draggedCard && element !== placeholder && element.classList && (element.classList.contains('card') || element.classList.contains('placeholder'))
             );
             
-            // Paso 2: Crear el nuevo orden lineal deseado (Shift-Reordering)
-            let newLinearOrder = [...oldLinearOrder];
-            
-            // Encontrar la posición de inserción en la lista lineal
-            let insertIndex = -1;
-            
-            if (targetElement.classList.contains('card')) {
-                const targetIndex = oldLinearOrder.findIndex(card => card === targetElement);
-                insertIndex = (insertPosition === 'AFTER') ? targetIndex + 1 : targetIndex;
-            } else if (targetElement.classList.contains('drop-zone')) {
-                const zoneIndex = allZones.findIndex(z => z === targetElement);
-                let cardsBefore = 0;
-                for (let i = 0; i < zoneIndex; i++) {
-                    cardsBefore += allZones[i].querySelectorAll('.card').length;
+            if (elements.length === 0) return null; 
+
+            return elements.reduce((closest, child) => {
+                const rect = child.getBoundingClientRect();
+                const center = rect.left + rect.width / 2;
+                const offset = x - center;
+
+                // Solo si el puntero está ANTES del centro del elemento.
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
                 }
-                insertIndex = cardsBefore;
-            }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
 
-            // Insertar el elemento arrastrado en la nueva lista lineal
-            if (insertIndex !== -1) {
-                newLinearOrder.splice(insertIndex, 0, draggedCard);
+        /**
+         * Reordena el DOM de todas las zonas para lograr el efecto cascada en vivo.
+         */
+        function liveReorderAndFlip(currentZone, clientX) {
+            if (!placeholder || !draggedCard) return; // Asegurarse de que estamos en modo MOVER
+            
+            // 1. FIRST: Capture positions before any DOM changes.
+            registerLiveTransforms();
+
+            // 2. Local Reorder: Insert placeholder in the CURRENT zone.
+            if (placeholder.parentNode) placeholder.remove(); 
+            
+            const afterElement = getDragAfterElement(currentZone, clientX);
+            
+            if (afterElement == null) {
+                currentZone.appendChild(placeholder);
+            } else {
+                currentZone.insertBefore(placeholder, afterElement);
             }
             
-            // Paso 3: Reordenar el DOM (Moviendo las tarjetas)
-            let currentZoneIndex = 0;
-            let cardsPlacedInZone = 0;
+            // Si es modo MOVER (lo cual siempre es ahora si llegamos aquí), reordenar globalmente.
+            
+            // 3. Global Reorder
+            // A. Obtener la secuencia global *actual* del DOM.
+            // Incluimos la mano para que la tarjeta arrastrada se pueda mover a la mano y viceversa.
+            let allDropAreas = [...allZones];
+            if (useCreatedDishesCheckbox.checked) {
+                allDropAreas.push(dishHandCarousel);
+            }
+            
+            let currentGlobalSequence = allDropAreas.flatMap(zone => 
+                Array.from(zone.children).filter(el => 
+                    el.classList && (el.classList.contains('card') || el.classList.contains('placeholder')) && el !== draggedCard
+                )
+            );
+            
+            // B. Reconstrucción de las zonas: Limpiar y re-agregar.
+            allZones.forEach(z => {
+                const label = z.querySelector('.zone-label');
+                if(label) label.remove();
+                z.innerHTML = '';
+                if(label) z.appendChild(label); 
+            });
+            // Limpiar la mano también para reconstruir su contenido
+            dishHandCarousel.innerHTML = ''; 
 
-            // Limpiar todas las zonas antes de reinsertar
-            allZones.forEach(zone => {
-                Array.from(zone.querySelectorAll('.card')).forEach(card => card.remove());
+            // C. Apendizar elementos a sus nuevas zonas según CARDS_PER_ZONE
+            currentGlobalSequence.forEach((el, index) => {
+                const targetZoneIndex = Math.floor(index / CARDS_PER_ZONE);
+                
+                // Los elementos que exceden el límite de drop zones (7 días * CARDS_PER_ZONE)
+                // deben regresar a la mano si estamos en modo creado.
+                if (targetZoneIndex < DAYS_COUNT) {
+                    const targetZone = allZones[targetZoneIndex];
+                    if (targetZone) {
+                        targetZone.appendChild(el);
+                    }
+                } else if (useCreatedDishesCheckbox.checked) {
+                    // Si se excede el límite de días, y estamos en modo creado, va a la mano (el "extra").
+                    dishHandCarousel.appendChild(el);
+                }
             });
 
-            newLinearOrder.forEach(card => {
-                if (cardsPlacedInZone >= CARDS_PER_ZONE) {
-                    currentZoneIndex++;
-                    cardsPlacedInZone = 0;
+
+            // 4. INVERT & PLAY: Animar
+            applyFLIPAnimation();
+        }
+        
+        // --- Función de Throttling ---
+        function processDragOverUpdate() {
+            // Solo procesa si estamos moviendo una tarjeta (draggedCard existe) o copiando (placeholder existe)
+            if (lastDragEventData.zone) {
+                liveReorderAndFlip(lastDragEventData.zone, lastDragEventData.clientX); 
+            }
+            isUpdating = false; // Resetear la bandera para permitir el siguiente frame
+        }
+        // ------------------------------
+
+        // ===============================================
+        // LÓGICA DE DATOS Y RENDERIZADO (Se asume correcta)
+        // ===============================================
+        
+        function getRandomElement(arr) {
+            if (!arr || arr.length === 0 || (arr.length === 1 && arr[0] === "-")) return 'N/A';
+            const randomIndex = Math.floor(Math.random() * arr.length);
+            return arr[randomIndex];
+        }
+
+        function getDishEmoji(dishName, selectedPrincipal) {
+            if (INGREDIENT_EMOJI_MAP[dishName]) {
+                return INGREDIENT_EMOJI_MAP[dishName];
+            }
+            const principalObject = menuData?.platos_principales.find(p => p.nombre === dishName);
+            if (principalObject?.principales?.[0] && INGREDIENT_EMOJI_MAP[principalObject.principales[0]]) {
+                return INGREDIENT_EMOJI_MAP[principalObject.principales[0]];
+            }
+            return "🍽️";
+        }
+
+        function getDishDetails(dishName) {
+            if (!menuData || !menuData.platos_principales) {
+                return { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: '🍽️' };
+            }
+
+            const dishObject = menuData.platos_principales.find(p => p.nombre === dishName);
+            if (!dishObject) {
+                return { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: '🍽️' };
+            }
+
+            let principales = (dishObject.principales || []).filter(i => i && i !== '-');
+            let carbohidratos = (dishObject.carbohidratos || []).filter(i => i && i !== '-');
+            let verduras = (dishObject.verduras || []).filter(i => i && i !== '-');
+
+            if (selectedComponentsSet.size > 0) {
+                principales = principales.filter(ing => selectedComponentsSet.has(ing));
+                carbohidratos = carbohidratos.filter(ing => selectedComponentsSet.has(ing));
+                verduras = verduras.filter(ing => selectedComponentsSet.has(ing));
+            }
+
+            if (Object.keys(customIngredients).length > 0) {
+                principales = principales.filter(ing => customIngredients[ing] !== false);
+                carbohidratos = carbohidratos.filter(ing => customIngredients[ing] !== false);
+                verduras = verduras.filter(ing => customIngredients[ing] !== false);
+            }
+
+            const selectedPrincipal = getRandomElement(principales);
+            const selectedCarbohidrato = getRandomElement(carbohidratos);
+            const selectedVerdura = getRandomElement(verduras);
+
+            return {
+                principal: selectedPrincipal,
+                carbohidrato: selectedCarbohidrato,
+                verdura: selectedVerdura,
+                emojiPrincipal: getDishEmoji(dishName, selectedPrincipal)
+            };
+        }
+
+        function getRandomDishes(count) {
+            const consecutiveCount = parseInt(consecutiveMealsSelect.value, 10);
+            const selectedDishes = [];
+            const dishesToSelectFrom = [...allowedDishes];
+
+            for (let i = 0; i < count; i++) {
+                if (dishesToSelectFrom.length === 0) break;
+
+                let randomDishIndex = Math.floor(Math.random() * dishesToSelectFrom.length);
+                let selectedDish = dishesToSelectFrom[randomDishIndex];
+                
+                selectedDishes.push(selectedDish);
+                
+                if ((i % CARDS_PER_ZONE) === 0 && (i + 1) < count) {
+                    for (let j = 1; j < consecutiveCount && (i + j) < count; j++) {
+                        selectedDishes.push(selectedDish);
+                    }
+                    i += consecutiveCount - 1; 
+                }
+
+                const originalLength = dishesToSelectFrom.length;
+                dishesToSelectFrom.splice(randomDishIndex, 1);
+                
+                if (dishesToSelectFrom.length === originalLength) break;
+            }
+            return selectedDishes;
+        }
+
+        function createDishCardHtml(dish) {
+            if (typeof dish === 'string') {
+                const details = getDishDetails(dish);
+                let secondaryEmojis = '';
+                if (details.carbohidrato && details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) {
+                    secondaryEmojis += INGREDIENT_EMOJI_MAP[details.carbohidrato];
+                }
+                if (details.verdura && details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) {
+                    secondaryEmojis += INGREDIENT_EMOJI_MAP[details.verdura];
+                }
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.setAttribute('data-dish', dish);
+
+                const ingredientsListHtml = [details.principal, details.carbohidrato, details.verdura]
+                    .filter(i => i && i !== 'N/A')
+                    .map(i => `<li>${i}</li>`)
+                    .join('');
+
+                card.innerHTML = `
+                    <div class="card-inner-content">
+                        <div class="card-image-zone">
+                            <span class="card-main-emoji">${details.emojiPrincipal}</span>
+                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
+                        </div>
+                        <div class="card-ingredients-zone">
+                            <p class="card-dish-name">${dish}</p>
+                            <ul class="card-ingredients-list">
+                                ${ingredientsListHtml}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return card;
+
+            } else {
+                const principales = dish.principales || [];
+                const carbohidratos = dish.carbohidratos || [];
+                const verduras = dish.verduras || [];
+                
+                const ingredientsList = [
+                    ...principales.map(p => ({name: p.name, emoji: p.emoji})),
+                    ...carbohidratos.map(c => ({name: c.name, emoji: c.emoji})),
+                    ...verduras.map(v => ({name: v.name, emoji: v.emoji})),
+                ].filter(i => i.name && i.name !== 'N/A');
+                
+                const mainEmoji = principales[0]?.emoji || '🍽️'; 
+                const secondaryEmojis = [
+                    carbohidratos[0]?.emoji,
+                    verduras[0]?.emoji
+                ].filter(e => e).join('');
+
+                const cardElement = document.createElement('div');
+                cardElement.classList.add('card');
+                cardElement.setAttribute('draggable', 'true');
+                cardElement.setAttribute('data-dish', dish.name);
+                cardElement.setAttribute('data-dish-json', JSON.stringify(dish)); 
+
+                cardElement.innerHTML = `
+                    <div class="card-inner-content">
+                        <div class="card-image-zone">
+                            <span class="card-main-emoji">${mainEmoji}</span>
+                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
+                        </div>
+                        <div class="card-ingredients-zone">
+                            <p class="card-dish-name">${dish.name}</p>
+                            <ul class="card-ingredients-list">
+                                ${ingredientsList.slice(0, 4).map(i => `<li>${i.name}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                return cardElement;
+            }
+        }
+        
+        function updateCardsPerZone() {
+            CARDS_PER_ZONE = mealsPerDayToggle.checked ? 2 : 1;
+            TOTAL_CARDS = CARDS_PER_ZONE * DAYS_COUNT;
+        }
+        
+        function loadCreatedDishesFromStorage() {
+            const storedDishes = localStorage.getItem(CREATED_DISHES_STORAGE_KEY);
+            if (storedDishes) {
+                try {
+                    createdDishes = JSON.parse(storedDishes);
+                } catch (e) {
+                    console.error("Error al cargar platos creados:", e);
+                    createdDishes = [];
+                }
+            }
+        }
+
+        function renderDishHand() {
+            dishHandCarousel.innerHTML = '';
+            if (createdDishes.length > 0) {
+                createdDishes.forEach(dish => {
+                    const card = createDishCardHtml(dish);
+                    dishHandCarousel.appendChild(card);
+                });
+            } else {
+                dishHandCarousel.innerHTML = '<p style="color: #484f58; margin: auto;">No tienes platos creados en tu colección. Desmarca la casilla para usar platos aleatorios.</p>';
+            }
+        }
+        
+        function renderCards() {
+            
+            updateCardsPerZone(); 
+            const isCreatedMode = useCreatedDishesCheckbox.checked;
+            
+            randomizeButton.style.display = isCreatedMode ? 'none' : 'block';
+            dishHandCarousel.style.display = isCreatedMode ? 'flex' : 'none';
+
+            if (isCreatedMode) {
+                loadingMessage.textContent = 'Modo Platos Creados activo.';
+                renderDishHand();
+                
+                allZones.forEach(zone => {
+                    // Limpia tarjetas existentes para empezar de cero en modo creado
+                    Array.from(zone.children).forEach(child => {
+                        if (child.classList.contains('card') || child.classList.contains('placeholder')) {
+                            child.remove();
+                        }
+                    });
+                    
+                    for (let i = 0; i < CARDS_PER_ZONE; i++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('placeholder');
+                        zone.appendChild(placeholder);
+                    }
+                });
+            } else {
+                loadingMessage.textContent = 'Randomizando menú...';
+                
+                allZones.forEach(zone => zone.innerHTML = `<div class="zone-label">${zone.getAttribute('data-day')}</div>`);
+
+                const randomDishes = getRandomDishes(TOTAL_CARDS);
+                
+                allZones.forEach((zone, zoneIndex) => {
+                    const label = zone.querySelector('.zone-label');
+                    zone.innerHTML = '';
+                    zone.appendChild(label); 
+
+                    const start = zoneIndex * CARDS_PER_ZONE;
+                    const end = start + CARDS_PER_ZONE;
+                    
+                    randomDishes.slice(start, end).forEach(dishName => {
+                        if (dishName) {
+                            zone.appendChild(createDishCardHtml(dishName)); 
+                        }
+                    });
+                    
+                    // Asegurar placeholders si faltan cartas en modo Random (por ejemplo, al final del array)
+                    const currentCards = zone.querySelectorAll('.card').length;
+                    for (let i = currentCards; i < CARDS_PER_ZONE; i++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.classList.add('placeholder');
+                        zone.appendChild(placeholder);
+                    }
+                });
+
+                loadingMessage.textContent = 'Menú listo.';
+                if (randomDishes.length < TOTAL_CARDS) {
+                     loadingMessage.textContent += ` (ADVERTENCIA: Solo se pudieron generar ${randomDishes.length} platos únicos disponibles.)`;
+                }
+            }
+        }
+
+        async function loadMenuData() {
+            try {
+                const menuResponse = await fetch(DATA_URL);
+                if (!menuResponse.ok) throw new Error(`Error al cargar el menú: ${menuResponse.status}`);
+                menuData = await menuResponse.json();
+                allDishes = menuData.platos_principales.map(d => d.nombre);
+                
+                const inventoryResponse = await fetch(INVENTORY_DATA_URL);
+                if (!inventoryResponse.ok) throw new Error(`Error al cargar el inventario: ${inventoryResponse.status}`);
+                const inventoryData = await inventoryResponse.json();
+                
+                INGREDIENT_EMOJI_MAP = {};
+                inventoryData.inventario.forEach(item => {
+                    INGREDIENT_EMOJI_MAP[item.nombre] = item.emoji; 
+                });
+
+                loadSelectionFilters();
+                loadCreatedDishesFromStorage(); 
+
+                // Si estamos en modo creado, primero limpiamos las zonas de ejemplo del HTML
+                if (useCreatedDishesCheckbox.checked) {
+                    allZones.forEach(zone => {
+                        const label = zone.querySelector('.zone-label');
+                        zone.innerHTML = '';
+                        zone.appendChild(label);
+                    });
                 }
                 
-                if (currentZoneIndex < allZones.length) {
-                    allZones[currentZoneIndex].appendChild(card);
-                    cardsPlacedInZone++;
-                }
-            });
+                renderCards(); 
 
-
-            // C. INVERT & PLAY (Animación Final)
-            const updatedCards = getAllCards(); 
-            
-            updatedCards.forEach(card => {
-                const firstRect = finalPositions.get(card);
-                
-                if (!firstRect) return;
-
-                const newRect = card.getBoundingClientRect();
-
-                const deltaX = firstRect.left - newRect.left;
-                const deltaY = firstRect.top - newRect.top;
-
-                // Si hay movimiento, aplicar INVERT
-                if (deltaX !== 0 || deltaY !== 0) {
-                    card.style.transition = 'none';
-                    card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                }
-            });
-
-            // Forzar reflow
-            void document.body.offsetHeight;
-
-            // PLAY
-            updatedCards.forEach(card => {
-                card.style.transition = '';
-                card.style.transform = '';
-            });
-
-            // Limpiar estados
-            clearLiveTransforms();
-        });
-
-        // Limpieza de eventos
-        container.addEventListener('dragend', clearLiveTransforms);
-        container.addEventListener('dragleave', (e) => {
-            if (!container.contains(e.relatedTarget)) {
-                allZones.forEach(z => z.classList.remove('drag-over'));
-                if (placeholder) placeholder.remove();
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                loadingMessage.textContent = `Error al cargar los datos: ${error.message}`;
+                loadingMessage.style.color = 'red';
             }
+        }
+        
+        function loadSelectionFilters() {
+            const selectionString = localStorage.getItem(SELECTION_STORAGE_KEY);
+            if (selectionString) {
+                const selections = JSON.parse(selectionString);
+                selectedComponentsSet = new Set([
+                    ...(Array.isArray(selections.dishes) ? selections.dishes : []), 
+                    ...(Array.isArray(selections.ingredients) ? selections.ingredients : [])
+                ]);
+            } else {
+                selectedComponentsSet = new Set();
+            }
+
+            const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
+            if (customIngString) {
+                customIngredients = JSON.parse(customIngString);
+            } else {
+                customIngredients = {};
+            }
+
+            if (selectedComponentsSet.size > 0) {
+                allowedDishes = allDishes.filter(dishName => selectedComponentsSet.has(dishName));
+            } else {
+                allowedDishes = allDishes;
+            }
+
+            allowedDishes = allowedDishes.filter(dishName => {
+                const dish = menuData.platos_principales.find(d => d.nombre === dishName);
+                if (!dish) return true;
+
+                const allIngredients = [...(dish.principales || []), ...(dish.carbohidratos || []), ...(dish.verduras || [])]
+                    .filter(i => i && i !== '-');
+
+                const hasOmittedIngredient = allIngredients.some(ing => customIngredients[ing] === false);
+
+                return !hasOmittedIngredient; 
+            });
+            
+            if (allowedDishes.length === 0 && !useCreatedDishesCheckbox.checked) {
+                loadingMessage.textContent = 'ADVERTENCIA: No hay platos disponibles con los filtros y omisiones seleccionadas.';
+                loadingMessage.style.color = 'orange';
+            }
+        }
+
+        // ===============================================
+        // DRAG & DROP EVENT LISTENERS (FLIP Y CASCADA)
+        // ===============================================
+
+        document.addEventListener('dragstart', (e) => {
+            const card = e.target.closest('.card');
+            if (!card || !card.hasAttribute('draggable') || card.getAttribute('draggable') === 'false') return;
+
+            const isFromHand = card.closest('#dish-hand-carousel');
+
+            // Crear placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'placeholder card'; 
+            
+            const computedStyle = window.getComputedStyle(card);
+            placeholder.style.width = computedStyle.width;
+            placeholder.style.height = computedStyle.height;
+            placeholder.style.paddingBottom = computedStyle.paddingBottom;
+            placeholder.style.margin = computedStyle.margin;
+
+            // Configurar imagen de arrastre vacía
+            const emptyImg = new Image();
+            emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            e.dataTransfer.setDragImage(emptyImg, 0, 0);
+
+            // AHORA AMBOS CASOS SON TRATADOS COMO OPERACIÓN DE MOVIMIENTO (MOVER)
+            draggedCard = card;
+            draggedCard.classList.add('dragging');
+            
+            e.dataTransfer.setData('text/plain', 'card-move'); 
+            e.dataTransfer.setData('application/x-dish-source', isFromHand ? 'hand-move' : 'zone');
+            e.dataTransfer.effectAllowed = 'move';
+            
+            // Insertar placeholder y ocultar tarjeta real
+            setTimeout(() => {
+                if (draggedCard && draggedCard.parentNode) {
+                    
+                    if (isFromHand) {
+                         // Si viene de la mano, la eliminamos inmediatamente del DOM.
+                         // Se reinsertará al final del drag, ya sea en la zona de drop o en dragend si falla.
+                         draggedCard.remove(); 
+                    } else {
+                         // Si viene de una zona, la reemplazamos con el placeholder.
+                         draggedCard.parentNode.insertBefore(placeholder, draggedCard);
+                    }
+                    draggedCard.style.display = 'none'; 
+                }
+            }, 0); 
+            
+            lastRectMap.clear();
         });
+
+        document.querySelectorAll('.drop-zone, #dish-hand-carousel').forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+
+                lastDragEventData.zone = zone;
+                lastDragEventData.clientX = e.clientX;
+                lastDragEventData.clientY = e.clientY;
+
+                // Mover placeholder inmediatamente para feedback visual.
+                if (placeholder && !isUpdating) {
+                    if (placeholder.parentNode) placeholder.remove(); 
+                    const afterElement = getDragAfterElement(zone, e.clientX);
+                    
+                    if (afterElement == null) {
+                        zone.appendChild(placeholder);
+                    } else {
+                        zone.insertBefore(placeholder, afterElement);
+                    }
+                }
+                
+                // Throttling: Llamar a liveReorderAndFlip solo en el siguiente requestAnimationFrame
+                if (draggedCard && !isUpdating) {
+                    isUpdating = true;
+                    // El draggedCard ahora existe incluso si viene de la mano, por lo que la cascada se activa.
+                    requestAnimationFrame(processDragOverUpdate); 
+                }
+            });
+
+            zone.addEventListener('dragleave', (e) => {
+                if (!zone.contains(e.relatedTarget)) {
+                    zone.classList.remove('drag-over');
+                }
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                
+                if (!placeholder || !draggedCard) {
+                    // Si el drop falló o no se está moviendo nada, limpiamos
+                    if (draggedCard) clearLiveTransforms();
+                    return;
+                }
+                
+                // 1. Capturar posiciones antes de reemplazar el placeholder (para la animación final)
+                registerLiveTransforms(false);
+                
+                // Lógica UNIFICADA MOVER (tanto para zona a zona, como mano a zona)
+                
+                // Si el drop fue en el carrusel (mano), la tarjeta vuelve a la mano.
+                if (zone.id === 'dish-hand-carousel') {
+                    
+                    // Si el placeholder es el que está en la mano, lo reemplazamos.
+                    // Si no, la tarjeta ya fue movida por liveReorderAndFlip
+                    
+                    if (placeholder.parentNode === dishHandCarousel) {
+                        placeholder.parentNode.replaceChild(draggedCard, placeholder);
+                    }
+                    
+                    draggedCard.style.display = ''; 
+                    draggedCard.classList.remove('dragging');
+                    
+                } else {
+                    // Si el drop fue en una zona de día: Reemplazar el placeholder con draggedCard.
+                    draggedCard.style.display = ''; 
+                    draggedCard.classList.remove('dragging');
+                    
+                    // Reemplazar el placeholder con el elemento final
+                    placeholder.parentNode.replaceChild(draggedCard, placeholder);
+                }
+
+
+                // 2. Animar el resto de las tarjetas
+                applyFLIPAnimation();
+
+                // Limpieza final
+                placeholder = null;
+                draggedCard = null; // Finaliza la operación de MOVER
+
+                // Re-renderizar placeholders en modo creado
+                if (useCreatedDishesCheckbox.checked && zone.classList.contains('drop-zone')) {
+                    const currentCards = Array.from(zone.querySelectorAll('.card')).length;
+                    Array.from(zone.querySelectorAll('.placeholder')).forEach(p => p.remove());
+                    // Asegurar que no se exceda el límite de CARDS_PER_ZONE
+                    for (let i = currentCards; i < CARDS_PER_ZONE; i++) {
+                        const newPlaceholder = document.createElement('div');
+                        newPlaceholder.classList.add('placeholder');
+                        zone.appendChild(newPlaceholder);
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('dragend', (e) => {
+            isUpdating = false; 
+
+            // Si draggedCard todavía existe, el drop falló -> Revertir.
+            if (draggedCard) {
+                // 1. Reinsertar draggedCard si no tiene padre (porque vino de la mano)
+                if (!draggedCard.parentNode) {
+                    dishHandCarousel.appendChild(draggedCard);
+                } 
+                // 2. Si placeholder todavía existe (vino de una zona), revertir el reemplazo.
+                else if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.replaceChild(draggedCard, placeholder);
+                }
+                clearLiveTransforms(); 
+            }
+            
+            allZones.forEach(zone => zone.classList.remove('drag-over'));
+            dishHandCarousel.classList.remove('drag-over');
+        });
+
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault(); 
+        });
+
+        // ===============================================
+        // INICIALIZACIÓN
+        // ===============================================
+
+        randomizeButton.addEventListener('click', renderCards);
+        consecutiveMealsSelect.addEventListener('change', renderCards); 
+        mealsPerDayToggle.addEventListener('change', renderCards); 
+        useCreatedDishesCheckbox.addEventListener('change', renderCards);
+        
+        loadMenuData();
     </script>
 </body>
 </html>

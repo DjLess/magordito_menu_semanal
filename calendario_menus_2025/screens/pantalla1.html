@@ -2,363 +2,191 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pantalla 1 - Drag and Drop con Desplazamiento en Vivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafíos y Logros</title>
+
+    <link rel="stylesheet" href="assets/css/card_styles.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
     <style>
-        /* ---------------------------------- */
-        /* ESTILOS CSS                        */
-        /* ---------------------------------- */
+        /* Estilos específicos de la Pantalla de Desafíos */
         body {
             background-color: #0d1117;
             color: #c9d1d9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
         }
 
-        #drop-zones-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 90%;
-            max-width: 600px;
-            margin: 30px auto;
-            padding: 15px;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #161b22;
-        }
-
-        .drop-zone {
-            background-color: #1f242c;
-            border: 2px solid #30363d;
-            border-radius: 4px;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centrado horizontal de la tarjeta */
-            padding: 10px;
-            transition: border-color 0.2s, background-color 0.2s;
-        }
-
-        .zone-label {
-            font-weight: 600;
+        h2 {
             color: #58a6ff;
-            margin-bottom: 5px;
-            font-size: 0.9em;
+            margin-bottom: 30px;
+            font-size: 2em;
         }
 
-        /* Estilo de la tarjeta (elemento arrastrable) */
-        .card {
-            background-color: #2b313a;
-            border: 1px solid #484f58;
-            border-radius: 4px;
-            padding: 8px;
-            margin: 5px 0 0 0;
-            width: 95%;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 500;
-            cursor: grab;
-            user-select: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-            /* 🚀 TRANSICIÓN CLAVE: Aplicada a la posición (transform) */
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10; /* Asegura que la tarjeta arrastrada esté arriba */
-            position: relative; /* Necesario para z-index */
+        #challenges-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adaptable */
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Estilo de carta de Desafío (Basado en .card pero más grande) */
+        .challenge-card {
+            background-color: #21262d;
+            border: 2px solid #484f58;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s;
         }
         
-        /* La tarjeta arrastrada se vuelve casi invisible */
-        .dragging {
-            opacity: 0.1;
-            transform: scale(0.9);
+        .challenge-card:hover {
+            transform: translateY(-5px);
         }
 
-        /* Resalte de zona de drop */
-        .drag-over {
-            border-color: #f75555;
-            background-color: #242931;
+        .challenge-card h3 {
+            color: #ff9800; /* Color de Título del Desafío */
+            margin-top: 0;
+            font-size: 1.2em;
+            border-bottom: 1px solid #484f58;
+            padding-bottom: 5px;
         }
+
+        .challenge-status {
+            font-weight: bold;
+            padding: 5px 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: inline-block;
+            font-size: 0.8em;
+        }
+        
+        /* Colores de Estado */
+        .status-pending { background-color: #505050; color: #f0f6fc; }
+        .status-progress { background-color: #58a6ff; color: #0d1117; }
+        .status-completed { background-color: #238636; color: #f0f6fc; }
+
+        .reward-info {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #c9d1d9;
+        }
+        .reward-info strong {
+             color: #ffc107;
+        }
+        
     </style>
 </head>
 <body>
-    <h2>Pantalla 1</h2>
-    <p>Arrastra una tarjeta y muévete sobre las zonas para ver el <strong>desplazamiento en vivo</strong>.</p>
-
-    <div id="drop-zones-container">
-        <div class="drop-zone" data-day="Lunes">
-            <div class="zone-label">Lunes</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 1">Tarjeta 1</div>
-        </div>
-        <div class="drop-zone" data-day="Martes">
-            <div class="zone-label">Martes</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 2">Tarjeta 2</div>
-        </div>
-        <div class="drop-zone" data-day="Miércoles">
-            <div class="zone-label">Miércoles</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 3">Tarjeta 3</div>
-        </div>
-        <div class="drop-zone" data-day="Jueves">
-            <div class="zone-label">Jueves</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 4">Tarjeta 4</div>
-        </div>
-        <div class="drop-zone" data-day="Viernes">
-            <div class="zone-label">Viernes</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 5">Tarjeta 5</div>
-        </div>
-        <div class="drop-zone" data-day="Sábado">
-            <div class="zone-label">Sábado</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 6">Tarjeta 6</div>
-        </div>
-        <div class="drop-zone" data-day="Domingo">
-            <div class="zone-label">Domingo</div>
-            <div class="card" draggable="true" data-card-name="Tarjeta 7">Tarjeta 7</div>
-        </div>
+    <h2>🏆 Desafíos y Logros Culinarios</h2>
+    <p>Completa desafíos para desbloquear nuevos ingredientes y cartas especiales.</p>
+    
+    <div id="challenges-container">
+        <p id="loading-message">Cargando desafíos...</p>
     </div>
 
     <script>
-        // ----------------------------------
-        //          LÓGICA JAVASCRIPT
-        // ----------------------------------
+        // *** SIMULACIÓN DE DATOS Y ESTADO DEL JUGADOR ***
+        // Nota: En la implementación real, estos datos deben guardarse en localStorage 
+        // o ser parte del estado global de tu aplicación.
+        const CHALLENGES_DB_URL = 'assets/data/challenges_db.json'; // Simulación de ruta
+        const PLAYER_PROGRESS = JSON.parse(localStorage.getItem('playerChallenges')) || {};
 
-        const container = document.getElementById('drop-zones-container');
-        const allZones = Array.from(document.querySelectorAll('.drop-zone'));
-        // Usar una función para obtener la lista actual de tarjetas es más seguro
-        const getAllCards = () => Array.from(document.querySelectorAll('.card')); 
+        const challengesContainer = document.getElementById('challenges-container');
+        const loadingMessage = document.getElementById('loading-message');
 
-        let draggedCard = null;
-        let sourceZone = null;
 
-        // Obtiene la zona de drop basándose en las coordenadas del ratón
-        function getZoneFromPoint(x, y) {
-            let targetZone = null;
-            for (const zone of allZones) {
-                const rect = zone.getBoundingClientRect();
-                const padding = 5; 
-                // Añadir un pequeño margen para hacer más fácil "entrar" a la zona
-                if (x >= rect.left - padding && x <= rect.right + padding && y >= rect.top - padding && y <= rect.bottom + padding) {
-                    targetZone = zone;
-                    break;
+        /**
+         * Función principal para cargar y renderizar los desafíos.
+         */
+        async function loadAndRenderChallenges() {
+            try {
+                // 1. Cargar la base de datos de desafíos (Simulación)
+                // Usar fetch real o asumir que 'MENU_DB' o una similar ya cargó el JSON.
+                // Aquí usamos una simulación de carga para no depender de otro archivo.
+                const response = await fetch('data:application/json;base64,' + btoa(JSON.stringify({ /* Contenido de challenges_db.json aquí */ })));
+                const data = await response.json();
+                const challenges = data.desafios;
+
+                challengesContainer.innerHTML = '';
+                
+                // 2. Renderizar cada desafío
+                challenges.forEach(challenge => {
+                    const progress = PLAYER_PROGRESS[challenge.id] || { completado: false, progreso_actual: 0 };
+                    const card = createChallengeCard(challenge, progress);
+                    challengesContainer.appendChild(card);
+                });
+
+                if (challenges.length === 0) {
+                     loadingMessage.textContent = "No hay desafíos disponibles en este momento.";
                 }
+
+            } catch (error) {
+                loadingMessage.style.color = '#dc3545';
+                loadingMessage.textContent = `Error al cargar desafíos: ${error.message}`;
+                console.error("Fallo la carga de Desafíos:", error);
             }
-            return targetZone;
         }
 
-        // Limpia todas las transformaciones visuales de las tarjetas y restaura el estado
-        function clearLiveTransforms() {
-            const allCards = getAllCards();
-            allCards.forEach(card => {
-                // Restaurar la transición CSS original
-                card.style.transition = '';
-                // Limpiar la transformación para que la tarjeta vuelva a su posición de DOM
-                card.style.transform = '';
-                card.classList.remove('dragging');
-            });
-            allZones.forEach(z => z.classList.remove('drag-over'));
+        /**
+         * Crea el elemento HTML de la tarjeta de desafío.
+         */
+        function createChallengeCard(challenge, progress) {
+            const card = document.createElement('div');
+            card.className = 'challenge-card';
+            card.dataset.id = challenge.id;
+
+            let statusClass, statusText, progressDetail = '';
+            
+            if (progress.completado) {
+                statusClass = 'status-completed';
+                statusText = '<i class="fa-solid fa-check"></i> ¡COMPLETADO!';
+            } else if (progress.progreso_actual > 0) {
+                statusClass = 'status-progress';
+                statusText = 'En Progreso';
+                const total = challenge.objetivo.cantidad || challenge.objetivo.dias_totales;
+                progressDetail = `<p>Progreso: ${progress.progreso_actual} / ${total}</p>`;
+            } else {
+                statusClass = 'status-pending';
+                statusText = 'Pendiente';
+            }
+            
+            card.innerHTML = `
+                <h3>${challenge.nombre}</h3>
+                <p>${challenge.descripcion}</p>
+                <div class="reward-info">
+                    <strong>Recompensa:</strong> ${challenge.recompensa_carta}
+                </div>
+                ${progressDetail}
+                <div class="challenge-status ${statusClass}">${statusText}</div>
+            `;
+
+            return card;
         }
 
-        // Configuración inicial de dragstart
-        getAllCards().forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                draggedCard = card;
-                sourceZone = card.parentElement;
-                card.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', card.getAttribute('data-card-name'));
-            });
+        // Simulación: Iniciar la carga
+        document.addEventListener('DOMContentLoaded', () => {
+             // 💡 SIMULACIÓN DE ESTADO INICIAL 💡
+             // Para probar la visualización:
+             PLAYER_PROGRESS["A001"] = { completado: false, progreso_actual: 1 }; // En progreso
+             PLAYER_PROGRESS["B001"] = { completado: true, progreso_actual: 7 };  // Completado
+             localStorage.setItem('playerChallenges', JSON.stringify(PLAYER_PROGRESS)); // Guardar estado simulado
+
+            loadAndRenderChallenges();
         });
 
-        // 3. Lógica de Vista Previa en Vivo (Dragover) - CORREGIDA
-        container.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            if (!draggedCard || !sourceZone) return;
+    </script>
+    <script>
+        // Cargar el contenido real de challenges_db.json
+        // Reemplaza esta simulación en tu integración final.
+        const challengeDBContent = JSON.parse(atob('eyJkZXNhZmlvcyI6IFt7ImlkIjogIkEwMDEiLCAidGlwbyI6ICJDUkVDSU9OX1BMQVRPIiwgIm5vbWJyZSI6ICJFbCBNYWVzdHJvIFBvbGx1ZWxvIiwgImRlc2NyaXBjaW9uIjogIkNyZWEgMyBQbGF0b3MgVsOhbGlkb3MgcXVlIHV0aWxpY2VuICdQb2xsbycgY29tbyBpbmdyZWRpZW50ZSBwcmluY2lwYWwgZW4gdW5hIHNvbGEgcGFydGlkYSBkZSBDcmVhZG9yIGRlIFBsYXRvcy4iLCAib2JqZXRpdm8iOiB7Im1ldHJpY2EiOiAiaW5ncmVkaWVudGVfcHJpbmNpcGFsX3VzYWRvIiwgImluZ3JlZGllbnRlIjogIlBvbGxvIEFzYWRvIiwgImNhbnRpZGFkIjogMywgInBhcnRpZGFfdW5pY2EiOiB0cnVlfSwgInJlY29tcGVuc2FfbG9ncm8iOiAiTG9ncm86IEVzcGVjaWFsaXN0YSBlbiBBdmVzIiwgInJlY29tcGVuc2FfY2FydGEiOiAiUG9sbG8gUHJlbWl1bSAoQ2FydGEgZGUgSW5ncmVkaWVudGUgbnVldmEpIn0sIHsiaWQiOiAiQTAwMiIsICJ0aXBvIjogIkNSRUVDSU9OX1BMQVRPIiwgIm5vbWJyZSI6ICJGaWVicmUgZGUgUGFzdGEiLCAiZGVzY3JpcGNpb24iOiAiQ3JlYSA0IFBsYXRvcyBWw6FsaWRvcyBxdWUgdXRpbGljZW4gY3VhbHF1aWVyIHRpcG8gZGUgJ1Bhc3RhJyBjb21vIGNhcmJvaGlkcmF0byBhIGxvIGxhcmdvIGRlIGN1YWxxdWllciBudW1lcm8gZGUgcGFydGlkYXMuIiwgIm9iamV0aXZvIjogeyJtZXRyaWNhIjogImNhdGVnb3JpYV91c2FkYSIsICJjYXRlZ29yaWEiOiAiY2FyYm9oaWRyYXRvcyIsICJpbmdyZWRpZW50ZXNfa2V5IjogWyJQYXN0YSBDb3J0YSIsICJQYXN0YSBMYXJnYSJdLCAiY2FudGlkYWQiOiA0LCAicGFydGlkYV91bmljYSI6IGZhbHNlfSwgInJlY29tcGVuc2FfbG9ncm8iOiAiTG9ncm86IFBhc3RhIEFkZGljdCIsICJyZWNvbXBlbnNhX2NhcnRhIjogIlBhc3RhIFJlbGxlbmEgKENhcnRhIGRlIEluZ3JlZGllbnRlIG51ZXZhKSJ9LCB7ImlkIjogIkIwMDEiLCAidGlwbyI6ICJQTEFOSUZJQ0FDSU9OX01FTlUiLCAibm9tYnJlIjogIkRpdmVyc2lkYWQgQWJzb2x1dGEiLCAiZGVzY3JpcGNpb24iOiAiR2VuZXJhIHkgY29uZmlybWEgdW4gTWVuxakgU2VtYW5hbCAoUGFudGFsbGEgMikgY29uIHVuIFBsYXRvIGRpZmVyZW50ZSBjYWRhIGTDrWEgKEx1bmVzIGEgRG9taW5nbykuIiwgIm9iamV0aXZvIjogeyJtZXRyaWNhIjogInBsYXRvc191bmljb3NfZW5fbWVudSIsICJkaWFzX3RvdGFsZXMiOiA3fSwgInJlY29tcGVuc2FfbG9ncm8iOiAiTG9ncm86IEVsIENoZWYgVmVyc2F0aWwiLCAicmVjb21wZW5zYV9jYXJ0YSI6ICJGaWRlbyBkZSBBcnJveiAoQ2FydGEgZGUgSW5ncmVkaWVudGUgbnVldmEpIn0sIHsiaWQiOiAiQjAwMiIsICJ0aXBvIjogIlBMSUFEcnUgTWVuxlUiLCAibm9tYnJlIjogIk1pbmltYWxpc3RhIEVsZWdhbnRlIiwgImRlc2NyaXBjaW9uIjogIkdlbmVyYSB5IGNvbmZpcm1hIHVuIE1lbsO6IFNlbWFuYWwgKFBhbnRhbGxhIDIpIHVzYW5kbyBzb2xvIFBsYXRvcyBxdWUgY29udGVuZ2FuIGV4YWN0YW1lbnRlIDMgaW5ncmVkaWVudGVzIGNsYXZlLiIsICJvYmpldGl2byI6eyJtZXRyaWNhIjogInRvdGFsX2luZ3JlZGllbnRlc19wbGF0byIsICJtYXhfaW5ncmVkaWVudGVzX3Bvcl9wbGF0byI6IDMsICJkaWFzX3RvdGFsZXMiOiA3fSwgInJlY29tcGVuc2FfbG9ncm8iOiAiTG9ncm86IFplbiBkZSBsYSBDb2NpbmEiLCAicmVjb21wZW5zYV9jYXJ0YSI6ICJTYWxzaaSgIFNlY3JldGEgKENhcnRhIFNhesOzbi9Db21vZMSpbiwgcHJvcHVlc3RhKSJ9XX0='));
 
-            const currentX = e.clientX;
-            const currentY = e.clientY;
-            const targetZone = getZoneFromPoint(currentX, currentY);
-            const destinationZone = targetZone || sourceZone; 
-
-            // 3.1. Resaltar la zona de destino
-            allZones.forEach(z => z.classList.remove('drag-over'));
-            if (targetZone) {
-                targetZone.classList.add('drag-over');
-            }
-
-            // 3.2. Calcular el orden hipotético (simulación)
-            const currentCardOrder = allZones.map(zone => zone.querySelector('.card'));
-            const destinationIndex = allZones.indexOf(destinationZone);
-            
-            let liveOrder = [...currentCardOrder];
-
-            // 1. Remover la tarjeta arrastrada de su posición actual
-            const cardToMoveIndex = liveOrder.findIndex(card => card === draggedCard);
-            if (cardToMoveIndex !== -1) {
-                liveOrder.splice(cardToMoveIndex, 1);
-            }
-
-            // 2. Insertar la tarjeta arrastrada en la posición de destino
-            liveOrder.splice(destinationIndex, 0, draggedCard);
-
-            // 3.3. Aplicar Transformaciones (Simulación Animada)
-            currentCardOrder.forEach((currentCardInZone, index) => {
-                
-                if (!currentCardInZone) return; 
-
-                // Encontramos el índice final simulado de esta tarjeta en el DOM
-                const newIndex = liveOrder.findIndex(card => card === currentCardInZone);
-                
-                if (newIndex === -1) return;
-
-                const finalTargetZone = allZones[newIndex];
-                
-                if (finalTargetZone) {
-                    const sourceRect = currentCardInZone.getBoundingClientRect(); // Posición inicial
-                    const finalTargetRect = finalTargetZone.getBoundingClientRect(); // Posición de la ZONA de destino
-                    
-                    // Cálculo de desplazamiento
-                    // X: Desde el centro horizontal de la tarjeta (sourceRect.left) hasta el centro horizontal de la zona (finalTargetRect.left) + un ajuste para el margen.
-                    // Y: Desde el borde superior de la tarjeta hasta el borde superior de la tarjeta en la zona de destino.
-                    
-                    // Como todas las tarjetas están en el mismo margen vertical (5px debajo de .zone-label), 
-                    // simplemente calculamos el movimiento de la esquina superior izquierda de la tarjeta a la posición
-                    // donde estaría si estuviera en la zona de destino.
-                    
-                    // Posición de la tarjeta en su zona de destino (aproximación basada en la zona)
-                    // (Asumimos que el margen superior de la tarjeta dentro de la zona es el mismo en todas las zonas)
-                    
-                    const deltaX = finalTargetRect.left - sourceRect.left;
-                    const deltaY = finalTargetRect.top - sourceRect.top; 
-                    
-                    // NOTA CLAVE: La zona de destino SÓLO tiene el borde y padding.
-                    // El transform se aplica a la tarjeta y la mueve respecto a su posición en el DOM.
-                    // Para que se "ajuste perfectamente" al lugar donde debería quedar, el delta debe ser:
-                    // (Posición del borde superior izquierdo de la ZONA DESTINO) - (Posición del borde superior izquierdo de la ZONA ORIGEN)
-                    
-                    // Para compensar los márgenes de la tarjeta dentro de la zona:
-                    const sourceZoneRect = currentCardInZone.parentElement.getBoundingClientRect();
-
-                    // El desplazamiento es la diferencia de posición de las ZONAS, más el ajuste de la posición inicial de la tarjeta.
-                    // Delta ZONA = (Posición ZONA Destino) - (Posición ZONA Origen)
-                    const deltaXZone = finalTargetRect.left - sourceZoneRect.left;
-                    const deltaYZone = finalTargetRect.top - sourceZoneRect.top;
-
-                    // Posición final = Posición inicial + Delta ZONA
-                    // Ya que `transform` es relativo a la posición actual, solo aplicamos el Delta ZONA.
-                    
-                    currentCardInZone.style.transform = `translate(${deltaXZone}px, ${deltaYZone}px)`;
-                } else {
-                    currentCardInZone.style.transform = '';
-                }
-            });
-        });
-
-        // 4. Lógica de Confirmación/Reversión (DROP)
-        container.addEventListener('drop', (e) => {
-            e.preventDefault();
-            
-            const destinationZone = getZoneFromPoint(e.clientX, e.clientY);
-            
-            // 4.1. Caso REVERSIÓN: Soltado fuera de una zona válida o en la zona de origen
-            // 🛑 CORRECCIÓN: Si el drop es nulo (fuera del contenedor) O no es una zona válida (targetZone es null), revertir.
-            if (!destinationZone) {
-                // Volver a la posición de origen. Se limpian los transforms y se restaura la opacidad.
-                clearLiveTransforms(); 
-                return;
-            }
-
-            // Si se suelta en la zona de origen, también es una reversión
-            if (destinationZone === sourceZone) {
-                clearLiveTransforms();
-                return;
-            }
-
-            // 4.2. Caso PERMANENCIA (Animación FLIP + DOM reordering)
-            
-            // A. FIRST (Posición ANTES de la reorganización DOM)
-            const allCards = getAllCards();
-            const sourceIndex = allZones.indexOf(sourceZone);
-            const destinationIndex = allZones.indexOf(destinationZone);
-            const existingCardInDestination = destinationZone.querySelector('.card:not(.dragging)');
-
-            const finalPositions = new Map();
-            
-            allCards.forEach(card => {
-                // Guardar la posición visual definida por el dragover (el "FIRST" de FLIP)
-                finalPositions.set(card, card.getBoundingClientRect()); 
-                card.style.transition = 'none'; // Desactivar transición
-                card.style.transform = ''; // Quitar transform para obtener posición real (LAST) después del DOM
-            });
-
-            // Forzar un reflow para asegurar que las posiciones se limpien
-            void document.body.offsetHeight;
-            
-            // B. LAST (Ejecutar la reorganización del DOM)
-            
-            let tempExistingCard = null;
-            if (existingCardInDestination) {
-                tempExistingCard = existingCardInDestination;
-                existingCardInDestination.remove();
-            }
-            
-            // Mover la tarjeta arrastrada al destino
-            destinationZone.appendChild(draggedCard);
-
-            // Desplazamiento en Cadena (Lógica simplificada para mover solo una tarjeta)
-            const start = Math.min(sourceIndex, destinationIndex);
-            const end = Math.max(sourceIndex, destinationIndex);
-
-            if (sourceIndex > destinationIndex) { // Movimiento hacia atrás (Ej. Miercoles a Lunes)
-                // Las tarjetas desde el destino hasta el origen - 1 se mueven hacia adelante
-                for (let i = start; i < end; i++) {
-                    const cardToMove = allZones[i].querySelector('.card:not(.dragging)');
-                    if (cardToMove) allZones[i + 1].appendChild(cardToMove);
-                }
-                if (tempExistingCard) {
-                    allZones[start + 1].appendChild(tempExistingCard);
-                }
-            } else { // Movimiento hacia adelante (Ej. Lunes a Miercoles)
-                // Las tarjetas desde el origen + 1 hasta el destino se mueven hacia atrás
-                for (let i = end; i > start; i--) {
-                    const cardToMove = allZones[i].querySelector('.card:not(.dragging)');
-                    if (cardToMove) allZones[i - 1].appendChild(cardToMove);
-                }
-                if (tempExistingCard) {
-                    allZones[end - 1].appendChild(tempExistingCard);
-                }
-            }
-            
-            // Recargar todas las tarjetas nuevamente
-            const updatedCards = getAllCards(); 
-            
-            // C. INVERT & PLAY (Animación Final)
-            updatedCards.forEach(card => {
-                const finalRect = finalPositions.get(card); // Posición FIRST
-                const newRect = card.getBoundingClientRect(); // Posición LAST
-
-                const deltaX = finalRect.left - newRect.left;
-                const deltaY = finalRect.top - newRect.top;
-
-                if (deltaX !== 0 || deltaY !== 0) {
-                    // INVERT: Mover la tarjeta visualmente a su posición anterior al drop
-                    card.style.transition = 'none';
-                    card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                } else {
-                    card.style.transform = '';
-                }
-            });
-
-            // Forzar reflow
-            void document.body.offsetHeight;
-
-            // PLAY: Animar a la posición final
-            updatedCards.forEach(card => {
-                card.style.transition = ''; // Restaura la transición del CSS
-                card.style.transform = '';  // Anima a la posición final en el DOM (posición LAST)
-            });
-
-            // Limpiar la clase dragging
-            if (draggedCard) draggedCard.classList.remove('dragging');
-        });
+        // Nota: En la versión final, asegúrate de que el script de carga de tu aplicación
+        // (`load_screen.js` o `main.js`) incluya el manejo de la nueva base de datos.
     </script>
 </body>
 </html>

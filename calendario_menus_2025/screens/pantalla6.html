@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Rápida de Menú</title>
+    <style>
+        /* Estilos Base - Oscuro y Amigable */
+        body {
+            background-color: #f7f9fc; /* Fondo claro para contraste */
+            color: #333;
+            font-family: 'Poppins', sans-serif; /* Fuente moderna */
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Contenedor Principal del Wizard */
+        #wizard-container {
+            width: 100%;
+            max-width: 650px;
+            background-color: #ffffff;
+            border-radius: 20px; /* Bordes muy redondeados */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #4A90E2; /* Azul vibrante */
+            text-align: center;
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            color: #777;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Estilos de los Pasos (Contenido) */
+        .step-content {
+            display: none; /* Ocultar por defecto */
+            text-align: left;
+            min-height: 200px; /* Altura mínima para evitar saltos */
+        }
+        .step-content.active {
+            display: block; /* Mostrar el paso activo */
+        }
+        
+        .step-content h3 {
+            font-size: 1.4em;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 25px;
+            border-left: 5px solid #4A90E2;
+            padding-left: 15px;
+        }
+
+        /* Estilo de los Botones de Opción (Radio/Checkbox) */
+        .option-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .option-button {
+            flex-grow: 1;
+            padding: 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            background-color: #fff;
+            max-width: 45%;
+            min-width: 150px;
+        }
+
+        .option-button:hover {
+            border-color: #9acafc;
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.1);
+        }
+
+        .option-button.selected {
+            border-color: #4A90E2;
+            background-color: #e6f0ff; /* Fondo claro para seleccionado */
+            color: #4A90E2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.2);
+        }
+        
+        .option-description {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Estilo para Inputs Numericos */
+        input[type="number"] {
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* Estilos del Contenedor de Restricciones (Step 4) */
+        .restriction-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.1s;
+        }
+        .restriction-item:hover {
+            background-color: #f0f0f0;
+        }
+        .restriction-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 15px;
+            accent-color: #4A90E2;
+        }
+        .restriction-item label {
+            flex-grow: 1;
+            font-size: 1.05em;
+        }
+
+        /* Navegación y Barra de Progreso */
+        #navigation-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .nav-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        #prev-button {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        #next-button {
+            background-color: #4A90E2;
+            color: white;
+        }
+
+        #next-button:hover {
+            background-color: #5d9ee6;
+            transform: translateY(-1px);
+        }
+
+        /* Barra de Progreso */
+        #progress-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        #progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #7BC043; /* Verde de progreso */
+            transition: width 0.4s ease;
+            border-radius: 5px;
+        }
+
+        #progress-text {
+            font-size: 0.9em;
+            color: #777;
+        }
+        
+        /* Estilo para el Paso Final de Resumen */
+        #step-finish-content {
+            text-align: center;
+        }
+
+        #summary {
+            background-color: #f7f7f7;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        #summary p {
+            margin: 8px 0;
+            font-size: 1.05em;
+            border-left: 3px solid #7BC043;
+            padding-left: 10px;
+        }
+        .save-button {
+            display: inline-block;
+            background-color: #7BC043;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        .save-button:hover {
+            background-color: #8ccf50;
+            transform: translateY(-1px);
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="wizard-container">
+        <h2>Configuración Rápida de Menú</h2>
+        <p class="subtitle">Personaliza tu plan en unos sencillos pasos.</p>
+        
+        <div class="step-content active" id="step-1">
+            <h3>Paso 1: Define tu Base Alimentaria</h3>
+
+            <label style="font-weight: 600; display: block; margin-bottom: 10px;">¿Qué tipo de dieta sigues?</label>
+            <div class="option-grid" data-key="tipoDieta">
+                <div class="option-button" data-value="tradicional">Tradicional</div>
+                <div class="option-button" data-value="pescetariano">Pescetariano</div>
+                <div class="option-button" data-value="vegetariano">Vegetariano</div>
+                <div class="option-button" data-value="vegano">Vegano</div>
+            </div>
+
+            <label style="font-weight: 600; display: block; margin-top: 20px; margin-bottom: 10px;">Mantengo una alimentación...</label>
+            <div class="option-grid" data-key="carbohidratos">
+                <div class="option-button" data-value="regular">Regular (Incluye Carbohidratos)</div>
+                <div class="option-button" data-value="hipocalorica">Hipocalórica (Menos/Sin Carbohidratos)</div>
+            </div>
+        </div>
+
+        <div class="step-content" id="step-2">
+            <h3>Paso 2: Estilo de Ingredientes</h3>
+
+            <label style="font-weight: 600; display: block; margin-bottom: 15px;">¿Deseas incluir productos Gourmet o usamos una canasta tradicional?</label>
+            <div class="option-grid" data-key="estiloGourmet">
+                <div class="option-button" data-value="gourmet">
+                    Gourmet <br><span class="option-description">(Ingredientes Premium/Especiales)</span>
+                </div>
+                <div class="option-button" data-value="tradicional">
+                    Tradicional <br><span class="option-description">(Ingredientes Básicos y Comunes)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-content" id="step-3">
+            <h3>Paso 3: Frecuencia de Comidas</h3>
+
+            <label style="font-weight: 600; display: block; margin-bottom: 15px;">¿Cuántas comidas deseas planificar para cada día (Almuerzo/Cena)?</label>
+            <div class="option-grid" data-key="frecuenciaComidas">
+                <div class="option-button" data-value="solo_1">
+                    Solo 1 <br><span class="option-description">(Ej. Solo Almuerzo)</span>
+                </div>
+                <div class="option-button" data-value="almuerzo_cena">
+                    Almuerzo y Cena <br><span class="option-description">(Mayor Variedad Diaria)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content" id="step-4">
+            <h3>Paso 4: Restricciones de Salud</h3>
+
+            <p style="margin-bottom: 20px;">Selecciona todas las restricciones o alergias que apliquen en tu hogar:</p>
+            
+            <div data-key="restricciones" style="max-height: 250px; overflow-y: auto; padding-right: 10px;">
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-gluten" data-restriction="gluten">
+                    <label for="rest-gluten">Sin Gluten</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-lactosa" data-restriction="lactosa">
+                    <label for="rest-lactosa">Sin Lactosa</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-frutos_secos" data-restriction="frutos_secos">
+                    <label for="rest-frutos_secos">Sin Frutos Secos</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-mariscos" data-restriction="mariscos">
+                    <label for="rest-mariscos">Sin Mariscos</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-soja" data-restriction="soja">
+                    <label for="rest-soja">Sin Soja</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-huevo" data-restriction="huevo">
+                    <label for="rest-huevo">Sin Huevo</label>
+                </div>
+                <div class="restriction-item">
+                    <input type="checkbox" id="rest-ninguna" data-restriction="ninguna">
+                    <label for="rest-ninguna">Ninguna Restricción (Marcar si no aplica ninguna de las anteriores)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-content" id="step-5">
+            <h3>Paso 5: Tamaño de la Familia</h3>
+
+            <label for="num-personas" style="font-weight: 600; display: block; margin-bottom: 10px;">¿Cuántas personas son en tu casa?</label>
+            <p class="option-description" style="margin-bottom: 20px;">Esto nos ayudará a calcular las cantidades de ingredientes exactas.</p>
+            <input type="number" id="num-personas" data-key="personas" min="1" max="15" value="1" required>
+        </div>
+        
+        <div class="step-content" id="step-6">
+            <h3>Paso 6: Resumen y Guardar</h3>
+
+            <p>Confirma tus elecciones antes de continuar. Puedes volver atrás para modificarlas.</p>
+            
+            <div id="summary">
+                </div>
+            
+            <button class="save-button" onclick="saveAllFiltersAndNavigate()">Guardar Configuración y Continuar</button>
+            <p id="save-status" style="margin-top: 15px; color: #7BC043; font-weight: bold;"></p>
+        </div>
+
+
+        <div id="navigation-bar">
+            <button id="prev-button" class="nav-button" onclick="navigateStep(-1)" disabled>← Anterior</button>
+            <button id="next-button" class="nav-button" onclick="navigateStep(1)">Siguiente →</button>
+        </div>
+        
+        <div id="progress-container">
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+            <p id="progress-text">Paso 1 de 6</p>
+        </div>
+
+    </div>
+    
+    <script>
+        const STORAGE_KEY = 'menuWizardConfig';
+        const TOTAL_STEPS = 6;
+        let currentStep = 1;
+        let configData = {};
+
+        // ===============================================
+        // LÓGICA DE NAVEGACIÓN Y UI
+        // ===============================================
+
+        function showStep(step) {
+            // 1. Ocultar todos los pasos y mostrar el activo
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`step-${step}`).classList.add('active');
+
+            // 2. Actualizar barra de progreso
+            const progress = (step / TOTAL_STEPS) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `Paso ${step} de ${TOTAL_STEPS}`;
+
+            // 3. Controlar botones de navegación
+            document.getElementById('prev-button').disabled = step === 1;
+            document.getElementById('navigation-bar').style.display = step === TOTAL_STEPS ? 'none' : 'flex';
+            
+            // 4. Si es el paso final (Resumen), generar el resumen
+            if (step === TOTAL_STEPS) {
+                generateSummary();
+            }
+        }
+
+        function navigateStep(direction) {
+            // Recoger datos antes de cambiar de paso (excepto en el paso final)
+            if (direction === 1 && currentStep < TOTAL_STEPS) {
+                if (!collectDataFromStep(currentStep)) return; // Validar y recoger
+            }
+            
+            let newStep = currentStep + direction;
+
+            if (newStep >= 1 && newStep <= TOTAL_STEPS) {
+                currentStep = newStep;
+                showStep(currentStep);
+            }
+        }
+        
+        // ===============================================
+        // LÓGICA DE RECOLECCIÓN Y PERSISTENCIA DE DATOS
+        // ===============================================
+
+        function collectDataFromStep(step) {
+            const stepContent = document.getElementById(`step-${step}`);
+            
+            switch(step) {
+                case 1:
+                    const tipoDietaElement = stepContent.querySelector('.option-grid[data-key="tipoDieta"] .selected');
+                    const carbohidratosElement = stepContent.querySelector('.option-grid[data-key="carbohidratos"] .selected');
+                    
+                    if (!tipoDietaElement || !carbohidratosElement) {
+                        alert('Por favor, selecciona una opción para Dieta y Carbohidratos.');
+                        return false;
+                    }
+                    configData.tipoDieta = tipoDietaElement.dataset.value;
+                    configData.carbohidratos = carbohidratosElement.dataset.value;
+                    break;
+                case 2:
+                    const estiloElement = stepContent.querySelector('.option-grid[data-key="estiloGourmet"] .selected');
+                    if (!estiloElement) {
+                        alert('Por favor, selecciona una opción de Estilo.');
+                        return false;
+                    }
+                    configData.estiloGourmet = estiloElement.dataset.value;
+                    break;
+                case 3:
+                    const frecuenciaElement = stepContent.querySelector('.option-grid[data-key="frecuenciaComidas"] .selected');
+                    if (!frecuenciaElement) {
+                        alert('Por favor, selecciona la frecuencia de comidas.');
+                        return false;
+                    }
+                    configData.frecuenciaComidas = frecuenciaElement.dataset.value;
+                    break;
+                case 4:
+                    const selectedRestrictions = [];
+                    stepContent.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+                        selectedRestrictions.push(checkbox.dataset.restriction);
+                    });
+                    
+                    if (selectedRestrictions.length === 0) {
+                        alert('Por favor, selecciona al menos una restricción o "Ninguna Restricción".');
+                        return false;
+                    }
+                    // Si solo se selecciona 'ninguna', la guardamos como tal. Si se selecciona alguna otra, la guardamos.
+                    configData.restricciones = selectedRestrictions.includes('ninguna') && selectedRestrictions.length === 1
+                        ? ['ninguna'] 
+                        : selectedRestrictions.filter(r => r !== 'ninguna');
+                    break;
+                case 5:
+                    const numPersonasInput = document.getElementById('num-personas');
+                    const personas = parseInt(numPersonasInput.value, 10);
+                    
+                    if (isNaN(personas) || personas < 1) {
+                        alert('Por favor, introduce un número válido de personas (mínimo 1).');
+                        return false;
+                    }
+                    configData.personas = personas;
+                    break;
+            }
+            
+            return true;
+        }
+
+        function generateSummary() {
+            // Asegurarse de que los datos del último paso (si se llegó al resumen con next) están recogidos
+            collectDataFromStep(TOTAL_STEPS - 1); 
+            
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = ''; 
+            
+            // Mapeo para nombres más amigables en el resumen
+            const friendlyNames = {
+                tipoDieta: 'Tipo de Dieta',
+                carbohidratos: 'Nivel de Carbohidratos',
+                estiloGourmet: 'Estilo de Ingredientes',
+                frecuenciaComidas: 'Frecuencia de Comidas',
+                restricciones: 'Restricciones de Salud',
+                personas: 'Número de Personas'
+            };
+
+            for (const key in configData) {
+                let value = configData[key];
+                let displayValue = '';
+
+                if (Array.isArray(value)) {
+                    // Si es un array (Restricciones), lo formatea
+                    displayValue = value.map(v => v.charAt(0).toUpperCase() + v.slice(1).replace('_', ' ')).join(', ');
+                } else if (typeof value === 'string') {
+                    // Formato de texto simple (Capitaliza la primera letra)
+                    displayValue = value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ');
+                } else {
+                    displayValue = value;
+                }
+
+                summaryDiv.innerHTML += `<p><strong>${friendlyNames[key] || key}:</strong> ${displayValue}</p>`;
+            }
+        }
+        
+        function saveAllFilters() {
+            // Guardar en localStorage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(configData));
+            console.log('Configuración final guardada:', configData);
+        }
+        
+        function saveAllFiltersAndNavigate() {
+            // 1. Guardar los datos del último paso (Personas)
+            if (!collectDataFromStep(TOTAL_STEPS - 1)) return;
+            
+            // 2. Guardar la configuración
+            saveAllFilters(); 
+            
+            // 3. Mostrar mensaje de estado
+            const statusElement = document.getElementById('save-status');
+            statusElement.textContent = '✅ Configuración guardada correctamente. Redirigiendo...';
+            
+            // 4. Redirigir usando la función de navegación del main.js
+            // NOTA IMPORTANTE: Asumimos que `MapsTo` de main.js está disponible globalmente.
+            setTimeout(() => {
+                if (typeof navigateTo === 'function') {
+                    navigateTo('pantalla5'); // Navega a la pantalla de Ajuste Fino
+                } else {
+                    // Fallback en caso de que main.js no esté cargado
+                    window.location.href = 'pantalla5.html'; 
+                }
+            }, 1000);
+        }
+
+        function loadConfig() {
+            const storedConfig = localStorage.getItem(STORAGE_KEY);
+            if (storedConfig) {
+                configData = JSON.parse(storedConfig);
+                applyConfigToUI();
+            } else {
+                // Inicializar datos del paso 5 si no hay config previa
+                configData.personas = 1; 
+            }
+        }
+        
+        function applyConfigToUI() {
+            // Aplicar selecciones de botón (Pasos 1, 2, 3)
+            document.querySelectorAll('.option-grid').forEach(grid => {
+                const key = grid.dataset.key;
+                const savedValue = configData[key];
+                if (savedValue) {
+                    const button = grid.querySelector(`[data-value="${savedValue}"]`);
+                    if (button) {
+                        button.classList.add('selected');
+                    }
+                }
+            });
+
+            // Aplicar selecciones de restricciones (checkboxes) (Paso 4)
+            if (configData.restricciones && Array.isArray(configData.restricciones)) {
+                configData.restricciones.forEach(restrictionKey => {
+                    const checkbox = document.querySelector(`[data-restriction="${restrictionKey}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    }
+                });
+            }
+            
+            // Aplicar valor de personas (Paso 5)
+            if (configData.personas) {
+                 document.getElementById('num-personas').value = configData.personas;
+            }
+        }
+
+
+        // ===============================================
+        // MANEJO DE EVENTOS (CLICK EN BOTONES DE OPCIÓN)
+        // ===============================================
+        
+        function handleOptionClick(event) {
+            const button = event.target.closest('.option-button');
+            if (!button) return;
+
+            const grid = button.parentElement;
+            
+            // Limpiar selección previa en este grupo
+            grid.querySelectorAll('.option-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            // Marcar el botón actual
+            button.classList.add('selected');
+        }
+        
+        function handleRestrictionClick(event) {
+             const target = event.target.closest('.restriction-item');
+             if (!target) return;
+             
+             const checkbox = target.querySelector('input[type="checkbox"]');
+             if (!checkbox) return;
+             
+             // Alternar el estado
+             checkbox.checked = !checkbox.checked;
+                 
+             // Lógica especial para 'Ninguna Restricción'
+             if (checkbox.dataset.restriction === 'ninguna') {
+                 if (checkbox.checked) {
+                     document.querySelectorAll('[data-restriction]:not([data-restriction="ninguna"])').forEach(otherCheckbox => {
+                         otherCheckbox.checked = false;
+                     });
+                 }
+             } else if (checkbox.checked) {
+                 // Si se selecciona otra restricción, deseleccionar 'Ninguna'
+                 document.querySelector('[data-restriction="ninguna"]').checked = false;
+             }
+        }
+
+        // ===============================================
+        // INICIALIZACIÓN
+        // ===============================================
+        window.onload = () => {
+            loadConfig();
+            showStep(currentStep);
+            
+            // Añadir manejadores de eventos para los botones de opción (radio-like)
+            document.querySelectorAll('.option-grid').forEach(grid => {
+                grid.addEventListener('click', handleOptionClick);
+            });
+            
+            // Añadir manejadores de eventos para las restricciones (checkboxes)
+            document.querySelectorAll('.restriction-item').forEach(item => {
+                item.addEventListener('click', handleRestrictionClick);
+            });
+        };
+        
+    </script>
+</body>
+</html>

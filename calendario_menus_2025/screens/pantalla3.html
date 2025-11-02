@@ -3,399 +3,1644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag and Drop - Reordenamiento Horizontal y Rebalanceo (Final)</title>
+    <title>Pantalla 7: Creador de Platos</title>
+    
     <style>
-        /* ---------------------------------- */
-        /* ESTILOS CSS */
-        /* ---------------------------------- */
-        html {
-            box-sizing: border-box;
-        }
-        *, *::before, *::after {
-            box-sizing: inherit;
+        /* ======================================================================= */
+        /* VARIABLES Y BASE */
+        /* ======================================================================= */
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --card-bg-color: #2b313a; 
+            --card-border-color: #484f58;
+            --selection-color: #58a6ff;
+            --success-color: #238636;
+            --failure-color: #a00000;
+            --lift-amount: 20px; 
+            
+            /* VARIABLES PARA TARJETA DE INGREDIENTE (54px) */
+            --ing-card-width: 54px; 
+            --ing-card-aspect-ratio: calc(70 / 49); 
+            --ing-card-calculated-height: calc(var(--ing-card-width) * var(--ing-card-aspect-ratio)); 
+            --overlap-margin: calc(-1 * var(--ing-card-width) * 0.40); 
+            
+            /* VARIABLES PARA TARJETA DE PLATO (80px - ESTILO NAIPE) */
+            --dish-card-width: 80px; 
+            --dish-card-aspect-ratio: calc(70 / 49);
+            --dish-card-calculated-height: calc(var(--dish-card-width) * var(--dish-card-aspect-ratio));
         }
 
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
             padding: 10px;
             text-align: center;
-            font-size: 0.9em;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        /* ... (Estilos de Top Bar, Stats, Action Buttons - sin cambios significativos) ... */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5px 10px 5px; 
+            flex-shrink: 0;
         }
 
         h2 {
-            font-size: 1.2em;
-            margin-bottom: 5px;
+            font-size: 1.5em;
+            margin: 0; 
+            color: var(--selection-color);
         }
 
-        /* Contenedor principal a 2 columnas */
-        #drop-zones-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            width: 95%;
-            max-width: 600px;
-            margin: 10px auto;
-            padding: 10px;
+        #show-recipes-button {
+            background-color: #f0f6fc; 
+            color: #1f242b;
+            border: none;
+            padding: 8px 12px; 
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            font-size: 0.8em; 
+            min-width: unset; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        #main-game-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; 
+            padding: 5px 0 10px 0;
+            overflow: hidden;
+            position: relative; 
+        }
+
+        #stats-container {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background-color: #161b22;
             border: 1px solid #30363d;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            font-size: 0.75em;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--selection-color);
+        }
+        .stat-value.success {
+            color: var(--success-color);
+        }
+        .stat-value.danger {
+            color: var(--failure-color);
+        }
+
+        #dish-board {
+            height: 32vh; 
+            margin-bottom: 15px;
+            border: 2px dashed #30363d;
+            border-radius: 8px;
+            background-color: #161b22;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; 
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            position: relative; 
+        }
+        
+        #board-placeholder {
+            font-size: 1.1em;
+            color: #484f58;
+            transition: opacity 0.3s;
+        }
+        
+        #result-message {
+            position: absolute;
+            top: 10px; 
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-out;
+            z-index: 200;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+        }
+
+        #result-message.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        #result-message.success {
+            background-color: rgba(35, 134, 54, 0.9); 
+            border: 2px solid var(--success-color);
+        }
+
+        #result-message.failure {
+            background-color: rgba(139, 0, 0, 0.9); 
+            border: 2px solid var(--failure-color);
+        }
+
+        #action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px; 
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        #action-buttons button {
+            border: none;
+            padding: 10px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s, opacity 0.2s;
+            font-size: 0.9em;
+            min-width: 100px; 
+        }
+        
+        #play-cards-button {
+            background-color: var(--success-color); 
+            color: white;
+        }
+        #discard-cards-button {
+            background-color: #8b0000; 
+            color: white;
+        }
+        #show-dishes-button { 
+            background-color: #58a6ff;
+            color: white;
+        }
+        #shuffle-cards-button {
+            background-color: #ffa500; 
+            color: white;
+            display: none; 
+        }
+        #reset-game-button {
+            background-color: #880000; 
+            color: white;
+        }
+
+        #action-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ======================================================================= */
+        /* CARRUSEL DE CARTAS (MANO DE CARTAS) */
+        /* ======================================================================= */
+        #card-carousel {
+            height: calc(var(--ing-card-calculated-height) + var(--lift-amount) + 20px); 
+            display: flex;
+            gap: 0px; 
+            overflow-x: hidden; 
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #161b22;
+            align-items: flex-end; 
+            flex-shrink: 0; 
+            position: relative; 
+            justify-content: flex-start; 
+        }
+        
+        /* ======================================================================= */
+        /* ESTILO DE LA CARTA DE INGREDIENTE (MANTENIENDO 54px) */
+        /* ======================================================================= */
+        .ingredient-card {
+            flex: 0 0 var(--ing-card-width);
+            width: var(--ing-card-width);
+            height: 0;
+            padding-bottom: var(--ing-card-calculated-height); 
+            
+            background-color: var(--card-bg-color); 
+            border: 2px solid var(--card-border-color); 
+            border-radius: 10px;
+            
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            margin-top: var(--lift-amount); 
+            user-select: none;
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s, opacity 0.3s, margin-top 0.2s;
+            cursor: pointer;
+            
+            padding: 5px; 
+            padding-bottom: var(--ing-card-calculated-height); 
+            
+            margin-right: var(--overlap-margin); 
+            transform-origin: bottom center; 
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s, opacity 0.3s, margin-top 0.2s, margin-right 0.2s; 
+        }
+        
+        .ingredient-card:last-child {
+            margin-right: 0; 
+        }
+
+        .ingredient-card > div {
+            position: absolute;
+            top: 5px; 
+            left: 5px; 
+            width: calc(100% - 10px); 
+            height: calc(100% - 10px); 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            
+            background-color: #1f242b; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+        }
+
+        .card-corner {
+            position: absolute;
+            font-size: 0.9em; 
+            font-weight: 700;
+            line-height: 1;
+            z-index: 5;
+            color: var(--text-color);
+            pointer-events: none; 
+        }
+        
+        .corner-top-left {
+            top: 7px;
+            left: 7px;
+        }
+        
+        .corner-bottom-right {
+            bottom: 7px;
+            right: 7px;
+            transform: rotate(180deg); 
+        }
+
+        .card-emoji {
+            font-size: 2em; 
+            line-height: 1;
+            margin-top: 5px;
+            flex-grow: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-name {
+            font-size: 0.7em; 
+            font-weight: 600;
+            text-align: center;
+            padding: 0 3px;
+            height: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden; 
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        
+        /* Colores de Marco por Tipo */
+        .ingredient-card[data-type="Principal"] {
+            border-color: #ff4081; 
+        }
+        .ingredient-card[data-type="Carbohidrato"] {
+            border-color: #ffeb3b; 
+        }
+        .ingredient-card[data-type="Verdura"] {
+            border-color: #4caf50; 
+        }
+        .ingredient-card[data-type="Custom"] {
+            border-color: #ffa500; 
+        }
+        
+        .ingredient-card.selected {
+            transform: translateY(calc(-1 * var(--lift-amount))) translateX(0px); 
+            border-color: var(--selection-color);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.6), 0 0 10px var(--selection-color);
+        }
+        
+        .ingredient-card.played {
+            cursor: default;
+            margin-top: 0;
+            transform: none !important; 
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+        }
+        
+        /* Animaciones */
+        .ingredient-card.combining {
+            transition: transform 0.5s ease-in-out, opacity 0.5s, box-shadow 0.5s; 
+            z-index: 10;
+        }
+
+        .ingredient-card.new-card {
+            opacity: 0;
+            transition: opacity 0.5s ease-out, transform 0.2s ease-out, box-shadow 0.2s, border-color 0.2s, margin-top 0.2s, margin-right 0.2s; 
+        }
+        
+        /* ======================================================================= */
+        /* ESTILO DE LA CARTA DE PLATO RESULTANTE (SIN ANIMACIÓN) */
+        /* ======================================================================= */
+        .result-dish-card {
+            /* Base Card Dimensions */
+            width: var(--dish-card-width); 
+            height: 0;
+            padding-bottom: var(--dish-card-calculated-height); 
+            
+            /* Base Card Visuals */
+            background-color: var(--card-bg-color); 
+            border: 2px solid var(--success-color); 
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5); 
+            
+            /* Positioning (Instant Centering) */
+            margin-top: 0;
+            cursor: default;
+            position: absolute; 
+            z-index: 100;
+            top: 50%; /* Centrado vertical */
+            left: 50%; /* Centrado horizontal */
+            transform: translate(-50%, -50%); /* Ajuste final de centrado */
+            padding: 0; 
+            user-select: none;
+            /* Se elimina la transición para que aparezca instantáneamente */
+            transition: none !important; 
+        }
+        
+        /* Contenido Interno (Naipe) */
+        .result-dish-card .card-inner-content {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex;
+            flex-direction: column;
+            padding: 3px; 
+            box-sizing: border-box;
+            background-color: #1f242b; 
+            border-radius: 6px;
+        }
+        
+        /* Zona Superior: Principal y Secundarios */
+        .result-dish-card .card-image-zone {
+            flex: 0 0 50%;
+            width: 100%;
+            display: flex;
+            flex-direction: column; /* Nuevo: Para apilar Principal arriba y Carb/Verd abajo */
+            justify-content: space-around;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            background-color: #38404a; 
+            padding: 1px 0;
+        }
+
+        .result-dish-card .card-main-emoji {
+            /* Ahora contiene el emoji del Ingrediente Principal */
+            font-size: 1.7em; 
+            line-height: 1; 
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.4), 0 0 7px rgba(0, 0, 0, 0.8);
+            flex-grow: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1px;
+            flex-basis: 50%; /* Para que tome la mitad superior de la zona de imagen */
+        }
+
+        .result-dish-card .card-secondary-emojis {
+            /* Ahora contiene los emojis de Carbohidrato y Verdura */
+            flex: 0 0 auto;
+            display: flex; 
+            gap: 5px; 
+            font-size: 1.5em; 
+            line-height: 1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+            flex-basis: 30%; /* Para que tome la mitad inferior de la zona de imagen */
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Zona Inferior: Nombre y Lista (con Hover) */
+        .result-dish-card .card-ingredients-zone {
+            flex: 1; 
+            width: 100%;
+            background-color: #38404a;
+            border-radius: 4px;
+            padding: 0.1px;
+            overflow: hidden;
+            color: #f0f6fc;
+            text-align: center;
+            font-size: 0.8em;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .result-dish-card .card-dish-name, .result-dish-card .card-ingredients-list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            padding: 2px;
+            box-sizing: border-box;
+            transition: opacity 0.2s ease-in-out;
+            margin: 0; 
+        }
+
+        .result-dish-card .card-dish-name {
+            opacity: 1; 
+            font-size: 0.8em; 
+            font-weight: 600;
+        }
+
+        .result-dish-card .card-ingredients-list {
+            opacity: 0; 
+            pointer-events: none;
+            text-align: left;
+            font-size: 0.65em;
+            line-height: 1;
+            white-space: nowrap;
+            list-style: none;
+            padding: 0 3px;
+            margin: 0;
+            justify-content: flex-start;
+            padding-top: 3px;
+        }
+        
+        .result-dish-card:hover .card-dish-name {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .result-dish-card:hover .card-ingredients-list {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .result-dish-card .card-ingredients-list li {
+            width: 100%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* ======================================================================= */
+        /* POP-UP STYLES (Ajustando el tamaño del plato en el coleccionable) */
+        /* ======================================================================= */
+        .popup {
+            display: none; 
+            position: fixed;
+            z-index: 300; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        /* ... (otros estilos de pop-up) ... */
+
+        /* Ajuste de estilo para tarjetas dentro del pop-up de platos creados (ESCALADO A 70px) */
+        #collected-dishes-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .collected-dishes .result-dish-card {
+            position: relative; 
+            flex: 0 0 70px; /* Tamaño de 70px para el pop-up */
+            width: 70px; 
+            height: auto;
+            padding-bottom: calc(70px * var(--dish-card-aspect-ratio));
+            opacity: 1 !important; 
+            transform: none !important; 
+            margin-top: 0;
+            border-color: var(--success-color); 
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5); 
+            transition: none !important; /* Asegurar que no hay animación en el pop-up */
+        }
+
+        /* Ajuste de tamaño de emoji y texto para el pop-up (70px) */
+        .collected-dishes .result-dish-card .card-main-emoji { 
+            font-size: 1.5em !important; 
+        }
+        .collected-dishes .result-dish-card .card-secondary-emojis {
+            font-size: 1.3em !important;
+        }
+        .collected-dishes .result-dish-card .card-dish-name {
+            font-size: 0.8em !important;
+        }
+        .collected-dishes .result-dish-card .card-ingredients-list {
+            font-size: 0.6em !important; 
+        }
+
+        /* ... (el resto de estilos de pop-up) ... */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .popup-content {
+            background-color: var(--bg-color);
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 650px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .popup-content h3 {
+            color: var(--success-color);
+            margin-top: 0;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        #available-recipes-container {
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .recipe-item {
+            border: 1px solid #30363d;
+            border-left: 5px solid var(--selection-color);
+            padding: 10px;
+            margin-bottom: 15px;
             border-radius: 6px;
             background-color: #161b22;
         }
-
-        /* Contenedor (drop-zone) */
-        .drop-zone {
-            background-color: #1f242c;
-            border: 2px solid #30363d;
-            border-radius: 4px;
-            min-height: 90px; 
-            overflow: hidden;
-            
+        
+        .recipe-item h4 {
+            margin: 0 0 5px 0;
+            color: var(--success-color);
+            font-size: 1.1em;
             display: flex;
-            flex-direction: row; /* Diseño horizontal */
-            align-items: flex-start; 
-            flex-wrap: wrap; 
-            padding: 5px;
-            transition: border-color 0.2s, background-color 0.2s;
+            align-items: center;
         }
 
-        .zone-label {
-            font-weight: 600;
-            color: #58a6ff;
-            margin-bottom: 5px; 
-            font-size: 0.8em;
-            align-self: flex-start;
-            width: 100%; 
+        .recipe-item .recipe-ingredients {
+            font-size: 0.9em;
+            color: #8b949e;
+            margin: 5px 0;
+        }
+        
+        .recipe-item .recipe-ingredients strong {
+            color: var(--text-color);
+            display: block;
+            margin-top: 3px;
             padding-left: 5px;
         }
 
-        /* Tarjeta (card) a 49px x 70px */
-        .card {
-            background-color: #2b313a;
-            border: 1px solid #484f58;
-            border-radius: 4px;
-            padding: 3px; 
-            margin: 0 3px; 
-            
-            width: 49px; 
-            height: 70px; 
-            
-            font-size: 0.7em; 
-            display: flex;
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center;
-            font-weight: 500;
-            cursor: move; 
-            user-select: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10;
-            position: relative;
-        }
-        
-        .dragging {
-            opacity: 0.1;
-            transform: scale(0.9);
-        }
-        
-        .placeholder {
-            opacity: 0;
-            width: 49px; 
-            height: 70px;
-            margin: 0 3px; 
-            transition: none;
-        }
-        
-        .drag-over {
-            border-color: #f75555;
-            background-color: #242931;
-        }
     </style>
 </head>
 <body>
-    <h2>Reordenamiento de Plan de Comidas (Pantalla 2)</h2>
 
-    <div id="drop-zones-container">
-        <div class="drop-zone" data-day="Lunes">
-            <div class="zone-label">Lunes</div>
-            <div class="card" draggable="true" data-card-id="1-almuerzo">1 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="1-cena">1 - Cena</div>
+    <div id="top-bar">
+        <h2>Mini-Juego: Creador de Platos 👨‍🍳</h2>
+        <button id="show-recipes-button">📜 Recetas</button>
+    </div>
+    
+    <div id="stats-container">
+        <div class="stat-item">
+            <span class="stat-label">Platos Creados</span>
+            <span id="score-value" class="stat-value success">0</span>
         </div>
-        <div class="drop-zone" data-day="Martes">
-            <div class="zone-label">Martes</div>
-            <div class="card" draggable="true" data-card-id="2-almuerzo">2 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="2-cena">2 - Cena</div>
+        <div class="stat-item">
+            <span class="stat-label">Manos Restantes (Jugar)</span>
+            <span id="plays-remaining-value" class="stat-value">5</span>
         </div>
-        <div class="drop-zone" data-day="Miércoles">
-            <div class="zone-label">Miércoles</div>
-            <div class="card" draggable="true" data-card-id="3-almuerzo">3 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="3-cena">3 - Cena</div>
+        <div class="stat-item">
+            <span class="stat-label">Descartes Restantes</span>
+            <span id="discards-remaining-value" class="stat-value">5</span>
         </div>
-        <div class="drop-zone" data-day="Jueves">
-            <div class="zone-label">Jueves</div>
-            <div class="card" draggable="true" data-card-id="4-almuerzo">4 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="4-cena">4 - Cena</div>
+    </div>
+    
+    <div id="main-game-area">
+        
+        <div id="dish-board">
+            <span id="board-placeholder">Selecciona hasta 3 ingredientes y **JUEGA** para colocarlos aquí.</span>
         </div>
-        <div class="drop-zone" data-day="Viernes">
-            <div class="zone-label">Viernes</div>
-            <div class="card" draggable="true" data-card-id="5-almuerzo">5 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="5-cena">5 - Cena</div>
+        
+        <div id="action-buttons">
+            <button id="play-cards-button" disabled>Jugar Tarjetas (0)</button>
+            <button id="discard-cards-button" disabled>Descartar Tarjetas</button>
+            <button id="reset-game-button" style="background-color: #880000; color: white;">Reiniciar Juego</button>
+            <button id="shuffle-cards-button" style="display: none;">Rebarajar</button> <button id="show-dishes-button">Ver Platos Creados (0)</button>
         </div>
-        <div class="drop-zone" data-day="Sábado">
-            <div class="zone-label">Sábado</div>
-            <div class="card" draggable="true" data-card-id="6-almuerzo">6 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="6-cena">6 - Cena</div>
-        </div>
-        <div class="drop-zone" data-day="Domingo">
-            <div class="zone-label">Domingo</div>
-            <div class="card" draggable="true" data-card-id="7-almuerzo">7 - Almuerzo</div>
-            <div class="card" draggable="true" data-card-id="7-cena">7 - Cena</div>
+
+        <div id="card-carousel">
+            </div>
+    </div>
+    
+    <div id="dish-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-button">&times;</span>
+            <h3>Platos Creados Exitosamente</h3>
+            <div id="collected-dishes-container" class="collected-dishes">
+                <p id="no-dishes-message">Aún no has creado ningún plato exitosamente.</p>
+            </div>
         </div>
     </div>
 
+    <div id="recipe-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-button" id="close-recipes-popup">&times;</span>
+            <h3>Recetario de Platos Disponibles 📜</h3>
+            <div id="available-recipes-container">
+                </div>
+        </div>
+    </div>
+
+
     <script>
-        const container = document.getElementById('drop-zones-container');
-        const allZones = Array.from(document.querySelectorAll('.drop-zone'));
-        // Función auxiliar para obtener todas las tarjetas visibles
-        const getAllCards = () => Array.from(document.querySelectorAll('.card:not(.placeholder)')); 
-        const CARDS_PER_ZONE = 2; 
+        // ===============================================
+        // DATOS BASE Y CONFIGURACIÓN DE LOCAL STORAGE
+        // ===============================================
 
-        let draggedCard = null;
-        let sourceZone = null;
-        let targetElement = null;
-        let insertPosition = null;
-        let placeholder = null; 
+        const BASE_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/';
+        const MENU_DB_PATH = BASE_DATA_URL + 'menu_db.json';
+        const INVENTORY_DATA_URL = BASE_DATA_URL + 'inventario_db.json';
 
-        function clearLiveTransforms() {
-            const allCards = getAllCards();
-            allCards.forEach(card => {
-                card.style.transition = '';
-                card.style.transform = '';
-                card.classList.remove('dragging');
-            });
-            allZones.forEach(z => z.classList.remove('drag-over'));
-            
-            if (placeholder) {
-                placeholder.remove();
+        const DISH_EMOJI_MAP = {
+            "Pasta Clásica con Salsa (a elección)": "🍝", "Bowl de Arroz, Proteína y Vegetales": "🍚",
+            "Proteína con Papa y Ensalada/Guiso": "🥔", "Garbanzos y Proteína con Acompañamiento": "🫘",
+            "Porotos Negros con Proteína y Vegetales": "🥫", "Hamburguesa Completa (Carne o Vegana)": "🍔",
+            "Sándwich de Proteína (Carne o Vegana)": "🥪", "Plato de Sopa (con Legumbres o Proteína)": "🥣",
+            "Salteado Vegano Completo": "🍜", "Pizza Casera con Ensalada": "🍕",
+            "Tallarines en Salsa Alfredo con Proteína": "🍝", "Charquicán Chileno Tradicional": "🍲",
+            "Empanada (Pino o Queso) con Ensalada": "🥟", "Hummus con Verduras y Pan Pita": "🥙",
+            "Ensalada Completa": "🥗",
+        };
+
+        let ALL_DISH_RECIPES = []; 
+
+        function setupDishRecipes(menuDb) {
+            if (!menuDb || !menuDb.platos_principales) {
+                console.error("Base de datos de menús no válida o incompleta.");
+                showMessage("ERROR: La base de datos de platos está vacía o es incorrecta.", 'failure');
+                return;
             }
-            placeholder = null;
-
-            targetElement = null;
-            insertPosition = null;
-            draggedCard = null; 
-            sourceZone = null;
+            ALL_DISH_RECIPES = menuDb.platos_principales.map(dish => {
+                return {
+                    name: dish.nombre,
+                    // MODIFICACIÓN 2: Se elimina el fallback a "🍽️"
+                    emoji: DISH_EMOJI_MAP[dish.nombre] || "", 
+                    carbohidratos: dish.carbohidratos || [],
+                    principales: dish.principales || [],
+                    verduras: dish.verduras || [],
+                };
+            });
+            console.log("Recetas de platos cargadas y procesadas desde la librería externa:", ALL_DISH_RECIPES);
         }
 
-        // Configuración de Drag Start/End
-        getAllCards().forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                draggedCard = card;
-                sourceZone = card.parentElement;
-                card.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', card.getAttribute('data-card-id'));
-                e.dataTransfer.effectAllowed = 'move'; 
-                
-                placeholder = document.createElement('div');
-                placeholder.classList.add('card', 'placeholder');
-                placeholder.style.height = `${draggedCard.offsetHeight}px`; 
-                placeholder.style.width = `${draggedCard.offsetWidth}px`;
-            });
-            card.addEventListener('dragend', clearLiveTransforms);
-        });
+        const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
+        const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
+        const STANDARD_ING_STORAGE_KEY = 'standardIngredientsConfig'; 
 
-        // Lógica para determinar el punto de inserción exacto (Horizontal basado en X)
-        function getClosestElement(container, x) {
-            const cardsInContainer = Array.from(container.querySelectorAll('.card:not(.placeholder)'))
-                .filter(card => card !== draggedCard); 
-            
-            // Caso 1: Contenedor vacío
-            if (cardsInContainer.length === 0) {
-                return { element: container.querySelector('.zone-label'), position: 'AFTER_LABEL' };
+        let ALL_INGREDIENTS = [];
+        let INGREDIENT_EMOJI_MAP = {};
+        let AVAILABLE_INGREDIENT_POOL = [];
+        let ALL_INGREDIENT_OBJECTS = new Map();
+
+        async function loadFilteredIngredients() {
+            let selectedItems = new Set();
+            let customIngredients = {};
+            let standardIngredientsConfig = {};
+
+            let inventory;
+            try {
+                const response = await fetch(INVENTORY_DATA_URL);
+                if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
+                inventory = await response.json();
+            } catch (e) {
+                console.error("Error al cargar inventario_db.json. La librería 'inventario_db' falló.", e);
+                showMessage("ERROR: Fallo al cargar la librería de Inventario.", 'failure');
+                inventory = { inventario: [] };
             }
 
-            let closest = { element: null, distance: Infinity, position: null };
+            try {
+                const storedSelection = localStorage.getItem(SELECTION_STORAGE_KEY);
+                if (storedSelection) selectedItems = new Set(JSON.parse(storedSelection).filter(item => !item.startsWith('Plato')));
+                const storedCustom = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
+                if (storedCustom) customIngredients = JSON.parse(storedCustom);
+                const storedStandard = localStorage.getItem(STANDARD_ING_STORAGE_KEY);
+                if (storedStandard) standardIngredientsConfig = JSON.parse(storedStandard);
+            } catch(e) {
+                console.warn("No se pudo cargar la configuración de localStorage. Usando inventario base sin filtrar.", e);
+            }
 
-            for (const card of cardsInContainer) {
-                const rect = card.getBoundingClientRect();
+            const finalIngredients = [];
+            const emojiMap = {};
+            ALL_INGREDIENT_OBJECTS.clear();
+
+            const useFullBase = selectedItems.size === 0 && Object.keys(customIngredients).length === 0;
+
+            inventory.inventario
+                .filter(ing => ing.activo)
+                .forEach(ing => {
+                    const ingName = ing.nombre;
+                    const isSelected = selectedItems.has(ingName);
+
+                    if (useFullBase || isSelected) {
+                        const config = standardIngredientsConfig[ingName] || {};
+                        const ingredientData = {
+                            id: ingName,
+                            name: ingName,
+                            type: ing.categoria.charAt(0).toUpperCase() + ing.categoria.slice(1),
+                            emoji: ing.emoji,
+                            availability: Math.max(1, config.availability || ing.cantidad_disponible || 1), 
+                            isCustom: false,
+                            baseName: ingName
+                        };
+                        finalIngredients.push(ingredientData);
+                        emojiMap[ingName] = ing.emoji;
+                        ALL_INGREDIENT_OBJECTS.set(ingName, ingredientData);
+                    }
+                });
+
+            Object.values(customIngredients).forEach(customIng => {
+                if (customIng.nombre && customIng.selected) {
+                    const ingName = customIng.nombre;
+                    const typeLabel = customIng.categoria.charAt(0).toUpperCase() + customIng.categoria.slice(1);
+                    const ingredientData = {
+                        id: ingName,
+                        name: ingName + ' (P)',
+                        baseName: ingName,
+                        type: typeLabel,
+                        emoji: "✨",
+                        availability: Math.max(1, customIng.availability || 1), 
+                        isCustom: true
+                    };
+                    finalIngredients.push(ingredientData);
+                    emojiMap[ingName] = ingredientData.emoji;
+                    ALL_INGREDIENT_OBJECTS.set(ingName, ingredientData);
+                }
+            });
+
+            ALL_INGREDIENTS = finalIngredients;
+            INGREDIENT_EMOJI_MAP = emojiMap;
+
+            AVAILABLE_INGREDIENT_POOL = [];
+            ALL_INGREDIENT_OBJECTS.forEach(ing => {
+                const count = ing.availability; 
+                for (let i = 0; i < count; i++) {
+                    AVAILABLE_INGREDIENT_POOL.push(ing.id);
+                }
+            });
+
+            AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
+
+
+            if (AVAILABLE_INGREDIENT_POOL.length === 0) {
+                showMessage("No hay ingredientes disponibles en el inventario para jugar.", 'failure');
+            }
+
+            return true; 
+        }
+
+        // ===============================================
+        // LÓGICA DE JUEGO
+        // ===============================================
+        function checkRecipeMatch(ingredients) {
+            if (ingredients.length === 0) return null;
+
+            for (const recipe of ALL_DISH_RECIPES) {
+                const recipeRequiresCarbo = recipe.carbohidratos.length > 0 && !recipe.carbohidratos.includes('-');
+                const recipeRequiresPrincipal = recipe.principales.length > 0 && !recipe.principales.includes('-');
+                const recipeRequiresVerdura = recipe.verduras.length > 0 && !recipe.verduras.includes('-');
+
+                const carboReqMet = !recipeRequiresCarbo || ingredients.some(ing => 
+                    ing.type === 'Carbohidrato' && recipe.carbohidratos.some(reqIng => ing.baseName ? ing.baseName.includes(reqIng) : ing.id.includes(reqIng))
+                );
+                const principalReqMet = !recipeRequiresPrincipal || ingredients.some(ing => 
+                    ing.type === 'Principal' && recipe.principales.some(reqIng => ing.baseName ? ing.baseName.includes(reqIng) : ing.id.includes(reqIng))
+                );
+                const verduraReqMet = !recipeRequiresVerdura || ingredients.some(ing => 
+                    ing.type === 'Verdura' && recipe.verduras.some(reqIng => ing.baseName ? ing.baseName.includes(reqIng) : ing.id.includes(reqIng))
+                );
                 
-                // Calculamos la distancia horizontal del cursor (x) al centro de la tarjeta
-                const cardCenter = rect.left + rect.width / 2;
-                const distanceX = Math.abs(x - cardCenter);
-                
-                if (distanceX < closest.distance) {
-                    closest.distance = distanceX;
-                    closest.element = card;
-                    // Determinamos si el cursor está a la izquierda (BEFORE) o derecha (AFTER) del centro.
-                    closest.position = (x < cardCenter) ? 'BEFORE' : 'AFTER'; 
+                if (carboReqMet && principalReqMet && verduraReqMet) {
+                    return { ...recipe, requiredCount: ingredients.length }; 
                 }
             }
-            
-            // CORRECCIÓN de Límites: Aseguramos que si el cursor está muy a la derecha del último
-            // elemento (pero aún sobre la zona), siempre se devuelva la posición 'AFTER' del último.
-             if (cardsInContainer.length > 0) {
-                const lastCardRect = cardsInContainer[cardsInContainer.length - 1].getBoundingClientRect();
-                 if (x > lastCardRect.right && closest.element === cardsInContainer[cardsInContainer.length - 1]) {
-                    closest.position = 'AFTER';
-                 }
-            }
+            return null;
+        }
 
-            return closest;
+        // --- CONFIGURACIÓN DE JUEGO ---
+        const MAX_SELECTION = 3;
+        const CAROUSEL_SIZE = 8;
+        const INITIAL_PLAYS = 5;
+        const INITIAL_DISCARDS = 5;
+
+        // --- ELEMENTOS DOM ---
+        const carousel = document.getElementById('card-carousel');
+        const dishBoard = document.getElementById('dish-board');
+        const mainGameArea = document.getElementById('main-game-area'); 
+        const playButton = document.getElementById('play-cards-button');
+        const discardButton = document.getElementById('discard-cards-button');
+        const resetGameButton = document.getElementById('reset-game-button');
+        const shuffleButton = document.getElementById('shuffle-cards-button'); 
+        const boardPlaceholder = document.getElementById('board-placeholder');
+        const scoreValueElement = document.getElementById('score-value');
+        const playsRemainingElement = document.getElementById('plays-remaining-value');
+        const discardsRemainingElement = document.getElementById('discards-remaining-value');
+        const showDishesButton = document.getElementById('show-dishes-button');
+        const dishPopup = document.getElementById('dish-popup');
+        const closeButton = dishPopup.querySelector('.close-button');
+        const collectedDishesContainer = document.getElementById('collected-dishes-container');
+        const noDishesMessage = document.getElementById('no-dishes-message');
+        const recipePopup = document.getElementById('recipe-popup');
+        const closeRecipesButton = document.getElementById('close-recipes-popup');
+        const showRecipesButton = document.getElementById('show-recipes-button');
+        const availableRecipesContainer = document.getElementById('available-recipes-container');
+
+        // --- ESTADO DEL JUEGO ---
+        let selectedCards = [];
+        let isProcessingPlay = false;
+        let resultMessageElement;
+        let score = loadGameData('score', 0); 
+        let playsRemaining = loadGameData('playsRemaining', INITIAL_PLAYS); 
+        let discardsRemaining = loadGameData('discardsRemaining', INITIAL_DISCARDS); 
+        let successfullyCreatedDishes = loadGameData('successfullyCreatedDishes', []); 
+        let usedIngredientIds = loadGameData('usedIngredientIds', []); 
+
+        function saveGameData(key, data) {
+            localStorage.setItem(`dishCreator_${key}`, JSON.stringify(data));
+        }
+
+        function loadGameData(key, defaultValue) {
+            const data = localStorage.getItem(`dishCreator_${key}`);
+            if (data) {
+                try {
+                    return JSON.parse(data);
+                } catch (e) {
+                    console.error("Error parsing stored data for key:", key, e);
+                    return defaultValue;
+                }
+            }
+            return defaultValue;
         }
         
-        // Uso de listeners para dragover/drop
-        allZones.forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move'; 
+        function updateStats() {
+            scoreValueElement.textContent = score;
+            playsRemainingElement.textContent = playsRemaining;
+            showDishesButton.textContent = `Ver Platos Creados (${successfullyCreatedDishes.length})`;
+            
+            saveGameData('score', score);
+            saveGameData('playsRemaining', playsRemaining);
+            saveGameData('discardsRemaining', discardsRemaining);
+            
+            if (playsRemaining <= 0) {
+                playsRemainingElement.classList.add('danger');
+            } else {
+                playsRemainingElement.classList.remove('danger');
+            }
 
-                if (!draggedCard || !placeholder) return;
-
-                zone.classList.add('drag-over');
-
-                const currentX = e.clientX;
-
-                // ⭐️ Solo pasamos la coordenada X para la lógica horizontal
-                const closestResult = getClosestElement(zone, currentX); 
+            if (discardsRemaining <= 0) {
+                discardsRemainingElement.classList.add('danger');
+            } else {
+                discardsRemainingElement.classList.remove('danger');
+            }
+            
+            updateShuffleButtonVisibility(); 
+        }
+        
+        function updateShuffleButtonVisibility() {
+            const cardsInCarousel = carousel.children.length;
+            
+            if (cardsInCarousel === 0 && AVAILABLE_INGREDIENT_POOL.length === 0) {
+                shuffleButton.style.display = 'inline-block';
+                playButton.disabled = true;
+                discardButton.disabled = true;
+                shuffleButton.disabled = usedIngredientIds.length === 0;
                 
-                targetElement = closestResult.element;
-                insertPosition = closestResult.position;
-                
-                // Mover el placeholder (sin restricción de capacidad)
-                if (targetElement) {
-                    const parent = targetElement.parentElement;
-                    if (insertPosition === 'BEFORE' && targetElement.classList.contains('card')) {
-                        parent.insertBefore(placeholder, targetElement);
-                    } else if (insertPosition === 'AFTER' && targetElement.classList.contains('card')) {
-                        parent.insertBefore(placeholder, targetElement.nextSibling);
-                    } 
-                    else if (insertPosition === 'AFTER_LABEL' && targetElement.classList.contains('zone-label')) {
-                        parent.insertBefore(placeholder, targetElement.nextSibling);
-                    }
-                }
-                
-                // Animación FLIP (FIRST, INVERT, PLAY) para el movimiento suave
-                const allCards = getAllCards();
-                const firstPositions = new Map();
-                allCards.forEach(card => {
-                    firstPositions.set(card, card.getBoundingClientRect()); 
-                });
-                
-                const updatedCards = getAllCards();
-                updatedCards.forEach(card => {
-                    if (card === draggedCard) return;
-                    const firstRect = firstPositions.get(card);
-                    if (!firstRect) return;
-                    const newRect = card.getBoundingClientRect();
-                    const deltaX = firstRect.left - newRect.left;
-                    const deltaY = firstRect.top - newRect.top;
-
-                    card.style.transition = 'none';
-                    card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                });
-
-                void document.body.offsetHeight; 
-
-                updatedCards.forEach(card => {
-                    card.style.transition = '';
-                    card.style.transform = ''; 
-                });
-            });
-
-            zone.addEventListener('dragleave', (e) => {
-                 // Simplificación de dragleave para mayor robustez
-                 if (!zone.contains(e.relatedTarget) || !e.relatedTarget || e.relatedTarget.id === 'drop-zones-container' || e.relatedTarget.tagName === 'BODY') {
-                     zone.classList.remove('drag-over');
-                }
-            });
-
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                
-                if (!draggedCard) {
-                    clearLiveTransforms(); 
-                    return;
-                }
-
-                // 1. FIRST (Guardar la posición para la animación)
-                const allCardsIncludingPlaceholder = Array.from(container.querySelectorAll('.card:not(.dragging)'));
-                const finalPositions = new Map();
-                allCardsIncludingPlaceholder.forEach(card => {
-                    finalPositions.set(card, card.getBoundingClientRect()); 
-                    card.style.transition = 'none';
-                });
-                
-                // 2. LAST (Mover la tarjeta arrastrada al DOM)
-                const dropTargetZone = placeholder?.parentElement;
-                if (dropTargetZone) {
-                    dropTargetZone.insertBefore(draggedCard, placeholder);
-                    placeholder.remove(); 
+                if (usedIngredientIds.length === 0) {
+                    shuffleButton.textContent = 'Mazo Vacío (0)';
                 } else {
-                    clearLiveTransforms();
-                    return;
+                    shuffleButton.textContent = `Rebarajar (${usedIngredientIds.length} cartas)`;
+                }
+            } else {
+                shuffleButton.style.display = 'none';
+            }
+        }
+
+        // ===============================================
+        // MANEJO DE CARTAS DE INGREDIENTE
+        // ===============================================
+
+        function createCardElement(ingredientId) {
+            const ingData = ALL_INGREDIENT_OBJECTS.get(ingredientId);
+            if (!ingData) {
+                console.error(`Datos no encontrados para el ingrediente: ${ingredientId}`);
+                return null;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'ingredient-card new-card';
+            card.setAttribute('data-id', ingData.id);
+            card.setAttribute('data-name', ingData.name);
+            card.setAttribute('data-type', ingData.type);
+
+            card.innerHTML = `
+                <div>
+                    <span class="card-corner corner-top-left">${ingData.type.charAt(0)}</span>
+                    <span class="card-emoji">${ingData.emoji}</span>
+                    <span class="card-name">${ingData.name}</span>
+                    <span class="card-corner corner-bottom-right">${ingData.type.charAt(0)}</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => toggleCardSelection(card));
+            return card;
+        }
+
+        function toggleCardSelection(card) {
+            if (isProcessingPlay) return;
+
+            const cardId = card.getAttribute('data-id');
+            const isSelected = card.classList.contains('selected');
+
+            if (isSelected) {
+                card.classList.remove('selected');
+                selectedCards = selectedCards.filter(id => id !== cardId);
+            } else {
+                if (selectedCards.length < MAX_SELECTION) {
+                    card.classList.add('selected');
+                    selectedCards.push(cardId);
+                } else {
+                    showMessage("Solo puedes seleccionar un máximo de 3 tarjetas.", 'failure');
+                }
+            }
+            updateActionButtons();
+        }
+
+        function drawRandomCardId() {
+            if (AVAILABLE_INGREDIENT_POOL.length === 0) {
+                 return null; 
+            }
+            
+            const cardId = AVAILABLE_INGREDIENT_POOL.pop(); 
+            return cardId;
+        }
+
+        function fillCarousel() {
+            const cardsNeeded = CAROUSEL_SIZE - carousel.children.length;
+
+            if (cardsNeeded <= 0) return;
+
+            const newCardIds = [];
+            for (let i = 0; i < cardsNeeded; i++) {
+                const newId = drawRandomCardId();
+                if (newId) {
+                    newCardIds.push(newId);
+                } else {
+                    break; 
+                }
+            }
+
+            const newCardElements = []; 
+            
+            newCardIds.forEach(id => {
+                const cardElement = createCardElement(id);
+                if (cardElement) {
+                    carousel.appendChild(cardElement);
+                    newCardElements.push(cardElement); 
+                }
+            });
+            
+            void carousel.offsetHeight; 
+            
+            newCardElements.forEach(card => {
+                setTimeout(() => {
+                    card.classList.remove('new-card');
+                }, 50); 
+            });
+            
+            updateStats(); 
+        }
+
+        function updateActionButtons() {
+            const count = selectedCards.length;
+            playButton.textContent = `Jugar Tarjetas (${count})`;
+            
+            const hasPlays = playsRemaining > 0;
+            const hasDiscards = discardsRemaining > 0;
+            const hasSelection = count > 0;
+
+            playButton.disabled = !hasSelection || !hasPlays || isProcessingPlay;
+            discardButton.disabled = !hasSelection || !hasDiscards || isProcessingPlay;
+        }
+
+        function handlePlayCards() {
+            if (isProcessingPlay || selectedCards.length === 0 || playsRemaining <= 0) return;
+
+            isProcessingPlay = true;
+            playsRemaining--;
+            
+            dishBoard.innerHTML = '';
+            boardPlaceholder.style.opacity = '0';
+
+            const playedCardsData = [];
+            const cardsToMove = [];
+            
+            selectedCards.forEach(id => {
+                const card = carousel.querySelector(`.ingredient-card[data-id="${id}"].selected`);
+                if (card) {
+                    const clone = card.cloneNode(true); 
+                    clone.classList.remove('selected');
+                    clone.classList.add('played');
+                    
+                    clone.removeEventListener('click', toggleCardSelection); 
+
+                    const startRect = card.getBoundingClientRect();
+                    
+                    card.style.opacity = '0';
+                    card.style.transition = 'none';
+                    card.classList.add('combining');
+                    cardsToMove.push(card); 
+
+                    dishBoard.appendChild(clone);
+
+                    const endRect = clone.getBoundingClientRect();
+                    const deltaX = startRect.left - endRect.left;
+                    const deltaY = startRect.top - endRect.top;
+
+                    clone.style.transition = 'none';
+                    clone.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                    void clone.offsetHeight;
+                    
+                    setTimeout(() => {
+                        clone.style.transition = 'transform 0.5s ease-out, opacity 0.3s';
+                        clone.style.transform = 'translate(0, 0)';
+                    }, 50);
+
+                    playedCardsData.push(ALL_INGREDIENT_OBJECTS.get(id));
+                }
+            });
+            
+            const selectedCardsForHistory = selectedCards; 
+            
+            setTimeout(() => {
+                const matchingRecipe = checkRecipeMatch(playedCardsData);
+                
+                if (matchingRecipe) {
+                    showMessage(`¡Plato Creado! ${matchingRecipe.emoji} ${matchingRecipe.name}`, 'success');
+                    
+                    const resultCard = handleSuccessfulDish(matchingRecipe, playedCardsData);
+                    
+                    // MODIFICACIÓN 1: Reducción del tiempo de espera (sin animación)
+                    setTimeout(() => {
+                        clearBoard(true, resultCard); 
+                        
+                        usedIngredientIds.push(...selectedCardsForHistory); 
+                        saveGameData('usedIngredientIds', usedIngredientIds); 
+                        
+                        removePlayedCards(cardsToMove);
+                        selectedCards = [];
+                        updateActionButtons();
+                        fillCarousel();
+                        isProcessingPlay = false;
+                        updateStats(); 
+                    }, 800); 
+
+                } else {
+                    showMessage("No se encontró ninguna receta válida. 😞", 'failure');
+                    
+                    // MODIFICACIÓN 1: Reducción del tiempo de espera (sin animación)
+                    setTimeout(() => {
+                        clearBoard(false, null);
+                        
+                        usedIngredientIds.push(...selectedCardsForHistory); 
+                        saveGameData('usedIngredientIds', usedIngredientIds); 
+                        
+                        removePlayedCards(cardsToMove);
+                        selectedCards = [];
+                        updateActionButtons();
+                        fillCarousel();
+                        isProcessingPlay = false;
+                        updateStats();
+                    }, 800);
                 }
                 
-                // 3. Obtener el nuevo orden lineal de TODAS las tarjetas.
-                let newLinearOrder = allZones.flatMap(z =>
-                    Array.from(z.querySelectorAll('.card:not(.zone-label):not(.placeholder)'))
-                ); 
                 
-                // 4. Aplicar el REBALANCEO de 2 tarjetas por zona (el comportamiento esperado)
-                let currentZoneIndex = 0;
-                let cardsPlacedInZone = 0;
+            }, 800);
+        }
 
-                // Limpiar zonas antes de reinsertar
-                allZones.forEach(z => {
-                    Array.from(z.querySelectorAll('.card')).forEach(card => card.remove());
-                });
+        // ===============================================
+        // MANEJO DE CARTA DE PLATO RESULTANTE (Nuevo Estilo)
+        // ===============================================
 
-                newLinearOrder.forEach(card => {
-                    if (currentZoneIndex >= allZones.length) return; 
+        function getDishDetailsFromPlayed(recipe, playedIngredients) {
+            
+            const findPlayedIngredient = (requiredList, playedType) => {
+                if (!requiredList || requiredList.length === 0 || requiredList.includes('-')) return 'N/A';
+                
+                const foundIng = playedIngredients.find(ing => 
+                    ing.type === playedType && requiredList.some(reqIng => ing.baseName ? ing.baseName.includes(reqIng) : ing.name.includes(reqIng))
+                );
+                return foundIng ? foundIng.baseName || foundIng.name : 'N/A';
+            };
+
+            const selectedPrincipal = findPlayedIngredient(recipe.principales, 'Principal');
+            const selectedCarbohidrato = findPlayedIngredient(recipe.carbohidratos, 'Carbohidrato');
+            const selectedVerdura = findPlayedIngredient(recipe.verduras, 'Verdura');
+
+            return {
+                principal: selectedPrincipal,
+                carbohidrato: selectedCarbohidrato,
+                verdura: selectedVerdura,
+                emojiPrincipal: recipe.emoji
+            };
+        }
+
+        function createResultDishCardElement(recipe, playedIngredients) {
+            
+            const details = getDishDetailsFromPlayed(recipe, playedIngredients);
+
+            // MODIFICACIÓN 3: Principal toma el lugar del emoji principal del plato
+            const mainIngredientEmoji = (details.principal !== 'N/A' && INGREDIENT_EMOJI_MAP[details.principal])
+                ? INGREDIENT_EMOJI_MAP[details.principal]
+                : details.emojiPrincipal || ''; // Usa el emoji del plato si no hay principal jugado (o '')
+            
+            // MODIFICACIÓN 3: Carbohidrato y Verdura van como secundarios
+            let secondaryEmojis = '';
+            
+            const carbEmoji = (details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) 
+                ? INGREDIENT_EMOJI_MAP[details.carbohidrato] : '';
+            const verduraEmoji = (details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) 
+                ? INGREDIENT_EMOJI_MAP[details.verdura] : '';
+            
+            secondaryEmojis = carbEmoji + verduraEmoji;
+
+            // MODIFICACIÓN 3: La lista de ingredientes mantiene el orden Principal, Carbohidrato, Verdura
+            const ingredientsListHtml = [details.principal, details.carbohidrato, details.verdura]
+                .filter(i => i && i !== 'N/A')
+                .map(i => `<li>${i}</li>`)
+                .join('');
+
+            const card = document.createElement('div');
+            card.className = 'result-dish-card'; 
+            card.setAttribute('data-dish', recipe.name);
+            // MODIFICACIÓN 1: Se eliminan los estilos de posición y transformación en línea (el CSS base lo maneja ahora)
+
+            card.innerHTML = `
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">${mainIngredientEmoji}</span> <div class="card-secondary-emojis">${secondaryEmojis}</div> </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">${recipe.name}</p>
+                        <ul class="card-ingredients-list">
+                            ${ingredientsListHtml}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+
+        function handleSuccessfulDish(recipe, playedIngredients) {
+            score++;
+            const newDish = { 
+                name: recipe.name, 
+                emoji: recipe.emoji,
+                playedIngredients: playedIngredients.map(ing => ing.baseName || ing.name)
+            };
+            successfullyCreatedDishes.push(newDish);
+            saveGameData('successfullyCreatedDishes', successfullyCreatedDishes);
+
+            // Crear y mostrar la carta de plato resultante 
+            const resultCard = createResultDishCardElement(recipe, playedIngredients);
+            
+            // Ocultar las cartas de ingrediente jugadas
+            dishBoard.querySelectorAll('.ingredient-card').forEach(card => {
+                card.style.opacity = '0';
+            });
+            
+            // Añadir el plato resultante (Aparece instantáneamente por la modificación del CSS)
+            dishBoard.appendChild(resultCard);
+            
+            // Se elimina la lógica de setTimeout para la animación de la tarjeta de plato
+
+            updateStats();
+            return resultCard; 
+        }
+
+        
+        function handleDiscardCards() {
+            if (isProcessingPlay || selectedCards.length === 0 || discardsRemaining <= 0) return;
+
+            isProcessingPlay = true;
+            discardsRemaining--;
+            
+            const cardsToDiscard = [];
+            selectedCards.forEach(id => {
+                const card = carousel.querySelector(`.ingredient-card[data-id="${id}"].selected`);
+                if (card) {
+                    cardsToDiscard.push(card);
+                    card.classList.remove('selected');
+                }
+            });
+
+            cardsToDiscard.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.transition = 'transform 0.5s ease-in, opacity 0.5s';
+                    card.style.transform = `translateY(300px) rotate(20deg)`;
+                    card.style.opacity = '0';
+                }, index * 100); 
+            });
+
+            setTimeout(() => {
+                usedIngredientIds.push(...selectedCards);
+                saveGameData('usedIngredientIds', usedIngredientIds);
+                
+                removePlayedCards(cardsToDiscard);
+                selectedCards = [];
+                updateActionButtons();
+                fillCarousel();
+                isProcessingPlay = false;
+                updateStats(); 
+                showMessage(`Se descartaron ${cardsToDiscard.length} cartas.`, 'failure');
+            }, cardsToDiscard.length * 100 + 500);
+        }
+        
+        function handleShufflePool() {
+            if (usedIngredientIds.length === 0 || isProcessingPlay) {
+                return;
+            }
+            
+            isProcessingPlay = true;
+            
+            AVAILABLE_INGREDIENT_POOL.push(...usedIngredientIds);
+            usedIngredientIds = []; 
+            saveGameData('usedIngredientIds', usedIngredientIds);
+
+            AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
+
+            fillCarousel();
+            isProcessingPlay = false;
+            updateStats();
+            showMessage(`¡Mazo rebarajado! ${AVAILABLE_INGREDIENT_POOL.length} cartas disponibles.`, 'success');
+        }
+        
+        function resetGame() {
+            if (!confirm("¿Estás seguro de que quieres reiniciar el juego? Se perderá todo el progreso (platos, manos restantes, etc.).")) {
+                return;
+            }
+            
+            localStorage.removeItem('dishCreator_score');
+            localStorage.removeItem('dishCreator_playsRemaining');
+            localStorage.removeItem('dishCreator_discardsRemaining');
+            localStorage.removeItem('dishCreator_successfullyCreatedDishes');
+            localStorage.removeItem('dishCreator_usedIngredientIds');
+            
+            location.reload(); 
+        }
+
+
+        function removePlayedCards(cards) {
+             cards.forEach(card => {
+                card.remove(); 
+            });
+        }
+        
+        function clearBoard(success, resultCardToRemove = null) {
+            dishBoard.querySelectorAll('.ingredient-card').forEach(card => {
+                card.style.transition = 'transform 0.5s, opacity 0.5s';
+                card.style.opacity = '0';
+                card.style.transform = success ? 'scale(1.5)' : 'translateY(-10px)'; 
+                
+                setTimeout(() => {
+                    card.remove();
+                }, 500);
+            });
+            
+            // MODIFICACIÓN 1: Eliminar la tarjeta de plato instantáneamente.
+            if (resultCardToRemove) {
+                resultCardToRemove.remove();
+            }
+            
+            setTimeout(() => {
+                boardPlaceholder.style.opacity = '1';
+            }, 500);
+        }
+
+
+        function showMessage(message, type) {
+            if (resultMessageElement) resultMessageElement.remove();
+            
+            resultMessageElement = document.createElement('div');
+            resultMessageElement.id = 'result-message';
+            resultMessageElement.textContent = message;
+            resultMessageElement.classList.add(type);
+
+            mainGameArea.appendChild(resultMessageElement);
+
+            setTimeout(() => {
+                resultMessageElement.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                resultMessageElement.classList.remove('show');
+                setTimeout(() => {
+                    resultMessageElement.remove();
+                    resultMessageElement = null;
+                }, 300);
+            }, 1500); 
+        }
+
+
+        function renderCollectedDishes() {
+            collectedDishesContainer.innerHTML = '';
+
+            if (successfullyCreatedDishes.length === 0) {
+                collectedDishesContainer.appendChild(noDishesMessage);
+                noDishesMessage.style.display = 'block';
+                return;
+            }
+            
+            noDishesMessage.style.display = 'none';
+
+            successfullyCreatedDishes.forEach((dish) => {
+                const name = dish.name;
+                
+                const recipeBase = ALL_DISH_RECIPES.find(r => r.name === name);
+
+                const ingredientsForDetails = (dish.playedIngredients || []).map(n => 
+                    ALL_INGREDIENT_OBJECTS.get(n) || { name: n, baseName: n, type: '', id: n }
+                );
+
+                const details = recipeBase 
+                    ? getDishDetailsFromPlayed(recipeBase, ingredientsForDetails) 
+                    : { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: dish.emoji };
+                
+                // MODIFICACIÓN 3: Principal toma el lugar del emoji principal del plato
+                const mainIngredientEmoji = (details.principal !== 'N/A' && INGREDIENT_EMOJI_MAP[details.principal])
+                    ? INGREDIENT_EMOJI_MAP[details.principal]
+                    : details.emojiPrincipal || '';
+                
+                // MODIFICACIÓN 3: Carbohidrato y Verdura van como secundarios
+                let secondaryEmojis = '';
+                
+                const carbEmoji = (details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) 
+                    ? INGREDIENT_EMOJI_MAP[details.carbohidrato] : '';
+                const verduraEmoji = (details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) 
+                    ? INGREDIENT_EMOJI_MAP[details.verdura] : '';
+                
+                secondaryEmojis = carbEmoji + verduraEmoji;
+
+                // MODIFICACIÓN 3: La lista de ingredientes mantiene el orden Principal, Carbohidrato, Verdura
+                const ingredientsListHtml = [details.principal, details.carbohidrato, details.verdura]
+                    .filter(i => i && i !== 'N/A')
+                    .map(i => `<li>${i}</li>`)
+                    .join('');
+
+
+                // Re-creamos la tarjeta usando la función del juego para asegurar la estructura
+                const card = document.createElement('div');
+                card.className = 'result-dish-card'; 
+                card.setAttribute('data-dish', name);
+
+                card.innerHTML = `
+                    <div class="card-inner-content">
+                        <div class="card-image-zone">
+                            <span class="card-main-emoji">${mainIngredientEmoji}</span>
+                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
+                        </div>
+                        <div class="card-ingredients-zone">
+                            <p class="card-dish-name">${name}</p>
+                            <ul class="card-ingredients-list">
+                                ${ingredientsListHtml}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                collectedDishesContainer.appendChild(card);
+            });
+        }
+
+
+        function showCollectedDishesPopup() {
+            renderCollectedDishes();
+            dishPopup.style.display = 'block';
+        }
+
+        function hideCollectedDishesPopup() {
+            dishPopup.style.display = 'none';
+        }
+        
+        function renderAllRecipes() {
+            availableRecipesContainer.innerHTML = '';
+            
+            if (ALL_DISH_RECIPES.length === 0) {
+                availableRecipesContainer.innerHTML = `<p style="color:#f75555;">No se pudo cargar el recetario de platos. Asegúrate de que 'menu_db.json' esté disponible.</p>`;
+                return;
+            }
+
+            const handIngredientIds = Array.from(carousel.querySelectorAll('.ingredient-card'))
+                                        .map(card => card.getAttribute('data-id'));
+
+            ALL_DISH_RECIPES.forEach(dish => {
+                const item = document.createElement('div');
+                item.className = 'recipe-item';
+                
+                const requiredCategories = [];
+                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) requiredCategories.push('Carbohidrato');
+                if (dish.principales.length > 0 && !dish.principales.includes('-')) requiredCategories.push('Principal');
+                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) requiredCategories.push('Verdura');
+
+                const requiredText = requiredCategories.length > 0 
+                    ? `Requiere: ${requiredCategories.join(', ')}`
+                    : 'No requiere categorías específicas (sólo ingredientes clave).';
+
+                let ingredientsHTML = '<div class="recipe-ingredients">';
+                
+                const createIngredientList = (label, ingredients) => {
+                    let html = `<strong>${label}:</strong> `;
                     
-                    // Si la zona actual ya tiene 2 tarjetas, pasar a la siguiente zona (día)
-                    if (cardsPlacedInZone >= CARDS_PER_ZONE) {
-                        currentZoneIndex++;
-                        cardsPlacedInZone = 0;
-                        if (currentZoneIndex >= allZones.length) return;
-                    }
+                    const listItems = ingredients.map(ingName => {
+                        const isAvailable = handIngredientIds.includes(ingName);
+                        // Resaltar en azul si está en la mano
+                        return isAvailable 
+                            ? `<span style="color: var(--selection-color); font-weight: 700;">${ingName}</span>` 
+                            : ingName;
+                    });
                     
-                    allZones[currentZoneIndex].appendChild(card);
-                    cardsPlacedInZone++;
-                });
+                    html += listItems.join(', ');
+                    return html + '<br>';
+                };
 
-                // 5. INVERT & PLAY (Animación Final)
-                const updatedCards = getAllCards(); 
-                updatedCards.forEach(card => {
-                    const firstRect = finalPositions.get(card);
-                    if (!firstRect) return;
+                if (dish.principales.length > 0 && !dish.principales.includes('-')) {
+                    ingredientsHTML += createIngredientList('Principales', dish.principales);
+                }
+                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) {
+                    ingredientsHTML += createIngredientList('Carbohidratos', dish.carbohidratos);
+                }
+                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) {
+                    ingredientsHTML += createIngredientList('Verduras/Extras', dish.verduras);
+                }
+                
+                ingredientsHTML += '</div>';
 
-                    const newRect = card.getBoundingClientRect();
-                    const deltaX = firstRect.left - newRect.left;
-                    const deltaY = firstRect.top - newRect.top;
+                item.innerHTML = `
+                    <h4>${dish.emoji} ${dish.name}</h4>
+                    <p style="font-size:0.9em; font-style:italic; color:#c9d1d9; margin-bottom: 0;">${requiredText}</p>
+                    ${ingredientsHTML}
+                `;
+                
+                availableRecipesContainer.appendChild(item);
+            });
+        }
 
-                    if (deltaX !== 0 || deltaY !== 0) {
-                        card.style.transition = 'none';
-                        card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-                    }
-                });
+        function showRecipesPopup() {
+            renderAllRecipes();
+            recipePopup.style.display = 'block';
+        }
 
-                void document.body.offsetHeight; 
+        function hideRecipesPopup() {
+            recipePopup.style.display = 'none';
+        }
 
-                updatedCards.forEach(card => {
-                    card.style.transition = '';
-                    card.style.transform = '';
-                });
+        // ===============================================
+        // INICIALIZACIÓN
+        // ===============================================
 
-                clearLiveTransforms();
+        async function initializeCarousel() {
+            let menuDatabase = window.MENU_DB;
+
+            if (!menuDatabase) {
+                console.warn("window.MENU_DB no encontrado. Intentando cargar la librería menu_db.json directamente.");
+                try {
+                    const response = await fetch(MENU_DB_PATH);
+                    if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
+                    menuDatabase = await response.json();
+                    console.log("Librería menu_db.json cargada directamente.");
+                } catch (e) {
+                    console.error("ERROR CRÍTICO: Fallo al cargar la librería menu_db.json. No se puede iniciar el juego.", e);
+                    showMessage("ERROR CRÍTICO: No se puede cargar la librería de Platos (menu_db).", 'failure');
+                    return; 
+                }
+            }
+            
+            setupDishRecipes(menuDatabase); 
+
+            const success = await loadFilteredIngredients(); 
+            
+            if (success && ALL_DISH_RECIPES.length > 0) {
+                if (AVAILABLE_INGREDIENT_POOL.length === 0 && usedIngredientIds.length > 0) {
+                     AVAILABLE_INGREDIENT_POOL.push(...usedIngredientIds);
+                     usedIngredientIds = [];
+                }
+                AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
+
+                fillCarousel(); 
+            } else if (ALL_DISH_RECIPES.length === 0) {
+                 showMessage("ERROR: No hay recetas para jugar.", 'failure');
+            }
+            
+            updateStats();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCarousel();
+            
+            playButton.addEventListener('click', handlePlayCards);
+            discardButton.addEventListener('click', handleDiscardCards);
+            shuffleButton.addEventListener('click', handleShufflePool); 
+            resetGameButton.addEventListener('click', resetGame);
+            
+            showDishesButton.addEventListener('click', showCollectedDishesPopup);
+            closeButton.addEventListener('click', hideCollectedDishesPopup);
+            
+            showRecipesButton.addEventListener('click', showRecipesPopup);
+            closeRecipesButton.addEventListener('click', hideRecipesPopup);
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === dishPopup) {
+                    hideCollectedDishesPopup();
+                }
+                if (event.target === recipePopup) {
+                    hideRecipesPopup();
+                }
             });
         });
-
-        // Listeners globales
-        document.addEventListener('dragover', (e) => {
-            e.preventDefault(); 
-        });
-        document.addEventListener('drop', clearLiveTransforms); 
-        
     </script>
 </body>
 </html>
