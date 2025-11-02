@@ -4,35 +4,45 @@
 const overlay = document.getElementById("content-display-overlay");
 const loadedArea = document.getElementById("loaded-content-area");
 const closeButton = document.getElementById("close-overlay-button");
-const galleriesContainer = document.getElementById('galleries-container'); // Contenedor de las nuevas galerías
+const galleriesContainer = document.getElementById('galleries-container');
 
 let menuData = null;      // Almacena la data de menu_db.json
 let inventarioData = null; // Almacena la data de inventario_db.json
 
+// RUTA ABSOLUTA PARA LOS DATOS EN GITHUB PAGES
+// Esta URL apunta directamente a la raíz de tus archivos de datos en GitHub.
+const GITHUB_DATA_BASE_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/';
+
+
 // ===============================================
-// FUNCIONES DE CARGA DE DATOS (JSON)
+// FUNCIONES DE CARGA DE DATOS (JSON) - USANDO URL ABSOLUTA
 // ===============================================
 
 async function cargarDatosMenu() {
     try {
-        // Asegúrate de que la ruta 'data/menu_db.json' sea correcta
-        const response = await fetch('data/menu_db.json');
-        if (!response.ok) throw new Error('Error al cargar menu_db.json');
+        // Fetch usa la URL completa HTTPS de GitHub.
+        const url = GITHUB_DATA_BASE_URL + 'menu_db.json';
+        const response = await fetch(url); 
+        
+        if (!response.ok) throw new Error('Error al cargar menu_db.json. URL: ' + url);
         menuData = await response.json();
-        console.log("Base de datos de Menú cargada:", menuData);
+        console.log("Base de datos de Menú cargada desde GitHub:", menuData);
     } catch (error) {
+        // En caso de fallo, el usuario verá el error en la consola, pero la app no se romperá.
         console.error("Fallo la carga del Menú:", error);
     }
 }
 
 async function cargarInventario() {
     try {
-        // Asegúrate de que la ruta 'data/inventario_db.json' sea correcta
-        const response = await fetch('data/inventario_db.json');
-        if (!response.ok) throw new Error('Error al cargar inventario_db.json');
+        // Fetch usa la URL completa HTTPS de GitHub.
+        const url = GITHUB_DATA_BASE_URL + 'inventario_db.json';
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error('Error al cargar inventario_db.json. URL: ' + url);
         const data = await response.json();
         inventarioData = data.inventario;
-        console.log("Base de datos de Inventario cargada:", inventarioData);
+        console.log("Base de datos de Inventario cargada desde GitHub:", inventarioData);
     } catch (error) {
         console.error("Fallo la carga del Inventario:", error);
     }
@@ -75,7 +85,7 @@ function renderGalleries() {
         `;
         galleriesContainer.innerHTML += menuHTML;
     } else {
-         galleriesContainer.innerHTML += `<p style="color: red;">Error: No se pudo cargar la data de Menú (menu_db.json).</p>`;
+         galleriesContainer.innerHTML += `<p style="color: red;">No se pudo cargar la data de Menú. Verifica la conexión a internet o la URL de GitHub Pages.</p>`;
     }
 
 
@@ -95,7 +105,7 @@ function renderGalleries() {
         `;
         galleriesContainer.innerHTML += inventarioHTML;
     } else {
-        galleriesContainer.innerHTML += `<p style="color: red;">Error: No se pudo cargar la data de Inventario (inventario_db.json).</p>`;
+        galleriesContainer.innerHTML += `<p style="color: red;">No se pudo cargar la data de Inventario. Verifica la conexión a internet o la URL de GitHub Pages.</p>`;
     }
 }
 
