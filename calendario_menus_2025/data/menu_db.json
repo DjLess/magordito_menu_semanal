@@ -8,18 +8,17 @@
       ],
       "principales": [
         "Camarones con Crema",
-        "Boloñesa",
-        "Boloñesa Soya",
+        "Salsa Boloñesa (Carne)",
+        "Salsa Boloñesa (Soya)",
         "Carne Mongoliana",
         "Pollo Mongoliano",
         "Salsa Alfredo", 
         "Salsa Pesto" 
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Guiso",
-        "Salteado Simple"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Guiso"
       ]
     },
     {
@@ -33,7 +32,7 @@
         "Croqueta/Empanizado",
         "Pollo Asado",
         "Carne Asada",
-        "Hamburguesa",
+        "Hamburguesa (Carne)",
         "Tofu",
         "Carne Mongoliana",
         "Pollo Mongoliano",
@@ -46,12 +45,10 @@
         "Tocino"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Palta",
-        "Guiso",
-        "Salteado Simple",
-        "Salteado Complejo"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Ensalada Palta",
+        "Guiso"
       ]
     },
     {
@@ -61,32 +58,32 @@
         "Choclo"
       ],
       "principales": [
-        "Salteado Verduras",
-        "Chapsui Vegetal",
+        "Mix Verduras Salteadas",
         "Tofu"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Zapallo Italiano",
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Salteado Zapallo Italiano",
         "Guiso",
-        "Salteado Simple",
-        "Salteado Complejo"
+        "Ensalada Brócoli",
+        "Salteado de Verduras",
+        "Salteado de Champiñon"
       ]
     },
     {
       "nombre": "Papas (Cocidas, fritas o puré), Proteína y Ensalada/Guiso",
       "carbohidratos": [
-        "Papa Cocida",
-        "Puré de Papa",
-        "Papas Fritas"
+        "Papa (Base)",
+        "Papa (Puré)",
+        "Papa (Frita)"
       ],
       "principales": [
         "Pescado",
         "Croqueta/Empanizado",
         "Pollo Asado",
         "Carne Asada",
-        "Hamburguesa",
+        "Hamburguesa (Carne)",
         "Tofu",
         "Carne al Horno",
         "Bistec",
@@ -97,32 +94,31 @@
         "Tocino"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Guiso",
-        "Salteado Simple",
-        "Salteado Complejo"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Guiso"
       ]
     },
     {
       "nombre": "Hamburguesa Completa (Carne o Vegetal)",
       "carbohidratos": [
-        "Pan"
+        "Pan Base"
       ],
       "principales": [
-        "Hamburguesa",
-        "Hamburguesa Vegetal"
+        "Hamburguesa (Carne)",
+        "Hamburguesa (Vegetal)"
       ],
       "verduras": [
         "Ensalada Clásica",
-        "Cebolla Caramelizada"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Ensalada Pepino"
       ]
     },
     {
       "nombre": "Sándwich de Proteína",
       "carbohidratos": [
-        "Pan",
-        "Pan Marraqueta"
+        "Pan Base"
       ],
       "principales": [
         "Pollo Asado",
@@ -139,11 +135,14 @@
       ],
       "verduras": [
         "Ensalada Clásica",
-        "Chucrut"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Ensalada Palta",
+        "Ensalada Pepino"
       ]
     },
     {
-      "nombre": "Plato de Sopa (con Legumbres o Proteína)",
+      "nombre": "Plato de Legumbres (con Carbohidrato o Proteína)",
       "carbohidratos": [
         "Sopa Legumbre",
         "Arroz",
@@ -159,9 +158,9 @@
         "Lomito de Cerdo"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Cebolla"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Guiso"
       ]
     },
     {
@@ -170,33 +169,28 @@
         "Masa Pizza"
       ],
       "principales": [
-        "Pizza Base",
         "Pepperoni",
         "Jamón",
         "Tocino",
         "Lomito de Cerdo"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Pimiento",
-        "Aceitunas"
+        "Ensalada Tomate",
+        "Ensalada Lechuga"
       ]
     },
     {
-      "nombre": "Charquicán Chileno Tradicional",
-      "carbohidratos": [
-        "Papa Cocida"
-      ],
+      "nombre": "Charquicán con Ensalada",
       "principales": [
-        "Carne Asada",
-        "Huevo Duro",
-        "Carne al Horno"
+        "Charquicán Base"
       ],
       "verduras": [
-        "Guiso",
-        "Zapallo Italiano",
-        "Porotos Verdes"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Ensalada Palta",
+        "Ensalada Clásica",
+        "Ensalada Pepino",
+        "Ensalada Quinoa y Verduras"
       ]
     },
     {
@@ -210,7 +204,6 @@
         "Pescado",
         "Pollo Asado",
         "Carne Asada",
-        "Huevo Duro",
         "Tofu",
         "Carne al Horno",
         "Bistec",
@@ -220,13 +213,18 @@
         "Lomito de Cerdo"
       ],
       "verduras": [
-        "Tomate",
-        "Lechuga",
-        "Palta",
-        "Brócoli",
-        "Zanahoria",
-        "Pepino",
-        "Quinoa"
+        "Ensalada Tomate",
+        "Ensalada Lechuga",
+        "Ensalada Palta",
+        "Ensalada Brócoli",
+        "Ensalada Pepino",
+        "Ensalada Quinoa y Verduras"
+      ]
+    },
+    {
+      "nombre": "Pizza Comodín Especial",
+      "comodin": [
+        "Pizza Comodín"
       ]
     }
   ]
