@@ -34,7 +34,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Papa Cocida",
+      "nombre": "Papa (Base)",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 2,
@@ -45,7 +45,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Puré de Papa",
+      "nombre": "Papa (Puré)",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 1,
@@ -56,7 +56,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Papas Fritas",
+      "nombre": "Papa (Frita)",
       "categoria": "carbohidrato",
       "activo": true,
       "cantidad_disponible": 1,
@@ -89,22 +89,11 @@
       "gourmet": false
     },
     {
-      "nombre": "Pan",
+      "nombre": "Pan Base",
       "categoria": "carbohidrato",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 4,
       "emoji": "🍞",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Pan Marraqueta",
-      "categoria": "carbohidrato",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥖",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -127,17 +116,6 @@
       "activo": true,
       "cantidad_disponible": 2,
       "emoji": "🍲",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Choclo",
-      "categoria": "carbohidrato",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🌽",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
@@ -199,7 +177,7 @@
       "gourmet": true
     },
     {
-      "nombre": "Hamburguesa",
+      "nombre": "Hamburguesa (Carne)",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
@@ -210,7 +188,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Boloñesa",
+      "nombre": "Salsa Boloñesa (Carne)",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 1,
@@ -221,7 +199,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Boloñesa Soya",
+      "nombre": "Salsa Boloñesa (Soya)",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 1,
@@ -254,43 +232,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Pizza Base",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🍕",
-      "vegetariano": true,
-      "vegano": false,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Huevo Duro",
+      "nombre": "Mix Verduras Salteadas",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 2,
-      "emoji": "🥚",
-      "vegetariano": true,
-      "vegano": false,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Salteado Verduras",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🥢",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Chapsui Vegetal",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
       "emoji": "🥢",
       "vegetariano": true,
       "vegano": true,
@@ -309,7 +254,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Hamburguesa Vegetal",
+      "nombre": "Hamburguesa (Vegetal)",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 1,
@@ -342,106 +287,18 @@
       "gourmet": false
     },
     {
-      "nombre": "Salsa Alfredo",
+      "nombre": "Charquicán Base",
       "categoria": "principal",
       "activo": true,
       "cantidad_disponible": 1,
-      "emoji": "🫕",
-      "vegetariano": true,
-      "vegano": false,
-      "pesciboro": true,
-      "gourmet": true
-    },
-    {
-      "nombre": "Salsa Pesto",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🌿",
-      "vegetariano": true,
-      "vegano": false,
-      "pesciboro": true,
-      "gourmet": true
-    },
-    {
-      "nombre": "Carne al Horno",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🍖",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": true
-    },
-    {
-      "nombre": "Bistec",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥩",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": true
-    },
-    {
-      "nombre": "Pollo a la Mostaza",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🍗",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": true
-    },
-    {
-      "nombre": "Filetes de Pollo Salteado",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🍗",
+      "emoji": "🥣",
       "vegetariano": false,
       "vegano": false,
       "pesciboro": false,
       "gourmet": false
     },
     {
-      "nombre": "Chuleta de Cerdo",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🐖",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": false
-    },
-    {
-      "nombre": "Lomito de Cerdo",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🐖",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": true
-    },
-    {
-      "nombre": "Tocino",
-      "categoria": "principal",
-      "activo": true,
-      "cantidad_disponible": 1,
-      "emoji": "🥓",
-      "vegetariano": false,
-      "vegano": false,
-      "pesciboro": false,
-      "gourmet": false
-    },
-    {
-      "nombre": "Tomate",
+      "nombre": "Ensalada Tomate",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 4,
@@ -452,7 +309,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Lechuga",
+      "nombre": "Ensalada Lechuga",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 4,
@@ -463,7 +320,7 @@
       "gourmet": false
     },
     {
-      "nombre": "Palta",
+      "nombre": "Ensalada Palta",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 2,
@@ -474,7 +331,7 @@
       "gourmet": true
     },
     {
-      "nombre": "Zapallo Italiano",
+      "nombre": "Salteado Zapallo Italiano",
       "categoria": "verdura",
       "activo": true,
       "cantidad_disponible": 2,
@@ -496,28 +353,6 @@
       "gourmet": false
     },
     {
-      "nombre": "Salteado Simple",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥘",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Salteado Complejo",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥘🫑",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
       "nombre": "Ensalada Clásica",
       "categoria": "verdura",
       "activo": true,
@@ -529,76 +364,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Cebolla Caramelizada",
+      "nombre": "Ensalada Brócoli",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🧅",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Chucrut",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🇩🇪",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Cebolla",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🧅",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Pimiento",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🫑",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Aceitunas",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🫒",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Porotos Verdes",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🫛",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Brócoli",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥦",
       "vegetariano": true,
       "vegano": true,
@@ -606,21 +375,10 @@
       "gourmet": false
     },
     {
-      "nombre": "Zanahoria",
+      "nombre": "Ensalada Pepino",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
-      "emoji": "🥕",
-      "vegetariano": true,
-      "vegano": true,
-      "pesciboro": true,
-      "gourmet": false
-    },
-    {
-      "nombre": "Pepino",
-      "categoria": "verdura",
-      "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🥒",
       "vegetariano": true,
       "vegano": true,
@@ -628,15 +386,48 @@
       "gourmet": false
     },
     {
-      "nombre": "Quinoa",
+      "nombre": "Ensalada Quinoa y Verduras",
       "categoria": "verdura",
       "activo": true,
-      "cantidad_disponible": 2,
+      "cantidad_disponible": 1,
       "emoji": "🌾",
       "vegetariano": true,
       "vegano": true,
       "pesciboro": true,
       "gourmet": false
+    },
+    {
+      "nombre": "Salteado de Verduras",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🥕",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Salteado de Champiñon",
+      "categoria": "verdura",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🍄",
+      "vegetariano": true,
+      "vegano": true,
+      "pesciboro": true,
+      "gourmet": false
+    },
+    {
+      "nombre": "Pizza Comodín",
+      "categoria": "comodin",
+      "activo": true,
+      "cantidad_disponible": 1,
+      "emoji": "🃏",
+      "vegetariano": true,
+      "vegano": false,
+      "pesciboro": true,
+      "gourmet": true
     }
   ]
 }
