@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Nueva App</title>
+    <title>Mi Nueva App (Main-only)</title>
     <link rel="stylesheet" href="assets/css/style.css">
-</head>
+    </head>
 <body>
     <div class="phone-frame">
         <div class="notch"></div>
@@ -17,6 +17,15 @@
 
         <div class="main-content">
             <h2 class="title">Menú principal</h2>
+            
+            <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; background-color: #f9f9f9;">
+                <input type="checkbox" id="show-galleries-toggle" onchange="toggleGalleries()" style="margin-right: 10px;">
+                <label for="show-galleries-toggle" style="font-weight: bold;">Mostrar Galerías de Datos / Inventario</label>
+            </div>
+            
+            <div id="galleries-container" class="hidden">
+            </div>
+            
             <div class="button-group">
                 <button onclick="loadContent('screens/pantalla1.html')">Abrir Pantalla 1</button>
                 <button onclick="loadContent('screens/pantalla2.html')">Abrir Pantalla 2</button>
@@ -31,11 +40,10 @@
 
         <div id="content-display-overlay" class="hidden">
             <button id="close-overlay-button" class="close-button">X</button>
-            <div id="loaded-content-area">
-                </div>
+            <div id="loaded-content-area"></div>
         </div>
     </div>
-
+    
     <script src="assets/js/main.js"></script>
 </body>
 </html>
