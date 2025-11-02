@@ -85,6 +85,17 @@
             max-width: 45%;
             min-width: 150px;
         }
+        /* Ajuste para el Paso 4 para que quepan más opciones */
+        #step-4 .option-button {
+            max-width: none; 
+            min-width: 120px; 
+            flex-basis: 30%; /* Para que quepan 3 por línea */
+        }
+        
+        #step-4 .option-button.full-width {
+            flex-basis: 100%;
+        }
+
 
         .option-button:hover {
             border-color: #9acafc;
@@ -116,29 +127,7 @@
             margin-top: 10px;
         }
         
-        /* Estilos del Contenedor de Restricciones (Step 4) */
-        .restriction-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 8px;
-            transition: background-color 0.1s;
-        }
-        .restriction-item:hover {
-            background-color: #f0f0f0;
-        }
-        .restriction-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 15px;
-            accent-color: #4A90E2;
-        }
-        .restriction-item label {
-            flex-grow: 1;
-            font-size: 1.05em;
-        }
+        /* Eliminados: Estilos del Contenedor de Restricciones (Step 4) - Usaremos option-button */
 
         /* Navegación y Barra de Progreso */
         #navigation-bar {
@@ -295,37 +284,18 @@
 
             <p style="margin-bottom: 20px;">Selecciona todas las restricciones o alergias que apliquen en tu hogar:</p>
             
-            <div data-key="restricciones" style="max-height: 250px; overflow-y: auto; padding-right: 10px;">
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-gluten" data-restriction="gluten">
-                    <label for="rest-gluten">Sin Gluten</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-lactosa" data-restriction="lactosa">
-                    <label for="rest-lactosa">Sin Lactosa</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-frutos_secos" data-restriction="frutos_secos">
-                    <label for="rest-frutos_secos">Sin Frutos Secos</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-mariscos" data-restriction="mariscos">
-                    <label for="rest-mariscos">Sin Mariscos</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-soja" data-restriction="soja">
-                    <label for="rest-soja">Sin Soja</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-huevo" data-restriction="huevo">
-                    <label for="rest-huevo">Sin Huevo</label>
-                </div>
-                <div class="restriction-item">
-                    <input type="checkbox" id="rest-ninguna" data-restriction="ninguna">
-                    <label for="rest-ninguna">Ninguna Restricción (Marcar si no aplica ninguna de las anteriores)</label>
+            <div class="option-grid" data-key="restricciones" style="max-height: 250px; overflow-y: auto; padding-right: 10px;">
+                <div class="option-button" data-restriction="gluten">Sin Gluten</div>
+                <div class="option-button" data-restriction="lactosa">Sin Lactosa</div>
+                <div class="option-button" data-restriction="frutos_secos">Sin Frutos Secos</div>
+                <div class="option-button" data-restriction="mariscos">Sin Mariscos</div>
+                <div class="option-button" data-restriction="soja">Sin Soja</div>
+                <div class="option-button" data-restriction="huevo">Sin Huevo</div>
+                <div class="option-button full-width" data-restriction="ninguna">
+                    Ninguna Restricción <br><span class="option-description">(Marcar si no aplica ninguna de las anteriores)</span>
                 </div>
             </div>
-        </div>
+            </div>
 
         <div class="step-content" id="step-5">
             <h3>Paso 5: Tamaño de la Familia</h3>
@@ -443,8 +413,9 @@
                     break;
                 case 4:
                     const selectedRestrictions = [];
-                    stepContent.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-                        selectedRestrictions.push(checkbox.dataset.restriction);
+                    // Recoger los valores de los botones con la clase 'selected'
+                    stepContent.querySelectorAll('.option-button.selected').forEach(button => {
+                        selectedRestrictions.push(button.dataset.restriction);
                     });
                     
                     if (selectedRestrictions.length === 0) {
@@ -497,7 +468,20 @@
                     displayValue = value.map(v => v.charAt(0).toUpperCase() + v.slice(1).replace('_', ' ')).join(', ');
                 } else if (typeof value === 'string') {
                     // Formato de texto simple (Capitaliza la primera letra)
-                    displayValue = value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ');
+                    // Manejo especial para el valor guardado de 'carbohidratos' y 'frecuenciaComidas' si lo requiriera
+                    if (key === 'carbohidratos' && value === 'hipocalorica') {
+                        displayValue = 'Hipocalórica (Menos/Sin Carbohidratos)';
+                    } else if (key === 'carbohidratos' && value === 'regular') {
+                        displayValue = 'Regular (Incluye Carbohidratos)';
+                    } else if (key === 'frecuenciaComidas' && value === 'solo_1') {
+                        displayValue = 'Solo 1 (Ej. Solo Almuerzo)';
+                    } else if (key === 'frecuenciaComidas' && value === 'almuerzo_cena') {
+                        displayValue = 'Almuerzo y Cena (Mayor Variedad Diaria)';
+                    }
+                    else {
+                        displayValue = value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ');
+                    }
+                    
                 } else {
                     displayValue = value;
                 }
@@ -551,7 +535,7 @@
             document.querySelectorAll('.option-grid').forEach(grid => {
                 const key = grid.dataset.key;
                 const savedValue = configData[key];
-                if (savedValue) {
+                if (key !== 'restricciones' && savedValue) { // Excluir restricciones aquí
                     const button = grid.querySelector(`[data-value="${savedValue}"]`);
                     if (button) {
                         button.classList.add('selected');
@@ -559,12 +543,12 @@
                 }
             });
 
-            // Aplicar selecciones de restricciones (checkboxes) (Paso 4)
+            // Aplicar selecciones de restricciones (botones) (Paso 4)
             if (configData.restricciones && Array.isArray(configData.restricciones)) {
                 configData.restricciones.forEach(restrictionKey => {
-                    const checkbox = document.querySelector(`[data-restriction="${restrictionKey}"]`);
-                    if (checkbox) {
-                        checkbox.checked = true;
+                    const button = document.querySelector(`[data-restriction="${restrictionKey}"]`);
+                    if (button) {
+                        button.classList.add('selected');
                     }
                 });
             }
@@ -580,12 +564,18 @@
         // MANEJO DE EVENTOS (CLICK EN BOTONES DE OPCIÓN)
         // ===============================================
         
+        // Manejador para selecciones de tipo Radio (Pasos 1, 2, 3)
         function handleOptionClick(event) {
             const button = event.target.closest('.option-button');
             if (!button) return;
 
             const grid = button.parentElement;
             
+            // Si el grid es para restricciones, usar el manejador de restricciones
+            if(grid.dataset.key === 'restricciones') {
+                return; // Ignorar, el evento es manejado por el listener específico más abajo.
+            }
+
             // Limpiar selección previa en este grupo
             grid.querySelectorAll('.option-button').forEach(btn => {
                 btn.classList.remove('selected');
@@ -595,26 +585,44 @@
             button.classList.add('selected');
         }
         
-        function handleRestrictionClick(event) {
-             const target = event.target.closest('.restriction-item');
-             if (!target) return;
+        // Manejador para selecciones de tipo Checkbox (Paso 4)
+        function handleRestrictionOptionClick(event) {
+             const button = event.target.closest('.option-button');
+             if (!button || !button.hasAttribute('data-restriction')) return;
              
-             const checkbox = target.querySelector('input[type="checkbox"]');
-             if (!checkbox) return;
+             const restrictionKey = button.dataset.restriction;
+             const isSelected = button.classList.contains('selected');
+             const allRestrictionButtons = button.parentElement.querySelectorAll('[data-restriction]');
+             const ningunaButton = button.parentElement.querySelector('[data-restriction="ninguna"]');
              
-             // Alternar el estado
-             checkbox.checked = !checkbox.checked;
-                 
-             // Lógica especial para 'Ninguna Restricción'
-             if (checkbox.dataset.restriction === 'ninguna') {
-                 if (checkbox.checked) {
-                     document.querySelectorAll('[data-restriction]:not([data-restriction="ninguna"])').forEach(otherCheckbox => {
-                         otherCheckbox.checked = false;
-                     });
+             if (restrictionKey === 'ninguna') {
+                 if (isSelected) {
+                     // Si 'ninguna' ya estaba seleccionada, la deseleccionamos
+                     button.classList.remove('selected');
+                 } else {
+                     // Si seleccionamos 'ninguna', deseleccionar todas las demás
+                     allRestrictionButtons.forEach(btn => btn.classList.remove('selected'));
+                     button.classList.add('selected');
                  }
-             } else if (checkbox.checked) {
-                 // Si se selecciona otra restricción, deseleccionar 'Ninguna'
-                 document.querySelector('[data-restriction="ninguna"]').checked = false;
+             } else {
+                 // Si seleccionamos o deseleccionamos una restricción normal
+                 button.classList.toggle('selected');
+                 
+                 // Si se selecciona (o deselecciona) una restricción, deseleccionar 'Ninguna' si estaba seleccionada
+                 if (ningunaButton && ningunaButton.classList.contains('selected')) {
+                     ningunaButton.classList.remove('selected');
+                 }
+                 
+                 // Si ahora no hay *ninguna* seleccionada, seleccionar 'Ninguna' por defecto
+                 const anyOtherSelected = Array.from(allRestrictionButtons).some(btn => 
+                     btn.dataset.restriction !== 'ninguna' && btn.classList.contains('selected')
+                 );
+                 
+                 if (!anyOtherSelected && !button.classList.contains('selected') && ningunaButton) {
+                     // Esto ocurre si deseleccionamos la última restricción no-'ninguna'
+                     // Aquí podríamos decidir si forzar la selección de 'ninguna' o dejarlo vacío.
+                     // Lo dejaremos vacío para que la validación en collectDataFromStep(4) fuerce la selección.
+                 }
              }
         }
 
@@ -625,15 +633,19 @@
             loadConfig();
             showStep(currentStep);
             
-            // Añadir manejadores de eventos para los botones de opción (radio-like)
+            // Añadir manejadores de eventos para los botones de opción (radio-like, Pasos 1, 2, 3)
+            // Se usa el listener en el grid para Pasos 1, 2, 3
             document.querySelectorAll('.option-grid').forEach(grid => {
-                grid.addEventListener('click', handleOptionClick);
+                if(grid.dataset.key !== 'restricciones') {
+                    grid.addEventListener('click', handleOptionClick);
+                }
             });
             
-            // Añadir manejadores de eventos para las restricciones (checkboxes)
-            document.querySelectorAll('.restriction-item').forEach(item => {
-                item.addEventListener('click', handleRestrictionClick);
-            });
+            // Añadir manejador de eventos para las restricciones (checkbox-like, Paso 4)
+            const restrictionsGrid = document.querySelector('.option-grid[data-key="restricciones"]');
+            if (restrictionsGrid) {
+                 restrictionsGrid.addEventListener('click', handleRestrictionOptionClick);
+            }
         };
         
     </script>
