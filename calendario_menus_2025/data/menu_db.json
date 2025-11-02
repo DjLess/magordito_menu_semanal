@@ -223,9 +223,10 @@
     },
     {
       "nombre": "Pizza Comodín Especial",
-      "comodin": [
+      "principales": [
         "Pizza Comodín"
       ]
     }
   ]
 }
+
