@@ -846,6 +846,13 @@
         const CAROUSEL_SIZE = 8;
         const INITIAL_PLAYS = 14;
         const INITIAL_DISCARDS = 14;
+        
+        // **********************************************
+        // NUEVAS CLAVES DE PERSISTENCIA
+        // **********************************************
+        const DISCOVERED_RECIPES_KEY = 'dishCreator_discoveredRecipes';
+        // **********************************************
+
 
         // --- ELEMENTOS DOM ---
         const carousel = document.getElementById('card-carousel');
@@ -858,9 +865,8 @@
         const scoreValueElement = document.getElementById('score-value');
         const playsRemainingElement = document.getElementById('plays-remaining-value');
         const discardsRemainingElement = document.getElementById('discards-remaining-value');
-        // const showDishesButton = document.getElementById('show-dishes-button'); // ELIMINADO
-        const goToPantalla2Button = document.getElementById('go-to-pantalla2-button'); // NUEVO
-        const createdDishesStack = document.getElementById('created-dishes-stack'); // NUEVO
+        const goToPantalla2Button = document.getElementById('go-to-pantalla2-button'); 
+        const createdDishesStack = document.getElementById('created-dishes-stack'); 
         const dishPopup = document.getElementById('dish-popup');
         const closeButton = dishPopup.querySelector('.close-button');
         const collectedDishesContainer = document.getElementById('collected-dishes-container');
@@ -873,17 +879,18 @@
         const displayPlaceholder = document.getElementById('display-text-placeholder');
         const deckCountElement = document.getElementById('deck-count');
         const createdDishesCountElement = document.getElementById('dishes-created-count');
-        const coinCountElement = document.getElementById('coin-count'); // NUEVA ADICIÓN: MONEDAS
+        const coinCountElement = document.getElementById('coin-count'); 
 
         // --- ESTADO DEL JUEGO ---
         let selectedCards = [];
         let isProcessingPlay = false;
         let score = loadGameData('score', 0);
-        let coins = loadGameData('coins', 0); // NUEVA ADICIÓN: MONEDAS
+        let coins = loadGameData('coins', 0); 
         let playsRemaining = loadGameData('playsRemaining', INITIAL_PLAYS);
         let discardsRemaining = loadGameData('discardsRemaining', INITIAL_DISCARDS);
         let successfullyCreatedDishes = loadGameData('successfullyCreatedDishes', []);
         let usedIngredientIds = loadGameData('usedIngredientIds', []);
+        let discoveredRecipes = loadGameData('discoveredRecipes', []); // NUEVO: Recetas descubiertas
 
         function saveGameData(key, data) { localStorage.setItem(`dishCreator_${key}`, JSON.stringify(data)); }
         function loadGameData(key, defaultValue) {
@@ -923,22 +930,20 @@
             playsRemainingElement.textContent = playsRemaining;
             discardsRemainingElement.textContent = discardsRemaining;
             
-            // MODIFICACIÓN: Actualizar el texto del botón que ahora va a pantalla2 (opcional, pero útil)
-            // goToPantalla2Button.textContent = `Volver a Inventario (${successfullyCreatedDishes.length})`;
-            
             if (deckCountElement) deckCountElement.textContent = AVAILABLE_INGREDIENT_POOL.length;
             if (createdDishesCountElement) createdDishesCountElement.textContent = successfullyCreatedDishes.length;
-            if (coinCountElement) coinCountElement.textContent = coins; // NUEVA ADICIÓN: MONEDAS
+            if (coinCountElement) coinCountElement.textContent = coins; 
 
             renderCardStackDepth('deck-stack', AVAILABLE_INGREDIENT_POOL.length);
             renderCardStackDepth('created-dishes-stack', successfullyCreatedDishes.length);
 
             saveGameData('score', score);
-            saveGameData('coins', coins); // NUEVA ADICIÓN: MONEDAS
+            saveGameData('coins', coins); 
             saveGameData('playsRemaining', playsRemaining);
             saveGameData('discardsRemaining', discardsRemaining);
             saveGameData('usedIngredientIds', usedIngredientIds);
-            saveGameData('successfullyCreatedDishes', successfullyCreatedDishes); // Asegurar que se guarda el historial
+            saveGameData('successfullyCreatedDishes', successfullyCreatedDishes); 
+            saveGameData(DISCOVERED_RECIPES_KEY, discoveredRecipes); // NUEVO: Guardar recetas descubiertas
 
             playsRemainingElement.classList.toggle('danger', playsRemaining <= 0);
             discardsRemainingElement.classList.toggle('danger', discardsRemaining <= 0);
@@ -967,7 +972,6 @@
             const ingData = ALL_INGREDIENT_OBJECTS.get(ingredientId);
             if (!ingData) { return null; }
 
-            // MODIFICACIÓN: Se elimina la clase 'new-card'
             const card = document.createElement('div');
             card.className = 'ingredient-card';
             card.setAttribute('data-id', ingData.id);
@@ -1011,22 +1015,18 @@
             return AVAILABLE_INGREDIENT_POOL.length === 0 ? null : AVAILABLE_INGREDIENT_POOL.pop();
         }
 
-        // NUEVAS FUNCIONES DE ANIMACIÓN Y ROBO (Reemplazo de la función original fillCarousel)
-
         function animateDrawToCarousel(ingredientId, index) {
             const ingData = ALL_INGREDIENT_OBJECTS.get(ingredientId);
             if (!ingData) return 0;
 
             const tempCard = createCardElement(ingredientId);
             
-            // 1. Preparar tarjeta temporal (posición fija para animación)
             tempCard.style.position = 'fixed';
             tempCard.style.margin = '0';
             tempCard.style.zIndex = 40 + index; 
             tempCard.style.opacity = '0';
             tempCard.style.transition = 'none';
 
-            // Calcular dimensiones de la tarjeta movible (12vh es 60% del alto del carrusel)
             const cardHeight = '12vh'; 
             const aspectRatio = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ing-card-aspect-ratio')) || (49 / 70);
             
@@ -1038,7 +1038,6 @@
             const deckStack = document.getElementById('deck-stack');
             const deckRect = deckStack.getBoundingClientRect();
             
-            // Posición Inicial: Centro de la Pila del Mazo
             const tempCardRect = tempCard.getBoundingClientRect();
             const startX = deckRect.left + deckRect.width / 2 - tempCardRect.width / 2;
             const startY = deckRect.top + deckRect.height / 2 - tempCardRect.height / 2;
@@ -1046,41 +1045,31 @@
             tempCard.style.top = `${startY}px`;
             tempCard.style.left = `${startX}px`;
 
-            // 2. Calcular Posición Objetivo (Usando un elemento dummy para forzar el espacio en el carrusel)
             const dummyCard = createCardElement(ingredientId);
             dummyCard.style.visibility = 'hidden';
-            dummyCard.style.position = 'relative'; // Asegura que tome espacio
+            dummyCard.style.position = 'relative'; 
             carousel.appendChild(dummyCard);
 
-            // Forzar reflow y obtener posición objetivo
             const targetRect = dummyCard.getBoundingClientRect();
             
             const endX = targetRect.left;
             const endY = targetRect.top;
 
-            // 3. Secuencia de Animación
             const totalDelay = index * 100;
             
-            // Fase 1: Aparecer y levantarse de la pila
             setTimeout(() => {
                 tempCard.style.transition = `opacity 100ms ease-out, transform 200ms ease-out`;
                 tempCard.style.opacity = '1';
-                // Levantar y mover ligeramente hacia la dirección del carrusel
                 tempCard.style.transform = `translateY(-${deckRect.height}px) scale(0.9)`; 
             }, totalDelay); 
 
-            // Fase 2: Mover al slot final del carrusel
             setTimeout(() => {
                 tempCard.style.transition = `transform ${ANIMATION_DURATION}ms ease-in-out, opacity ${ANIMATION_DURATION}ms linear`;
-                // Transformar desde la posición fija de inicio a la posición fija de destino
                 tempCard.style.transform = `translate(${endX - startX}px, ${endY - startY}px) rotate(0deg) scale(1)`;
 
-                // Fase 3: Limpieza e inserción final
                 setTimeout(() => {
-                    // Eliminar el clon móvil
                     tempCard.remove(); 
                     
-                    // Eliminar el dummy e insertar la tarjeta final
                     carousel.removeChild(dummyCard); 
                     const finalCardElement = createCardElement(ingredientId);
                     carousel.appendChild(finalCardElement);
@@ -1111,17 +1100,14 @@
                 if (animTime > maxAnimationTime) maxAnimationTime = animTime;
             });
             
-            // Esperar a que todas las animaciones terminen antes de actualizar estadísticas
             setTimeout(updateStats, maxAnimationTime + 100); 
         }
 
-        // --- NUEVA FUNCIÓN DE ANIMACIÓN DE PLATO AL STACK ---
         function animateDishToStack(resultCard) {
             const targetStack = document.getElementById('created-dishes-stack');
             const targetRect = targetStack.getBoundingClientRect();
             const startRect = resultCard.getBoundingClientRect();
 
-            // 1. Crear un clon para la animación
             const clone = resultCard.cloneNode(true);
             clone.classList.remove('show'); 
             clone.style.transition = 'none';
@@ -1129,7 +1115,6 @@
             clone.style.zIndex = 1000;
             clone.style.margin = '0';
             
-            // Posición inicial (la misma que la tarjeta actual en el DOM)
             clone.style.top = `${startRect.top}px`;
             clone.style.left = `${startRect.left}px`;
             clone.style.width = `${startRect.width}px`;
@@ -1138,21 +1123,17 @@
 
             document.body.appendChild(clone);
             
-            // Esconder la tarjeta original inmediatamente
             resultCard.style.opacity = '0'; 
 
             const targetX = targetRect.left + targetRect.width / 2 - startRect.width / 2;
             const targetY = targetRect.top + targetRect.height / 2 - startRect.height / 2;
             
-            // 2. Ejecutar la animación
             setTimeout(() => {
                 clone.style.transition = `transform ${ANIMATION_DURATION}ms ease-in, opacity ${ANIMATION_DURATION}ms ease-in`;
                 clone.style.opacity = '0.7'; 
-                // Mover al centro del stack objetivo y reducir tamaño
                 clone.style.transform = `translate(${targetX - startRect.left}px, ${targetY - startRect.top}px) rotate(0deg) scale(0.3)`;
             }, 50);
 
-            // 3. Limpieza
             setTimeout(() => {
                 clone.remove();
                 resultCard.remove(); 
@@ -1161,12 +1142,10 @@
             return ANIMATION_DURATION + 100;
         }
 
-        // MODIFICACIÓN DE REQUERIMIENTO: NUEVA FUNCIÓN DE RECICLAJE
         function animateRecycleCards(cardsToRecycle, selectedCardsForRecycle) {
             const targetStack = document.getElementById('deck-stack');
             const targetRect = targetStack.getBoundingClientRect();
             
-            // 1. Limpiar el placeholder del tablero
             boardPlaceholder.style.opacity = '1';
 
             let maxAnimationTime = 0;
@@ -1188,7 +1167,7 @@
                 clone.style.transform = 'none'; 
                 
                 document.body.appendChild(clone);
-                card.remove(); // Eliminar la carta del tablero inmediatamente
+                card.remove(); 
 
                 const targetX = targetRect.left + targetRect.width / 2 - currentRect.width / 2;
                 const targetY = targetRect.top + targetRect.height / 2 - currentRect.height / 2;
@@ -1198,29 +1177,25 @@
 
                 setTimeout(() => {
                     clone.style.transition = `transform ${ANIMATION_DURATION}ms ease-in-out, opacity ${ANIMATION_DURATION / 2}ms linear`;
-                    // Mover al centro del stack y reducir tamaño
                     clone.style.transform = `translate(${targetX - currentRect.left}px, ${targetY - currentRect.top}px) rotate(${Math.random() * 10 - 5}deg) scale(0.3)`;
                     
                     setTimeout(() => {
-                        clone.style.opacity = '0'; // Desaparecer al final
+                        clone.style.opacity = '0'; 
                     }, ANIMATION_DURATION - 50);
 
                 }, animationDelay); 
                 
-                // Agregar la carta de vuelta al mazo lógico
                 AVAILABLE_INGREDIENT_POOL.push(selectedCardsForRecycle[index]); 
             });
             
-            // Limpieza de clones animados y finalización del turno
             setTimeout(() => {
                 document.body.querySelectorAll('.moving-card').forEach(c => c.remove());
                 
-                // Re-ordenar el mazo después de la inserción
                 AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
                 
                 selectedCards = [];
                 updateActionButtons();
-                fillCarousel(); // Robar nuevas cartas
+                fillCarousel(); 
                 isProcessingPlay = false;
                 updateStats();
                 
@@ -1229,7 +1204,6 @@
 
             return maxAnimationTime + 100;
         }
-        // FIN MODIFICACIÓN DE REQUERIMIENTO
 
 
         function updateActionButtons() {
@@ -1244,7 +1218,6 @@
             discardButton.disabled = !hasSelection || !hasDiscards || isProcessingPlay;
         }
         
-        // --- Lógica de Animación y Juego ---
         
         function handlePlayCards() {
             if (isProcessingPlay || selectedCards.length === 0 || playsRemaining <= 0) return;
@@ -1288,7 +1261,6 @@
 
             const selectedCardsForHistory = selectedCards;
 
-            // Mover cartas al tablero
             setTimeout(() => {
                 const dishBoardRect = dishBoard.getBoundingClientRect();
                 const centerOfBoardX = dishBoardRect.left + dishBoardRect.width / 2;
@@ -1321,27 +1293,22 @@
 
             }, 50);
 
-            // Revisar receta y animar resultado
             setTimeout(() => {
                 const matchingRecipe = checkRecipeMatch(playedCardsData);
 
                 if (matchingRecipe) {
-                    // MODIFICACIÓN: MONEDAS
                     const pointsGained = matchingRecipe.points || 1; 
                     showMessage(`¡Plato Creado! ${matchingRecipe.emoji} ${matchingRecipe.name} (+${pointsGained} Monedas 💰)`, 'success');
-                    // FIN MODIFICACIÓN
 
-                    const resultCard = handleSuccessfulDish(matchingRecipe, playedCardsData); // Obtiene el elemento de la tarjeta de plato
+                    const resultCard = handleSuccessfulDish(matchingRecipe, playedCardsData); 
 
-                    // Esperar a que la tarjeta de plato aparezca en el tablero (50ms después de ser agregada)
                     const waitTimeBeforeMove = 50; 
 
                     setTimeout(() => {
-                        const moveTime = animateDishToStack(resultCard); // Inicia la animación de movimiento al stack
+                        const moveTime = animateDishToStack(resultCard); 
 
-                        // Limpieza final después de que la tarjeta ha llegado al stack
                         setTimeout(() => {
-                            clearBoard(true); // Limpia el placeholder y las cartas de ingredientes jugadas
+                            clearBoard(true); 
                             usedIngredientIds.push(...selectedCardsForHistory);
                             removePlayedCards(cardsToMove);
                             selectedCards = [];
@@ -1354,24 +1321,29 @@
                     }, waitTimeBeforeMove);
 
                 } else {
-                    // MODIFICACIÓN DE REQUERIMIENTO: LLAMAR A RECICLAR CARTAS
                     showMessage("No se encontró ninguna receta válida. 😞", 'failure');
                     
-                    // Obtener las cartas que se movieron al tablero (ahora están en dishBoard)
                     const cardsInBoard = Array.from(dishBoard.querySelectorAll('.ingredient-card.played'));
-                    removePlayedCards(cardsToMove); // Elimina las cartas originales del carrusel
+                    removePlayedCards(cardsToMove); 
 
-                    // Llama a la nueva función de reciclaje, que maneja la limpieza y el estado
                     animateRecycleCards(cardsInBoard, selectedCardsForHistory); 
                 }
             }, ANIMATION_DURATION + 300);
         }
 
-        // MODIFICACIÓN: Retorna el elemento y la lógica de animación de plato se movió a handlePlayCards
         function handleSuccessfulDish(recipe, playedIngredients) {
             score++;
-            const pointsGained = recipe.points || 1; // NUEVA ADICIÓN: MONEDAS
-            coins += pointsGained; // NUEVA ADICIÓN: MONEDAS
+            const pointsGained = recipe.points || 1; 
+            coins += pointsGained; 
+            
+            // **********************************************
+            // MODIFICACIÓN CLAVE: MARCAR RECETA COMO DESCUBIERTA
+            // **********************************************
+            if (!discoveredRecipes.includes(recipe.name)) {
+                discoveredRecipes.push(recipe.name);
+            }
+            // **********************************************
+
 
             const newDish = {
                 name: recipe.name,
@@ -1383,13 +1355,11 @@
 
             const resultCard = createResultDishCardElement(recipe, playedIngredients);
 
-            // Desvanecer las cartas de ingredientes jugadas
             dishBoard.querySelectorAll('.ingredient-card').forEach(card => {
                 card.style.transition = 'opacity 0.3s ease-in';
                 card.style.opacity = '0';
             });
             
-            // Mostrar la carta de plato en el centro
             dishBoard.appendChild(resultCard);
             setTimeout(() => {
                 resultCard.classList.add('show');
@@ -1397,26 +1367,21 @@
 
             updateStats();
             
-            // **********************************************
             // MODIFICACIÓN CLAVE: CERRAR CICLO DE LOGROS
-            // **********************************************
             if (window.parent && typeof window.parent.verificarLogros === 'function') {
                 window.parent.verificarLogros();
                 console.log("Notificación enviada a main.js para verificar logros (Plato Creado).");
             } else {
                 console.warn("Función window.parent.verificarLogros() no disponible. Asegúrate de que main.js la define.");
             }
-            // **********************************************
             
             return resultCard;
         }
 
 
-        // MODIFICACIÓN: La función clearBoard se usa solo para el éxito, y solo espera que el resultado desaparezca.
         function clearBoard(success) {
             
             if (!success) {
-                // Esta parte ya no se usa, pero se mantiene la función para éxito
                 dishBoard.querySelectorAll('.ingredient-card.played').forEach((card) => {
                     card.style.transition = `transform ${ANIMATION_DURATION}ms ease-in, opacity ${ANIMATION_DURATION}ms ease-in`;
                     card.style.opacity = '0';
@@ -1427,7 +1392,7 @@
             setTimeout(() => {
                 dishBoard.querySelectorAll('.ingredient-card.played').forEach(card => card.remove());
                 boardPlaceholder.style.opacity = '1';
-                dishBoard.querySelectorAll('.result-dish-card').forEach(card => card.remove()); // Asegurar que el plato también desaparezca
+                dishBoard.querySelectorAll('.result-dish-card').forEach(card => card.remove()); 
             }, ANIMATION_DURATION);
         }
 
@@ -1558,11 +1523,12 @@
         function resetGame() {
             if (!confirm("¿Estás seguro de que quieres reiniciar el juego? Se perderá todo el progreso (platos, manos restantes, etc.).")) return;
             localStorage.removeItem('dishCreator_score');
-            localStorage.removeItem('dishCreator_coins'); // NUEVA ADICIÓN: MONEDAS
+            localStorage.removeItem('dishCreator_coins'); 
             localStorage.removeItem('dishCreator_playsRemaining');
             localStorage.removeItem('dishCreator_discardsRemaining');
             localStorage.removeItem('dishCreator_successfullyCreatedDishes');
             localStorage.removeItem('dishCreator_usedIngredientIds');
+            localStorage.removeItem(DISCOVERED_RECIPES_KEY); // NUEVO: Resetear recetas descubiertas
             location.reload();
         }
 
@@ -1717,10 +1683,14 @@
                 collectedDishesContainer.appendChild(card);
             });
         }
+        
+        // **********************************************
+        // MODIFICACIÓN CLAVE: RECETARIO CON DESCUBRIMIENTO
+        // **********************************************
         function renderAllRecipes() { 
             availableRecipesContainer.innerHTML = '';
             if (ALL_DISH_RECIPES.length === 0) {
-                availableRecipesContainer.innerHTML = `<p style="color:#f75555;">No se pudo cargar el recetario.</p>`;
+                availableRecipesContainer.innerHTML = `<p style="color:#f75555;">No se pudo cargar el recetario. (Verifique menu_db.json)</p>`;
                 return;
             }
 
@@ -1728,42 +1698,55 @@
                                         .map(card => card.getAttribute('data-id'));
 
             ALL_DISH_RECIPES.forEach(dish => {
+                const isDiscovered = discoveredRecipes.includes(dish.name);
                 const item = document.createElement('div');
                 item.className = 'recipe-item';
-                const requiredCategories = [];
-                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) requiredCategories.push('Carbohidrato');
-                if (dish.principales.length > 0 && !dish.principales.includes('-')) requiredCategories.push('Principal');
-                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) requiredCategories.push('Verdura');
 
-                const requiredText = requiredCategories.length > 0
-                    ? `Requiere: ${requiredCategories.join(', ')}`
-                    : 'No requiere categorías específicas.';
+                if (!isDiscovered) {
+                    // Mostrar receta oculta
+                    item.innerHTML = `
+                        <h4>❓ Receta Desconocida (Valor: ${dish.points || 1} 💰)</h4>
+                        <p class="recipe-ingredients" style="color:#b0b8c5;">Crea el plato para descubrir sus requisitos.</p>
+                    `;
+                } else {
+                    // Mostrar receta descubierta
+                    const requiredCategories = [];
+                    if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) requiredCategories.push('Carbohidrato');
+                    if (dish.principales.length > 0 && !dish.principales.includes('-')) requiredCategories.push('Principal');
+                    if (dish.verduras.length > 0 && !dish.verduras.includes('-')) requiredCategories.push('Verdura');
 
-                let ingredientsHTML = '<div class="recipe-ingredients">';
-                const createIngredientList = (label, ingredients) => {
-                    let html = `<strong>${label}:</strong> `;
-                    const listItems = ingredients.map(ingName => {
-                        const isAvailable = handIngredientIds.some(id => (ALL_INGREDIENT_OBJECTS.get(id)?.baseName || id) === ingName);
-                        return isAvailable ? `<span style="color: var(--selection-color); font-weight: 700;">${ingName}</span>` : ingName;
-                    });
-                    html += listItems.join(', ');
-                    return html + '<br>';
-                };
+                    const requiredText = requiredCategories.length > 0
+                        ? `Requiere: ${requiredCategories.join(', ')}`
+                        : 'No requiere categorías específicas.';
 
-                if (dish.principales.length > 0 && !dish.principales.includes('-')) ingredientsHTML += createIngredientList('Principales', dish.principales);
-                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) ingredientsHTML += createIngredientList('Carbohidratos', dish.carbohidratos);
-                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) ingredientsHTML += createIngredientList('Verduras/Extras', dish.verduras);
+                    let ingredientsHTML = '<div class="recipe-ingredients">';
+                    const createIngredientList = (label, ingredients) => {
+                        let html = `<strong>${label}:</strong> `;
+                        const listItems = ingredients.map(ingName => {
+                            const isAvailable = handIngredientIds.some(id => (ALL_INGREDIENT_OBJECTS.get(id)?.baseName || id) === ingName);
+                            return isAvailable ? `<span style="color: var(--selection-color); font-weight: 700;">${ingName}</span>` : ingName;
+                        });
+                        html += listItems.join(', ');
+                        return html + '<br>';
+                    };
 
-                ingredientsHTML += '</div>';
+                    if (dish.principales.length > 0 && !dish.principales.includes('-')) ingredientsHTML += createIngredientList('Principales', dish.principales);
+                    if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) ingredientsHTML += createIngredientList('Carbohidratos', dish.carbohidratos);
+                    if (dish.verduras.length > 0 && !dish.verduras.includes('-')) ingredientsHTML += createIngredientList('Verduras/Extras', dish.verduras);
 
-                item.innerHTML = `
-                    <h4>${dish.emoji} ${dish.name} (Valor: ${dish.points || 1} 💰)</h4>
-                    <p style="font-size:0.9em; font-style:italic; color:#b0b8c5; margin-bottom: 0;">${requiredText}</p>
-                    ${ingredientsHTML}
-                `;
+                    ingredientsHTML += '</div>';
+
+                    item.innerHTML = `
+                        <h4>${dish.emoji} ${dish.name} (Valor: ${dish.points || 1} 💰)</h4>
+                        <p style="font-size:0.9em; font-style:italic; color:#b0b8c5; margin-bottom: 0;">${requiredText}</p>
+                        ${ingredientsHTML}
+                    `;
+                }
                 availableRecipesContainer.appendChild(item);
             });
         }
+        // **********************************************
+
         function showRecipesPopup() {
             renderAllRecipes();
             recipePopup.style.display = 'block';
@@ -1814,24 +1797,16 @@
             shuffleButton.addEventListener('click', handleShufflePool);
             resetGameButton.addEventListener('click', resetGame);
 
-            // MODIFICACIÓN 1: El stack de platos ahora abre el popup
             createdDishesStack.addEventListener('click', showCollectedDishesPopup);
-            // El close button ahora está dentro del popup-content, por lo que usamos querySelector
             dishPopup.querySelector('.close-button').addEventListener('click', hideCollectedDishesPopup);
 
-            // MODIFICACIÓN 2: El nuevo botón de acción ahora carga pantalla2
             goToPantalla2Button.addEventListener('click', () => {
-                // ASUNCIÓN: Se utiliza una función global 'loadScreen' para el cambio de pantalla.
-                // Si la función tiene otro nombre o es local, esto deberá ajustarse en tu entorno.
-                // Usamos window.parent si estamos en un iframe.
                 if (window.parent && typeof window.parent.loadScreen === 'function') {
                     window.parent.loadScreen('pantalla2');
                 } else if (typeof window.loadScreen === 'function') {
                     window.loadScreen('pantalla2');
                 } else {
                     console.warn("La función loadScreen('pantalla2') no está definida globalmente. No se pudo cambiar la pantalla.");
-                    // Opcional: Redireccionar directamente para simular el cambio si no hay un gestor de pantallas:
-                    // window.location.href = 'pantalla2.html';
                 }
             });
 
