@@ -6,7 +6,19 @@
       "descripcion": "Crea y guarda tu primer plato principal en el menú.",
       "categoria": "Creación",
       "condicion": { "metrica": "total_platos_creados", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Queso Secreto",
+          "stock_inicial": 3,
+          "emoji": "🧀",
+          "vegetariano": true, "vegano": false, "pesciboro": true, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "Misterio Lácteo"
+        }
+      }
     },
     {
       "id": "diversidad_10",
@@ -14,15 +26,59 @@
       "descripcion": "Crea 10 platos principales con nombres únicos.",
       "categoria": "Creación",
       "condicion": { "metrica": "total_platos_creados", "valor_minimo": 10 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Trufa Negra",
+          "stock_inicial": 1,
+          "emoji": "🍄",
+          "vegetariano": true, "vegano": false, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Aroma de Lujo"
+        }
+      }
+    },
+    {
+      "id": "creador_experto",
+      "nombre": "🔬 El Gran Innovador",
+      "descripcion": "Crea 25 platos principales con nombres únicos.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "total_platos_creados", "valor_minimo": 25 },
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Caviar Dorado",
+          "stock_inicial": 1,
+          "emoji": "⚫",
+          "vegetariano": false, "vegano": false, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Manjar de Élite"
+        }
+      }
     },
     {
       "id": "el_carbonara",
       "nombre": "🥓 El Favorito",
-      "descripcion": "Crea 5 platos que contengan el ingrediente 'Tocino' (o tu ingrediente principal más popular).",
+      "descripcion": "Crea 5 platos que contengan el ingrediente 'Tocino'.",
       "categoria": "Creación",
       "condicion": { "metrica": "platos_con_ingrediente_X", "valor_minimo": 5, "param": "Tocino" },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Pechuga de Pavo Ahumada",
+          "stock_inicial": 4,
+          "emoji": "🦃",
+          "vegetariano": false, "vegano": false, "pesciboro": false, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "Sándwich Proteico"
+        }
+      }
     },
     {
       "id": "la_trinidad_plato",
@@ -30,15 +86,39 @@
       "descripcion": "Crea un plato que contenga 3 Carbohidratos, 3 Principales y 3 Verduras (9 ingredientes totales).",
       "categoria": "Reto",
       "condicion": { "metrica": "plato_con_nueve_items", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Langosta Fresca",
+          "stock_inicial": 1,
+          "emoji": "🦞",
+          "vegetariano": false, "vegano": false, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Desafío de las Aguas"
+        }
+      }
     },
     {
       "id": "solo_un_carbo",
-      "nombre": "🍚 Puro Carbo",
+      "nombre": "🍚 Pureza Culinaria",
       "descripcion": "Crea 12 platos que utilicen solo 1 carbohidrato (y al menos 1 Principal/Verdura).",
       "categoria": "Creación",
       "condicion": { "metrica": "platos_con_solo_1_carbo", "valor_minimo": 12 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Seitán Gourmet",
+          "stock_inicial": 2,
+          "emoji": "🌱",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Opción Vegana Rápida"
+        }
+      }
     },
     {
       "id": "proteina_completa",
@@ -46,7 +126,19 @@
       "descripcion": "Crea 5 platos que usen al menos 2 tipos de proteínas diferentes en su campo 'Principal'.",
       "categoria": "Creación",
       "condicion": { "metrica": "platos_con_doble_proteina", "valor_minimo": 5 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Rib Eye",
+          "stock_inicial": 1,
+          "emoji": "🥩",
+          "vegetariano": false, "vegano": false, "pesciboro": false, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Corte de Maestro"
+        }
+      }
     },
     {
       "id": "verdura_maestro",
@@ -54,83 +146,170 @@
       "descripcion": "Crea 8 platos que contengan al menos 3 verduras diferentes.",
       "categoria": "Creación",
       "condicion": { "metrica": "platos_con_triple_verdura", "valor_minimo": 8 },
-      "obtenido": false, "fecha_obtencion": null
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Pesto Artesanal",
+          "stock_inicial": 3,
+          "emoji": "🍃",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "La Esencia Italiana"
+        }
+      }
     },
     {
-      "id": "plato_sin_carbo",
-      "nombre": "🥗 Keto King",
-      "descripcion": "Crea un plato que no tenga asignado ningún carbohidrato.",
+      "id": "sin_carbo",
+      "nombre": "🥑 Keto Avanzado",
+      "descripcion": "Crea 5 platos principales sin utilizar ningún carbohidrato.",
       "categoria": "Reto",
-      "condicion": { "metrica": "platos_sin_carbohidrato", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
+      "condicion": { "metrica": "platos_sin_carbohidrato", "valor_minimo": 5 },
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Aceite de Oliva Extra Virgen",
+          "stock_inicial": 5,
+          "emoji": "🍾",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Elixir Mediterráneo"
+        }
+      }
     },
     {
-      "id": "multi_carbo_dish",
-      "nombre": "🥔🍝 Triple Impacto",
-      "descripcion": "Crea un plato principal que tenga 3 carbohidratos diferentes.",
+      "id": "triple_carbo",
+      "nombre": "🍞 El Carga-Carbohidratos",
+      "descripcion": "Crea 3 platos que contengan 3 o más carbohidratos diferentes.",
       "categoria": "Reto",
-      "condicion": { "metrica": "platos_con_triple_carbo", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
+      "condicion": { "metrica": "platos_con_triple_carbo", "valor_minimo": 3 },
+      "obtenido": false, 
+      "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Masa de Sémola",
+          "stock_inicial": 3,
+          "emoji": "🌾",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "Textura Múltiple"
+        }
+      }
     },
     {
-      "id": "etiquetas_pro",
-      "nombre": "🔖 Etiquetador Profesional",
-      "descripcion": "Crea 15 platos diferentes con la propiedad 'gourmet: true' (o similar) en al menos uno de sus ingredientes.",
+      "id": "inventario_completo",
+      "nombre": "📦 Coleccionista",
+      "descripcion": "Registra 50 ingredientes en el inventario.",
+      "categoria": "Hito",
+      "condicion": { "metrica": "total_platos_registrados", "valor_minimo": 50 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Setas Exóticas",
+          "stock_inicial": 2,
+          "emoji": "🍄",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "Bosque Umbrío"
+        }
+      }
+    },
+    {
+      "id": "hambre_maxima",
+      "nombre": "🤯 Sin Restricciones",
+      "descripcion": "Crea 1 plato sin ninguna restricción de dieta (vegetariano, vegano, pesciboro, etc.).",
+      "categoria": "Reto",
+      "condicion": { "metrica": "plato_sin_restriccion", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Pimentón Ahumado",
+          "stock_inicial": 5,
+          "emoji": "🌶️",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "Sabor Intenso"
+        }
+      }
+    },
+    {
+      "id": "vegetariano_puro",
+      "nombre": "🥦 Maestro Vegetal",
+      "descripcion": "Crea 10 platos aptos estrictamente vegetarianos.",
       "categoria": "Creación",
-      "condicion": { "metrica": "platos_con_ingrediente_gourmet", "valor_minimo": 15 },
-      "obtenido": false, "fecha_obtencion": null
-    },
-
-
-
-
-
-    {
-      "id": "plan_semanal_full",
-      "nombre": "📅 Planificador Semanal",
-      "descripcion": "Completa una semana entera (7 días) de planificación con platos asignados.",
-      "categoria": "Planificación",
-      "condicion": { "metrica": "semanas_completas", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
+      "condicion": { "metrica": "total_platos_vegetarianos", "valor_minimo": 10 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Lentejas Beluga",
+          "stock_inicial": 4,
+          "emoji": "🍲",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "El Tesoro de la Tierra"
+        }
+      }
     },
     {
-      "id": "no_repetir_semana",
-      "nombre": "🙅‍♂️ Anti-Repetición",
-      "descripcion": "Completa una semana de planificación donde todos los 7 platos sean diferentes.",
+      "id": "gourmet_5",
+      "nombre": "🎩 Paladar Fino",
+      "descripcion": "Crea 5 platos que contengan al menos 1 ingrediente marcado como 'gourmet'.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_gourmet", "valor_minimo": 5 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Especias Azafrán",
+          "stock_inicial": 2,
+          "emoji": "👑",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": true
+        },
+        "plato_nuevo": {
+          "nombre": "La Joya del Menú"
+        }
+      }
+    },
+    {
+      "id": "agotamiento_total",
+      "nombre": "📉 Baja Existencia II",
+      "descripcion": "Logra que 10 ingredientes de tu inventario lleguen a 0 o 1 unidad disponible.",
+      "categoria": "Hito",
+      "condicion": { "metrica": "ingredientes_casi_agotados", "valor_minimo": 10 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Chorizo Artesanal",
+          "stock_inicial": 3,
+          "emoji": "🥓",
+          "vegetariano": false, "vegano": false, "pesciboro": false, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "Sabor del Pueblo"
+        }
+      }
+    },
+    
+    {
+      "id": "plan_semanal_completo",
+      "nombre": "📅 Rutina Estable",
+      "descripcion": "Planifica 7 días seguidos con un plato asignado.",
       "categoria": "Planificación",
-      "condicion": { "metrica": "semanas_sin_repeticion", "valor_minimo": 1 },
+      "condicion": { "metrica": "dias_con_plato_asignado_continuo", "valor_minimo": 7 },
       "obtenido": false, "fecha_obtencion": null
     },
     {
-      "id": "repetidor_diario",
-      "nombre": "🔄 Comida Única",
-      "descripcion": "Planifica un menú semanal donde el mismo plato se repita 7 veces.",
-      "categoria": "Planificación",
-      "condicion": { "metrica": "semanas_con_plato_repetido_7", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
-    },
-    {
-      "id": "menu_vegetariano",
-      "nombre": "🥦 Menú Verde",
-      "descripcion": "Planifica una semana completa usando solo platos Vegetarianos (todos sus ingredientes son vegetarianos).",
-      "categoria": "Planificación",
-      "condicion": { "metrica": "semanas_veg_completas", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
-    },
-    {
-      "id": "menu_pescetariano",
-      "nombre": "🐟 Dieta Marina",
-      "descripcion": "Planifica una semana completa usando solo platos Pescetarianos.",
-      "categoria": "Planificación",
-      "condicion": { "metrica": "semanas_pesce_completas", "valor_minimo": 1 },
-      "obtenido": false, "fecha_obtencion": null
-    },
-    {
-      "id": "diversidad_ingre_15",
-      "nombre": "🧩 Mega Combinación",
-      "descripcion": "Crea un menú semanal que utilice 15 ingredientes de inventario diferentes.",
-      "categoria": "Planificación",
-      "condicion": { "metrica": "ingredientes_diferentes_semana", "valor_minimo": 15 },
+      "id": "milestone_50",
+      "nombre": "🗓️ Cincuenta Días",
+      "descripcion": "Alcanza 50 días totales de planificación en el calendario.",
+      "categoria": "Hito",
+      "condicion": { "metrica": "total_dias_planificados", "valor_minimo": 50 },
       "obtenido": false, "fecha_obtencion": null
     },
     {
@@ -142,28 +321,31 @@
       "obtenido": false, "fecha_obtencion": null
     },
     {
-      "id": "plan_completo_mes",
-      "nombre": "🗓️ Visión a Largo Plazo",
-      "descripcion": "Planifica 30 días continuos con un plato asignado.",
+      "id": "variedad_semana",
+      "nombre": "🔄 Rotación Constante",
+      "descripcion": "Utiliza al menos 15 ingredientes únicos en tu planificación semanal.",
       "categoria": "Planificación",
-      "condicion": { "metrica": "dias_con_plato_asignado_continuo", "valor_minimo": 30 },
+      "condicion": { "metrica": "ingredientes_unicos_por_semana", "valor_minimo": 15 },
       "obtenido": false, "fecha_obtencion": null
     },
     {
-      "id": "stock_agotado_plan",
-      "nombre": "📉 Baja Existencia",
-      "descripcion": "Planifica un menú semanal que te obligue a utilizar 5 ingredientes cuya cantidad_disponible era 1 o menos.",
+      "id": "reto_vegan",
+      "nombre": "💚 Desafío Vegano",
+      "descripcion": "Crea 5 platos aptos estrictamente veganos.",
       "categoria": "Reto",
-      "condicion": { "metrica": "ingredientes_agotados_por_plan", "valor_minimo": 5 },
-      "obtenido": false, "fecha_obtencion": null
-    },
-    {
-      "id": "combinaciones_90",
-      "nombre": "🧬 Maestro Combinador",
-      "descripcion": "Crea 90 platos en total (la mitad del máximo de 180 combinaciones posibles).",
-      "categoria": "Hito",
-      "condicion": { "metrica": "total_platos_creados", "valor_minimo": 90 },
-      "obtenido": false, "fecha_obtencion": null
+      "condicion": { "metrica": "total_platos_veganos", "valor_minimo": 5 },
+      "obtenido": false, "fecha_obtencion": null,
+      "recompensa": {
+        "ingrediente_comodin": {
+          "nombre": "Tofu Sazonado",
+          "stock_inicial": 3,
+          "emoji": "◻️",
+          "vegetariano": true, "vegano": true, "pesciboro": true, "gourmet": false
+        },
+        "plato_nuevo": {
+          "nombre": "El Cubo de la Planta"
+        }
+      }
     }
   ]
 }
