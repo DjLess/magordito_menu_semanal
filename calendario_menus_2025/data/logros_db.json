@@ -6,7 +6,7 @@
       "descripcion": "Crea y guarda tu primer plato principal en el menú.",
       "categoria": "Creación",
       "condicion": { "metrica": "total_platos_creados", "valor_minimo": 1 },
-      "obtenido": false, 
+      "obtenido": true, 
       "fecha_obtencion": null,
       "recompensa": {
         "ingrediente_comodin": {
@@ -349,6 +349,7 @@
     }
   ]
 }
+
 
 
 
