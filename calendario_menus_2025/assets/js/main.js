@@ -221,7 +221,7 @@ function desbloquearRecompensa(recompensa, isSilent = false) {
     }
 
     // Opcional: Refrescar la vista si es necesario
-    if (isUpdated && !galleriesContainer.classList.contains('hidden')) {
+    if (isUpdated && galleriesContainer && !galleriesContainer.classList.contains('hidden')) {
         renderGalleries();
     }
 }
@@ -274,8 +274,8 @@ function verificarLogros() {
         platos_con_ingrediente_X: countPlatosWithIngredient('Tocino'), 
         total_platos_registrados: inventarioData ? inventarioData.length : 0,
 
-        // **NOTA: Las siguientes métricas requieren lógica de rastreo adicional no incluida aquí,
-        // por lo que se dejan en 0 o con los nombres de las métricas que debes implementar:**
+        // **NOTA: Estas métricas dependen de más lógica de seguimiento (dieta, planificación)
+        // que no está incluida en este código, por lo que se asume el valor 0 o 1 (booleano):**
         plato_sin_restriccion: 0, 
         total_platos_vegetarianos: 0, 
         platos_con_gourmet: 0, 
@@ -298,6 +298,7 @@ function verificarLogros() {
             // Chequeo especial para métricas de ingrediente específico
             let cumpleCondicion = false;
             if (metrica === 'platos_con_ingrediente_X' && logro.condicion.param) {
+                 // Usa el param del logro para re-chequear si no es 'Tocino'
                  if (countPlatosWithIngredient(logro.condicion.param) >= valorMinimo) {
                      cumpleCondicion = true;
                  }
@@ -409,19 +410,23 @@ function showLogrosScreen() {
 }
 
 function toggleGalleries() {
-    if (galleriesContainer.classList.contains('hidden')) {
-        galleriesContainer.classList.remove('hidden');
-        galleriesContainer.style.backgroundColor = '#1a1f26'; 
-        galleriesContainer.style.borderColor = '#484f58';
-        galleriesContainer.style.color = '#c9d1d9';
-        renderGalleries();
-    } else {
-        galleriesContainer.classList.add('hidden');
-        galleriesContainer.innerHTML = '';
+    if (galleriesContainer) {
+        if (galleriesContainer.classList.contains('hidden')) {
+            galleriesContainer.classList.remove('hidden');
+            galleriesContainer.style.backgroundColor = '#1a1f26'; 
+            galleriesContainer.style.borderColor = '#484f58';
+            galleriesContainer.style.color = '#c9d1d9';
+            renderGalleries();
+        } else {
+            galleriesContainer.classList.add('hidden');
+            galleriesContainer.innerHTML = '';
+        }
     }
 }
 
 function renderGalleries() {
+    if (!galleriesContainer) return;
+    
     galleriesContainer.innerHTML = ''; // Limpiar
 
     const logrosButtonHTML = `
@@ -477,24 +482,29 @@ function renderGalleries() {
 
 
 async function loadContent(url) {
-    loadedArea.innerHTML = "";
-    overlay.style.display = "flex";
+    if (loadedArea && overlay) {
+        loadedArea.innerHTML = "";
+        overlay.style.display = "flex";
 
-    const iframe = document.createElement("iframe");
-    iframe.src = url;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-    iframe.allow = "autoplay";
-    loadedArea.appendChild(iframe);
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.allow = "autoplay";
+        loadedArea.appendChild(iframe);
 
-    iframe.onload = () => console.log("Pantalla cargada:", url);
+        iframe.onload = () => console.log("Pantalla cargada:", url);
+    }
 }
 
-closeButton.addEventListener("click", () => {
-    overlay.style.display = "none";
-    loadedArea.innerHTML = "";
-});
+// Asegurarse de que los elementos existen antes de añadir listeners
+if (closeButton) {
+    closeButton.addEventListener("click", () => {
+        if (overlay) overlay.style.display = "none";
+        if (loadedArea) loadedArea.innerHTML = "";
+    });
+}
 
 
 // ===============================================
