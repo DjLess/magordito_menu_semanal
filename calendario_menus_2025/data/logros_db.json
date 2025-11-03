@@ -1,0 +1,171 @@
+{
+  "logros": [
+    /* =============================================== */
+    /* I. LOGROS DE CREACIÓN DE PLATILLOS (PANTALLA 7) */
+    /* =============================================== */
+    {
+      "id": "creador_novato",
+      "nombre": "🍳 Chef en Prácticas",
+      "descripcion": "Crea y guarda tu primer plato principal en el menú.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "total_platos_creados", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "diversidad_10",
+      "nombre": "🗺️ Mapa de Sabores",
+      "descripcion": "Crea 10 platos principales con nombres únicos.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "total_platos_creados", "valor_minimo": 10 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "el_carbonara",
+      "nombre": "🥓 El Favorito",
+      "descripcion": "Crea 5 platos que contengan el ingrediente 'Tocino' (o tu ingrediente principal más popular).",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_ingrediente_X", "valor_minimo": 5, "param": "Tocino" },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "la_trinidad_plato",
+      "nombre": "🌟 Plato Épico",
+      "descripcion": "Crea un plato que contenga 3 Carbohidratos, 3 Principales y 3 Verduras (9 ingredientes totales).",
+      "categoria": "Reto",
+      "condicion": { "metrica": "plato_con_nueve_items", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "solo_un_carbo",
+      "nombre": "🍚 Puro Carbo",
+      "descripcion": "Crea 12 platos que utilicen solo 1 carbohidrato (y al menos 1 Principal/Verdura).",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_solo_1_carbo", "valor_minimo": 12 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "proteina_completa",
+      "nombre": "💪 Base Proteica",
+      "descripcion": "Crea 5 platos que usen al menos 2 tipos de proteínas diferentes en su campo 'Principal'.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_doble_proteina", "valor_minimo": 5 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "verdura_maestro",
+      "nombre": "🌿 Fan de lo Verde",
+      "descripcion": "Crea 8 platos que contengan al menos 3 verduras diferentes.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_triple_verdura", "valor_minimo": 8 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "plato_sin_carbo",
+      "nombre": "🥗 Keto King",
+      "descripcion": "Crea un plato que no tenga asignado ningún carbohidrato.",
+      "categoria": "Reto",
+      "condicion": { "metrica": "platos_sin_carbohidrato", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "multi_carbo_dish",
+      "nombre": "🥔🍝 Triple Impacto",
+      "descripcion": "Crea un plato principal que tenga 3 carbohidratos diferentes.",
+      "categoria": "Reto",
+      "condicion": { "metrica": "platos_con_triple_carbo", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "etiquetas_pro",
+      "nombre": "🔖 Etiquetador Profesional",
+      "descripcion": "Crea 15 platos diferentes con la propiedad 'gourmet: true' (o similar) en al menos uno de sus ingredientes.",
+      "categoria": "Creación",
+      "condicion": { "metrica": "platos_con_ingrediente_gourmet", "valor_minimo": 15 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    
+    /* ============================================== */
+    /* II. LOGROS DE PLANIFICACIÓN DE MENÚS (PANTALLA 2)*/
+    /* ============================================== */
+    {
+      "id": "plan_semanal_full",
+      "nombre": "📅 Planificador Semanal",
+      "descripcion": "Completa una semana entera (7 días) de planificación con platos asignados.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "semanas_completas", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "no_repetir_semana",
+      "nombre": "🙅‍♂️ Anti-Repetición",
+      "descripcion": "Completa una semana de planificación donde todos los 7 platos sean diferentes.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "semanas_sin_repeticion", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "repetidor_diario",
+      "nombre": "🔄 Comida Única",
+      "descripcion": "Planifica un menú semanal donde el mismo plato se repita 7 veces.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "semanas_con_plato_repetido_7", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "menu_vegetariano",
+      "nombre": "🥦 Menú Verde",
+      "descripcion": "Planifica una semana completa usando solo platos Vegetarianos (todos sus ingredientes son vegetarianos).",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "semanas_veg_completas", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "menu_pescetariano",
+      "nombre": "🐟 Dieta Marina",
+      "descripcion": "Planifica una semana completa usando solo platos Pescetarianos.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "semanas_pesce_completas", "valor_minimo": 1 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "diversidad_ingre_15",
+      "nombre": "🧩 Mega Combinación",
+      "descripcion": "Crea un menú semanal que utilice 15 ingredientes de inventario diferentes.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "ingredientes_diferentes_semana", "valor_minimo": 15 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "milestone_100",
+      "nombre": "💯 Cien Días",
+      "descripcion": "Alcanza 100 días totales de planificación en el calendario.",
+      "categoria": "Hito",
+      "condicion": { "metrica": "total_dias_planificados", "valor_minimo": 100 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "plan_completo_mes",
+      "nombre": "🗓️ Visión a Largo Plazo",
+      "descripcion": "Planifica 30 días continuos con un plato asignado.",
+      "categoria": "Planificación",
+      "condicion": { "metrica": "dias_con_plato_asignado_continuo", "valor_minimo": 30 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "stock_agotado_plan",
+      "nombre": "📉 Baja Existencia",
+      "descripcion": "Planifica un menú semanal que te obligue a utilizar 5 ingredientes cuya cantidad_disponible era 1 o menos.",
+      "categoria": "Reto",
+      "condicion": { "metrica": "ingredientes_agotados_por_plan", "valor_minimo": 5 },
+      "obtenido": false, "fecha_obtencion": null
+    },
+    {
+      "id": "combinaciones_90",
+      "nombre": "🧬 Maestro Combinador",
+      "descripcion": "Crea 90 platos en total (la mitad del máximo de 180 combinaciones posibles).",
+      "categoria": "Hito",
+      "condicion": { "metrica": "total_platos_creados", "valor_minimo": 90 },
+      "obtenido": false, "fecha_obtencion": null
+    }
+  ]
+}
