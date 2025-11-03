@@ -737,6 +737,7 @@
             let selectedItems = new Set();
             let customIngredients = {};
             let standardIngredientsConfig = {};
+            let hasSelectionData = false; // <<< MODIFICACIÓN: Nuevo indicador de datos de selección encontrados
 
             let inventory;
             try {
@@ -751,20 +752,32 @@
 
             try {
                 const storedSelection = localStorage.getItem(SELECTION_STORAGE_KEY);
-                if (storedSelection) selectedItems = new Set(JSON.parse(storedSelection).filter(item => !item.startsWith('Plato')));
                 const storedCustom = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
-                if (storedCustom) customIngredients = JSON.parse(storedCustom);
+                
+                if (storedSelection) {
+                    selectedItems = new Set(JSON.parse(storedSelection).filter(item => !item.startsWith('Plato')));
+                    hasSelectionData = true; // Se encontró data de selección
+                }
+                if (storedCustom) {
+                    customIngredients = JSON.parse(storedCustom);
+                    hasSelectionData = true; // Se encontró data de ingredientes custom
+                }
+                
                 const storedStandard = localStorage.getItem(STANDARD_ING_STORAGE_KEY);
                 if (storedStandard) standardIngredientsConfig = JSON.parse(storedStandard);
+
             } catch(e) {
                 console.warn("No se pudo cargar la configuración de localStorage. Usando inventario base sin filtrar.", e);
+                // Si falla la carga, hasSelectionData podría ser false, lo cual es correcto.
             }
 
             const finalIngredients = [];
             const emojiMap = {};
             ALL_INGREDIENT_OBJECTS.clear();
 
-            const useFullBase = selectedItems.size === 0 && Object.keys(customIngredients).length === 0;
+            // Lógica de fallback basada en si se encontró data de selección.
+            // Si hay data de selección (incluso si está vacía), NO se carga el inventario completo.
+            const useFullBaseFallback = !hasSelectionData; 
 
             inventory.inventario
                 .filter(ing => ing.activo)
@@ -772,7 +785,7 @@
                     const ingName = ing.nombre;
                     const isSelected = selectedItems.has(ingName);
 
-                    if (useFullBase || isSelected) {
+                    if (useFullBaseFallback || isSelected) {
                         const config = standardIngredientsConfig[ingName] || {};
                         const ingredientData = {
                             id: ingName,
@@ -789,12 +802,14 @@
                     }
                 });
 
+            // CORRECCIÓN CLAVE: Asegurar ID única para Ingredientes Personalizados
             Object.values(customIngredients).forEach(customIng => {
                 if (customIng.nombre && customIng.selected) {
                     const ingName = customIng.nombre;
+                    const uniqueId = ingName + '_CUSTOM'; // <<< MODIFICACIÓN: ID única para evitar conflictos
                     const typeLabel = customIng.categoria.charAt(0).toUpperCase() + customIng.categoria.slice(1);
                     const ingredientData = {
-                        id: ingName,
+                        id: uniqueId, // Usar el ID único aquí
                         name: customIng.nombre + ' (P)', 
                         baseName: customIng.nombre,
                         type: typeLabel,
@@ -803,8 +818,8 @@
                         isCustom: true
                     };
                     finalIngredients.push(ingredientData);
-                    emojiMap[ingName] = ingredientData.emoji;
-                    ALL_INGREDIENT_OBJECTS.set(ingName, ingredientData);
+                    emojiMap[uniqueId] = ingredientData.emoji;
+                    ALL_INGREDIENT_OBJECTS.set(uniqueId, ingredientData); // Usar el ID único en el mapa
                 }
             });
 
@@ -1174,669 +1189,322 @@
                 resultCard.remove(); 
             }, ANIMATION_DURATION + 100); 
 
-            return ANIMATION_DURATION + 100;
+            return ANIMATION_DURATION
         }
 
-        // MODIFICACIÓN DE REQUERIMIENTO: NUEVA FUNCIÓN DE RECICLAJE
-        function animateRecycleCards(cardsToRecycle, selectedCardsForRecycle) {
-            const targetStack = document.getElementById('deck-stack');
-            const targetRect = targetStack.getBoundingClientRect();
-            
-            // 1. Limpiar el placeholder del tablero
-            boardPlaceholder.style.opacity = '1';
-
-            let maxAnimationTime = 0;
-
-            cardsToRecycle.forEach((card, index) => {
-                const currentRect = card.getBoundingClientRect(); 
-                
-                const clone = card.cloneNode(true); 
-                
-                clone.classList.remove('played'); 
-                clone.classList.add('moving-card');
-
-                clone.style.position = 'fixed'; 
-                clone.style.top = `${currentRect.top}px`;
-                clone.style.left = `${currentRect.left}px`;
-                clone.style.width = `${currentRect.width}px`;
-                clone.style.height = `${currentRect.height}px`;
-                clone.style.zIndex = 30 + index; 
-                clone.style.transform = 'none'; 
-                
-                document.body.appendChild(clone);
-                card.remove(); // Eliminar la carta del tablero inmediatamente
-
-                const targetX = targetRect.left + targetRect.width / 2 - currentRect.width / 2;
-                const targetY = targetRect.top + targetRect.height / 2 - currentRect.height / 2;
-
-                const animationDelay = index * 50;
-                maxAnimationTime = Math.max(maxAnimationTime, ANIMATION_DURATION + 200 + animationDelay);
-
-                setTimeout(() => {
-                    clone.style.transition = `transform ${ANIMATION_DURATION}ms ease-in-out, opacity ${ANIMATION_DURATION / 2}ms linear`;
-                    // Mover al centro del stack y reducir tamaño
-                    clone.style.transform = `translate(${targetX - currentRect.left}px, ${targetY - currentRect.top}px) rotate(${Math.random() * 10 - 5}deg) scale(0.3)`;
-                    
-                    setTimeout(() => {
-                        clone.style.opacity = '0'; // Desaparecer al final
-                    }, ANIMATION_DURATION - 50);
-
-                }, animationDelay); 
-                
-                // Agregar la carta de vuelta al mazo lógico
-                AVAILABLE_INGREDIENT_POOL.push(selectedCardsForRecycle[index]); 
-            });
-            
-            // Limpieza de clones animados y finalización del turno
-            setTimeout(() => {
-                document.body.querySelectorAll('.moving-card').forEach(c => c.remove());
-                
-                // Re-ordenar el mazo después de la inserción
-                AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
-                
-                selectedCards = [];
-                updateActionButtons();
-                fillCarousel(); // Robar nuevas cartas
-                isProcessingPlay = false;
-                updateStats();
-                
-                showMessage(`¡No hay plato! ${selectedCardsForRecycle.length} cartas recicladas al mazo. ♻️`, 'default');
-            }, maxAnimationTime + 100);
-
-            return maxAnimationTime + 100;
-        }
-        // FIN MODIFICACIÓN DE REQUERIMIENTO
-
-
-        function updateActionButtons() {
-            const count = selectedCards.length;
-            playButton.textContent = `Jugar Tarjetas (${count})`;
-
-            const hasPlays = playsRemaining > 0;
-            const hasDiscards = discardsRemaining > 0;
-            const hasSelection = count > 0;
-
-            playButton.disabled = !hasSelection || !hasPlays || isProcessingPlay;
-            discardButton.disabled = !hasSelection || !hasDiscards || isProcessingPlay;
-        }
-        
-        // --- Lógica de Animación y Juego ---
-        
-        function handlePlayCards() {
-            if (isProcessingPlay || selectedCards.length === 0 || playsRemaining <= 0) return;
-
-            isProcessingPlay = true;
-            playsRemaining--;
-
-            dishBoard.innerHTML = '';
-            boardPlaceholder.style.opacity = '0';
-
-            const playedCardsData = [];
-            const cardsToMove = [];
-            const cardPositions = [];
-
-            selectedCards.forEach((id, index) => {
-                const card = carousel.querySelector(`.ingredient-card[data-id="${id}"].selected`);
-                if (card) {
-                    const startRect = card.getBoundingClientRect();
-                    cardPositions.push(startRect);
-                    
-                    const clone = card.cloneNode(true);
-                    clone.classList.remove('selected');
-                    clone.classList.add('played');
-
-                    clone.style.position = 'fixed'; 
-                    clone.style.top = `${startRect.top}px`;
-                    clone.style.left = `${startRect.left}px`;
-                    clone.style.width = `${startRect.width}px`;
-                    clone.style.height = `${startRect.height}px`;
-                    clone.style.zIndex = 30 + index; 
-                    
-                    document.body.appendChild(clone);
-                    
-                    card.style.opacity = '0';
-                    card.classList.add('combining');
-                    cardsToMove.push(card);
-
-                    playedCardsData.push(ALL_INGREDIENT_OBJECTS.get(id));
-                }
-            });
-
-            const selectedCardsForHistory = selectedCards;
-
-            // Mover cartas al tablero
-            setTimeout(() => {
-                const dishBoardRect = dishBoard.getBoundingClientRect();
-                const centerOfBoardX = dishBoardRect.left + dishBoardRect.width / 2;
-                const centerOfBoardY = dishBoardRect.top + dishBoardRect.height / 2;
-                
-                const offset = 20;
-                const startX = centerOfBoardX - (selectedCards.length - 1) * offset / 2; 
-
-                playedCardsData.forEach((data, index) => {
-                    const clone = document.body.querySelector(`.ingredient-card.played[data-id="${data.id}"]`);
-                    if (clone) {
-                        const targetX = startX + index * offset;
-                        const targetY = centerOfBoardY - cardPositions[index].height / 2; 
-
-                        clone.style.transform = `translate(${targetX - cardPositions[index].left}px, ${targetY - cardPositions[index].top}px) rotate(${ (index - (selectedCards.length - 1) / 2) * 5 }deg)`;
-                        clone.style.transition = `transform ${ANIMATION_DURATION}ms ease-in-out`;
-                        
-                        setTimeout(() => {
-                            clone.style.position = 'absolute';
-                            clone.style.top = `${targetY - dishBoardRect.top}px`;
-                            clone.style.left = `${targetX - dishBoardRect.left}px`;
-                            clone.style.transform = `rotate(${ (index - (selectedCards.length - 1) / 2) * 5 }deg)`;
-                            dishBoard.appendChild(clone);
-                            
-                            clone.style.width = 'var(--dish-card-width)'; 
-                            clone.style.height = 'auto'; 
-                        }, ANIMATION_DURATION);
-                    }
-                });
-
-            }, 50);
-
-            // Revisar receta y animar resultado
-            setTimeout(() => {
-                const matchingRecipe = checkRecipeMatch(playedCardsData);
-
-                if (matchingRecipe) {
-                    // MODIFICACIÓN: MONEDAS
-                    const pointsGained = matchingRecipe.points || 1; 
-                    showMessage(`¡Plato Creado! ${matchingRecipe.emoji} ${matchingRecipe.name} (+${pointsGained} Monedas 💰)`, 'success');
-                    // FIN MODIFICACIÓN
-
-                    const resultCard = handleSuccessfulDish(matchingRecipe, playedCardsData); // Obtiene el elemento de la tarjeta de plato
-
-                    // Esperar a que la tarjeta de plato aparezca en el tablero (50ms después de ser agregada)
-                    const waitTimeBeforeMove = 50; 
-
-                    setTimeout(() => {
-                        const moveTime = animateDishToStack(resultCard); // Inicia la animación de movimiento al stack
-
-                        // Limpieza final después de que la tarjeta ha llegado al stack
-                        setTimeout(() => {
-                            clearBoard(true); // Limpia el placeholder y las cartas de ingredientes jugadas
-                            usedIngredientIds.push(...selectedCardsForHistory);
-                            removePlayedCards(cardsToMove);
-                            selectedCards = [];
-                            updateActionButtons();
-                            fillCarousel();
-                            isProcessingPlay = false;
-                            updateStats();
-                        }, moveTime);
-
-                    }, waitTimeBeforeMove);
-
-                } else {
-                    // MODIFICACIÓN DE REQUERIMIENTO: LLAMAR A RECICLAR CARTAS
-                    showMessage("No se encontró ninguna receta válida. 😞", 'failure');
-                    
-                    // Obtener las cartas que se movieron al tablero (ahora están en dishBoard)
-                    const cardsInBoard = Array.from(dishBoard.querySelectorAll('.ingredient-card.played'));
-                    removePlayedCards(cardsToMove); // Elimina las cartas originales del carrusel
-
-                    // Llama a la nueva función de reciclaje, que maneja la limpieza y el estado
-                    animateRecycleCards(cardsInBoard, selectedCardsForHistory); 
-                }
-            }, ANIMATION_DURATION + 300);
-        }
-
-        // MODIFICACIÓN: Retorna el elemento y la lógica de animación de plato se movió a handlePlayCards
-        function handleSuccessfulDish(recipe, playedIngredients) {
-            score++;
-            const pointsGained = recipe.points || 1; // NUEVA ADICIÓN: MONEDAS
-            coins += pointsGained; // NUEVA ADICIÓN: MONEDAS
-
-            const newDish = {
-                name: recipe.name,
-                emoji: recipe.emoji,
-                playedIngredients: playedIngredients.map(ing => ing.baseName || ing.name)
-            };
-            successfullyCreatedDishes.push(newDish);
-            saveGameData('successfullyCreatedDishes', successfullyCreatedDishes);
-
-            const resultCard = createResultDishCardElement(recipe, playedIngredients);
-
-            // Desvanecer las cartas de ingredientes jugadas
-            dishBoard.querySelectorAll('.ingredient-card').forEach(card => {
-                card.style.transition = 'opacity 0.3s ease-in';
-                card.style.opacity = '0';
-            });
-            
-            // Mostrar la carta de plato en el centro
-            dishBoard.appendChild(resultCard);
-            setTimeout(() => {
-                resultCard.classList.add('show');
-            }, 50);
-
-            updateStats();
-            
-            return resultCard;
-        }
-
-
-        // MODIFICACIÓN: La función clearBoard se usa solo para el éxito, y solo espera que el resultado desaparezca.
-        function clearBoard(success) {
-            
-            if (!success) {
-                // Esta parte ya no se usa, pero se mantiene la función para éxito
-                dishBoard.querySelectorAll('.ingredient-card.played').forEach((card) => {
-                    card.style.transition = `transform ${ANIMATION_DURATION}ms ease-in, opacity ${ANIMATION_DURATION}ms ease-in`;
-                    card.style.opacity = '0';
-                    card.style.transform = card.style.transform + ' scale(0.8)';
-                });
-            }
-            
-            setTimeout(() => {
-                dishBoard.querySelectorAll('.ingredient-card.played').forEach(card => card.remove());
-                boardPlaceholder.style.opacity = '1';
-                dishBoard.querySelectorAll('.result-dish-card').forEach(card => card.remove()); // Asegurar que el plato también desaparezca
-            }, ANIMATION_DURATION);
-        }
-
-        function handleDiscardCards() {
-            if (isProcessingPlay || selectedCards.length === 0 || discardsRemaining <= 0) return;
-
-            isProcessingPlay = true;
-            discardsRemaining--;
-
-            const cardsToDiscard = [];
-            const targetStack = document.getElementById('deck-stack');
-            const targetRect = targetStack.getBoundingClientRect();
-
-            const selectedCardsForRecycle = [...selectedCards]; 
-
-            selectedCards.forEach((id, index) => {
-                const card = carousel.querySelector(`.ingredient-card[data-id="${id}"].selected`);
-                if (card) {
-                    const startRect = card.getBoundingClientRect();
-                    const clone = card.cloneNode(true);
-                    
-                    clone.classList.remove('selected'); 
-                    clone.classList.add('moving-card');
-
-                    clone.style.position = 'fixed'; 
-                    clone.style.top = `${startRect.top}px`;
-                    clone.style.left = `${startRect.left}px`;
-                    clone.style.width = `${startRect.width}px`;
-                    clone.style.height = `${startRect.height}px`;
-                    clone.style.zIndex = 30 + index; 
-                    
-                    document.body.appendChild(clone);
-                    
-                    card.style.opacity = '0';
-                    cardsToDiscard.push(card);
-
-                    const targetX = targetRect.left + targetRect.width / 2 - startRect.width / 2;
-                    const targetY = targetRect.top + targetRect.height / 2 - startRect.height / 2;
-
-                    setTimeout(() => {
-                        clone.style.transition = `transform ${ANIMATION_DURATION}ms ease-in-out, opacity ${ANIMATION_DURATION / 2}ms linear`;
-                        clone.style.transform = `translate(${targetX - startRect.left}px, ${targetY - startRect.top}px) rotate(${Math.random() * 10 - 5}deg) scale(0.8)`;
-                        
-                        setTimeout(() => {
-                            clone.style.opacity = '0'; 
-                            AVAILABLE_INGREDIENT_POOL.push(id); 
-                        }, ANIMATION_DURATION - 50);
-
-                    }, index * 50); 
-                }
-            });
-
-            const totalAnimationTime = ANIMATION_DURATION + 200 + (selectedCards.length * 50); 
-            
-            setTimeout(() => {
-                document.body.querySelectorAll('.moving-card').forEach(c => c.remove());
-                removePlayedCards(cardsToDiscard); 
-                
-                selectedCards = [];
-                updateActionButtons();
-                
-                AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
-                
-                fillCarousel(); 
-                
-                isProcessingPlay = false;
-                updateStats();
-                showMessage(`Se descartaron ${selectedCardsForRecycle.length} cartas y se devolvieron al mazo.`, 'default');
-            }, totalAnimationTime);
-        }
-
-        function handleShufflePool() {
-            if (usedIngredientIds.length === 0 || isProcessingPlay) return;
-
-            isProcessingPlay = true;
-            showMessage(`¡Rebarajando ${usedIngredientIds.length} cartas!`, 'default');
-
-            const cardsCount = usedIngredientIds.length;
-            const shuffleDuration = 1000;
-            const deckStackRect = document.getElementById('deck-stack').getBoundingClientRect();
-
-            for (let i = 0; i < cardsCount; i++) {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'ingredient-card moving-card';
-                placeholder.style.backgroundColor = '#7f0000';
-                placeholder.style.border = '3px solid gold';
-                placeholder.style.width = '70px';
-                placeholder.style.height = '100px'; 
-                
-                const startX = Math.random() < 0.5 ? -100 : window.innerWidth + 100;
-                const startY = Math.random() * window.innerHeight;
-                
-                placeholder.style.position = 'fixed';
-                placeholder.style.top = `${startY}px`;
-                placeholder.style.left = `${startX}px`;
-                placeholder.style.opacity = '0';
-                placeholder.style.transition = 'none';
-                document.body.appendChild(placeholder);
-
-                void placeholder.offsetHeight;
-
-                const endX = deckStackRect.left + deckStackRect.width / 2 - 35; 
-                const endY = deckStackRect.top + deckStackRect.height / 2 - 50; 
-
-                setTimeout(() => {
-                    placeholder.style.transition = `transform ${shuffleDuration}ms ease-in-out, opacity ${shuffleDuration / 2}ms ease-in`;
-                    placeholder.style.opacity = '1';
-                    placeholder.style.transform = `translate(${endX - startX}px, ${endY - startY}px) rotate(720deg) scale(0.7)`;
-                }, i * (shuffleDuration / cardsCount / 2));
-                
-                setTimeout(() => {
-                    placeholder.remove();
-                }, i * (shuffleDuration / cardsCount / 2) + shuffleDuration);
-            }
-
-            setTimeout(() => {
-                AVAILABLE_INGREDIENT_POOL.push(...usedIngredientIds);
-                usedIngredientIds = [];
-                AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
-
-                fillCarousel();
-                isProcessingPlay = false;
-                updateStats();
-                showMessage(`¡Mazo rebarajado! ${AVAILABLE_INGREDIENT_POOL.length} cartas disponibles.`, 'success');
-            }, shuffleDuration + 500);
-        }
-
-        function resetGame() {
-            if (!confirm("¿Estás seguro de que quieres reiniciar el juego? Se perderá todo el progreso (platos, manos restantes, etc.).")) return;
-            localStorage.removeItem('dishCreator_score');
-            localStorage.removeItem('dishCreator_coins'); // NUEVA ADICIÓN: MONEDAS
-            localStorage.removeItem('dishCreator_playsRemaining');
-            localStorage.removeItem('dishCreator_discardsRemaining');
-            localStorage.removeItem('dishCreator_successfullyCreatedDishes');
-            localStorage.removeItem('dishCreator_usedIngredientIds');
-            location.reload();
-        }
-
-        function removePlayedCards(cards) { cards.forEach(card => card.remove()); }
-
-
-        function showMessage(message, type) {
-            let displayTextElement = document.getElementById('display-text');
-            displayTextElement.className = '';
-            displayTextElement.textContent = message.toUpperCase();
-            displayTextElement.classList.add(type);
-            displayTextElement.style.opacity = '1';
-
-            displayPlaceholder.style.display = 'none';
-
-            setTimeout(() => {
-                displayTextElement.style.opacity = '0.1';
-                displayPlaceholder.style.display = 'block';
-            }, 2500);
-
-            setTimeout(() => {
-                displayTextElement.textContent = '';
-                displayTextElement.style.opacity = '0';
-            }, 3000);
-        }
-        
-        function getDishDetailsFromPlayed(recipe, playedIngredients) {
-            const findPlayedIngredient = (requiredList, playedType) => {
-                if (!requiredList || requiredList.length === 0 || requiredList.includes('-')) return 'N/A';
-                const foundIng = playedIngredients.find(ing =>
-                    ing.type === playedType && requiredList.some(reqIng => (ing.baseName || ing.id).includes(reqIng))
-                );
-                return foundIng ? foundIng.baseName || foundIng.name : 'N/A';
-            };
-
-            const selectedPrincipal = findPlayedIngredient(recipe.principales, 'Principal');
-            const selectedCarbohidrato = findPlayedIngredient(recipe.carbohidratos, 'Carbohidrato');
-            const selectedVerdura = findPlayedIngredient(recipe.verduras, 'Verdura');
-
-            return {
-                principal: selectedPrincipal,
-                carbohidrato: selectedCarbohidrato,
-                verdura: selectedVerdura,
-                emojiPrincipal: recipe.emoji
-            };
-        }
-
-        function createResultDishCardElement(recipe, playedIngredients) {
-            const details = getDishDetailsFromPlayed(recipe, playedIngredients);
-
-            const mainIngredientEmoji = (details.principal !== 'N/A' && INGREDIENT_EMOJI_MAP[details.principal])
-                ? INGREDIENT_EMOJI_MAP[details.principal]
-                : details.emojiPrincipal || '';
-
-            let secondaryEmojis = '';
-            const carbEmoji = (details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) ? INGREDIENT_EMOJI_MAP[details.carbohidrato] : '';
-            const verduraEmoji = (details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) ? INGREDIENT_EMOJI_MAP[details.verdura] : '';
-            secondaryEmojis = carbEmoji + verduraEmoji;
-
-            let allIngredients = [details.principal, details.carbohidrato, details.verdura].filter(i => i && i !== 'N/A');
-            const otherIngredients = playedIngredients
-                .filter(ing => ing.type !== 'Principal' && ing.type !== 'Carbohidrato' && ing.type !== 'Verdura')
-                .map(ing => ing.baseName || ing.name);
-
-            allIngredients.push(...otherIngredients);
-            
-            const ingredientsListHtml = Array.from(new Set(allIngredients)) 
-                .map(i => `<li>${i}</li>`).join('');
-
+        function createResultDishCard(dish) {
             const card = document.createElement('div');
-            card.className = 'result-dish-card'; 
-            card.setAttribute('data-dish', recipe.name);
+            card.className = 'result-dish-card';
+
+            const ingredientsListHtml = [
+                ...dish.carbohidratos.map(name => `<li>🍚 ${name}</li>`),
+                ...dish.principales.map(name => `<li>🥩 ${name}</li>`),
+                ...dish.verduras.map(name => `<li>🥗 ${name}</li>`)
+            ].join('');
 
             card.innerHTML = `
                 <div class="card-inner-content">
                     <div class="card-image-zone">
-                        <span class="card-main-emoji">${mainIngredientEmoji}</span> 
-                        <div class="card-secondary-emojis">${secondaryEmojis}</div> 
+                        <span class="card-main-emoji" style="font-size: 3em;">${dish.emoji || '🍽️'}</span>
+                        <div class="card-secondary-emojis">
+                            <span style="color: var(--coin-color); font-weight: bold;">${dish.points} <i class="fas fa-coins"></i></span>
+                        </div>
                     </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">${recipe.name}</p>
-                        <ul class="card-ingredients-list">
-                            ${ingredientsListHtml}
-                        </ul>
-                    </div>
+                    <div class="card-dish-name">${dish.name}</div>
+                    <ul class="card-ingredients-list">
+                        ${ingredientsListHtml}
+                    </ul>
                 </div>
             `;
             return card;
         }
 
+        // --- LÓGICA DE JUEGO PRINCIPAL ---
+
+        function handlePlay() {
+            if (isProcessingPlay || selectedCards.length === 0 || playsRemaining <= 0) return;
+            isProcessingPlay = true;
+            playsRemaining--;
+            saveGameData('playsRemaining', playsRemaining);
+            
+            const selectedIngData = selectedCards.map(id => ALL_INGREDIENT_OBJECTS.get(id)).filter(ing => ing);
+            
+            const match = checkRecipeMatch(selectedIngData);
+
+            // 1. Mover las tarjetas seleccionadas al centro del tablero (Animación)
+            const cardElements = selectedCards.map(id => document.querySelector(`#card-carousel .ingredient-card[data-id="${id}"]`)).filter(el => el);
+            
+            let maxAnimTime = 0;
+            const dishBoardRect = dishBoard.getBoundingClientRect();
+            
+            cardElements.forEach((cardEl, index) => {
+                // Calcular posición de destino en el tablero (centralizada con un pequeño offset)
+                const targetX = dishBoardRect.left + (dishBoardRect.width / 2) + ((index - 1) * 30);
+                const targetY = dishBoardRect.top + (dishBoardRect.height / 2) - (cardEl.offsetHeight / 2) + 20;
+
+                const startRect = cardEl.getBoundingClientRect();
+                
+                cardEl.classList.add('played');
+                cardEl.style.transition = `transform ${ANIMATION_DURATION}ms ease-out, opacity ${ANIMATION_DURATION}ms ease-out`;
+                cardEl.style.transform = `translate(${targetX - startRect.left}px, ${targetY - startRect.top}px) rotate(${ (index - 1) * 5 }deg) scale(1.1)`;
+                cardEl.style.zIndex = 20 + index;
+                
+                maxAnimTime = Math.max(maxAnimTime, ANIMATION_DURATION);
+            });
+
+            // 2. Ejecutar el resultado después de la animación de movimiento
+            setTimeout(() => {
+                dishBoard.innerHTML = '';
+                boardPlaceholder.style.opacity = 0;
+                
+                if (match) {
+                    handleSuccessfulDish(match, cardElements);
+                } else {
+                    handleFailedDish(cardElements);
+                }
+                
+                // Limpieza post-juego
+                selectedCards = [];
+                updateActionButtons();
+                // fillCarousel es llamado dentro de handleSuccessfulDish/handleFailedDish después de su propia animación
+            }, maxAnimTime + 100); 
+        }
+
+        function handleSuccessfulDish(dish, playedCardElements) {
+            showMessage(`🎉 ÉXITO: ¡Has cocinado ${dish.name}! Ganaste ${dish.points} Monedas.`, 'success');
+            
+            score += 1;
+            coins += dish.points;
+            successfullyCreatedDishes.push(dish);
+            
+            const resultCard = createResultDishCard(dish);
+            document.body.appendChild(resultCard); // Añadir al body para que esté sobre todo
+            
+            // Animación: Mostrar tarjeta de plato
+            setTimeout(() => {
+                resultCard.classList.add('show');
+            }, 50);
+
+            // Animación: Mover ingredientes a la pila de usados
+            playedCardElements.forEach(cardEl => {
+                // Agregar al pool de usados para el rebarajado
+                const cardId = cardEl.getAttribute('data-id');
+                usedIngredientIds.push(cardId); 
+                cardEl.remove();
+            });
+
+            // Animación: Mover tarjeta de plato a la pila de platos creados
+            setTimeout(() => {
+                resultCard.classList.add('hide'); // Inicia la fase de reducción
+                const animTime = animateDishToStack(resultCard);
+
+                // Esperar a que la animación de apilamiento termine
+                setTimeout(() => {
+                    isProcessingPlay = false;
+                    fillCarousel(); // Robar nuevas cartas
+                }, animTime + 100);
+            }, 1000 + ANIMATION_DURATION); 
+        }
+
+        function handleFailedDish(playedCardElements) {
+            showMessage("❌ FALLO: No se ha encontrado ninguna receta válida con esa combinación.", 'failure');
+            
+            // Mover las tarjetas jugadas a la pila de usados inmediatamente
+            playedCardElements.forEach(cardEl => {
+                // Agregar al pool de usados para el rebarajado
+                const cardId = cardEl.getAttribute('data-id');
+                usedIngredientIds.push(cardId);
+                cardEl.remove();
+            });
+            
+            setTimeout(() => {
+                isProcessingPlay = false;
+                fillCarousel(); // Robar nuevas cartas
+            }, ANIMATION_DURATION + 500); 
+        }
+
+
+        function handleDiscard() {
+            if (isProcessingPlay || selectedCards.length === 0 || discardsRemaining <= 0) return;
+            isProcessingPlay = true;
+            discardsRemaining--;
+            saveGameData('discardsRemaining', discardsRemaining);
+
+            const discardedCardElements = selectedCards.map(id => document.querySelector(`#card-carousel .ingredient-card[data-id="${id}"]`)).filter(el => el);
+            
+            // 1. Mover las tarjetas descartadas a la pila de usados
+            discardedCardElements.forEach(cardEl => {
+                const cardId = cardEl.getAttribute('data-id');
+                usedIngredientIds.push(cardId);
+                cardEl.remove(); // Remoción inmediata del DOM
+            });
+            
+            showMessage(`🗑️ Descartaste ${discardedCardElements.length} cartas.`, 'default');
+
+            // 2. Limpieza y reposición
+            selectedCards = [];
+            updateActionButtons();
+
+            setTimeout(() => {
+                isProcessingPlay = false;
+                fillCarousel(); // Robar nuevas cartas para llenar la mano
+            }, 500); // Pequeña pausa para que el usuario vea el resultado en el carrusel y el mensaje
+        }
+
+
+        // --- UTILIDADES ---
+
+        function updateActionButtons() {
+            const count = selectedCards.length;
+            
+            playButton.textContent = `Jugar Tarjetas (${count})`;
+            playButton.disabled = count === 0 || playsRemaining <= 0 || isProcessingPlay;
+            
+            discardButton.textContent = `Descartar Tarjetas (${count})`;
+            discardButton.disabled = count === 0 || discardsRemaining <= 0 || isProcessingPlay;
+            
+            if (count > 0) {
+                boardPlaceholder.style.opacity = 0;
+            } else {
+                 if (dishBoard.children.length === 0) {
+                    boardPlaceholder.style.opacity = 1;
+                }
+            }
+        }
+
+        let messageTimeout;
+        function showMessage(text, type = 'default') {
+            clearTimeout(messageTimeout);
+            
+            const displayText = document.getElementById('display-text');
+            displayText.className = type;
+            displayText.textContent = text;
+            displayText.style.opacity = 0; 
+            displayPlaceholder.style.opacity = 0;
+            
+            setTimeout(() => {
+                displayText.style.opacity = 1;
+            }, 50);
+
+            messageTimeout = setTimeout(() => {
+                displayText.style.opacity = 0;
+                setTimeout(() => {
+                    displayPlaceholder.style.opacity = 1;
+                }, 300);
+            }, 3000);
+        }
+
         function showCollectedDishesPopup() {
-            renderCollectedDishes();
+            collectedDishesContainer.innerHTML = '';
+            
+            if (successfullyCreatedDishes.length === 0) {
+                noDishesMessage.style.display = 'block';
+            } else {
+                noDishesMessage.style.display = 'none';
+                successfullyCreatedDishes.forEach(dish => {
+                    const dishCard = createResultDishCard(dish); 
+                    dishCard.style.position = 'relative'; 
+                    dishCard.style.transform = 'none'; 
+                    dishCard.style.opacity = '1'; 
+                    dishCard.style.width = '100px'; 
+                    dishCard.style.height = 'auto';
+                    dishCard.style.padding = '0';
+                    dishCard.querySelector('.card-dish-name').style.fontSize = '0.9em';
+                    dishCard.querySelector('.card-ingredients-list').style.fontSize = '0.7em';
+                    dishCard.querySelector('.card-main-emoji').style.fontSize = '1.5em';
+                    collectedDishesContainer.appendChild(dishCard);
+                });
+            }
             dishPopup.style.display = 'block';
         }
 
         function hideCollectedDishesPopup() {
             dishPopup.style.display = 'none';
         }
-        function renderCollectedDishes() { 
-            collectedDishesContainer.innerHTML = '';
-            if (successfullyCreatedDishes.length === 0) {
-                collectedDishesContainer.appendChild(noDishesMessage);
-                noDishesMessage.style.display = 'block';
-                return;
-            }
-            noDishesMessage.style.display = 'none';
-
-            successfullyCreatedDishes.forEach((dish) => {
-                const name = dish.name;
-                const recipeBase = ALL_DISH_RECIPES.find(r => r.name === name);
-                const ingredientsForDetails = (dish.playedIngredients || []).map(n =>
-                    ALL_INGREDIENT_OBJECTS.get(n) || { name: n, baseName: n, type: '', id: n }
-                );
-
-                const details = recipeBase
-                    ? getDishDetailsFromPlayed(recipeBase, ingredientsForDetails)
-                    : { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: dish.emoji };
-
-                const mainIngredientEmoji = (details.principal !== 'N/A' && INGREDIENT_EMOJI_MAP[details.principal])
-                    ? INGREDIENT_EMOJI_MAP[details.principal] : details.emojiPrincipal || '';
-                const carbEmoji = (details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) ? INGREDIENT_EMOJI_MAP[details.carbohidrato] : '';
-                const verduraEmoji = (details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) ? INGREDIENT_EMOJI_MAP[details.verdura] : '';
-                const secondaryEmojis = carbEmoji + verduraEmoji;
-
-                const ingredientsListHtml = [details.principal, details.carbohidrato, details.verdura]
-                    .filter(i => i && i !== 'N/A')
-                    .map(i => `<li>${i}</li>`).join('');
-
-                const card = document.createElement('div');
-                card.className = 'result-dish-card';
-                card.setAttribute('data-dish', name);
-                card.style.position = 'relative';
-                card.style.transform = 'none';
-                card.style.opacity = '1';
-                card.style.width = '120px'; 
-                card.style.height = 'auto'; 
-
-                card.innerHTML = `
-                    <div class="card-inner-content">
-                        <div class="card-image-zone">
-                            <span class="card-main-emoji">${mainIngredientEmoji}</span>
-                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
-                        </div>
-                        <div class="card-ingredients-zone">
-                            <p class="card-dish-name">${name}</p>
-                            <ul class="card-ingredients-list">
-                                ${ingredientsListHtml}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                collectedDishesContainer.appendChild(card);
-            });
-        }
-        function renderAllRecipes() { 
+        
+        function showRecipesPopup() {
             availableRecipesContainer.innerHTML = '';
-            if (ALL_DISH_RECIPES.length === 0) {
-                availableRecipesContainer.innerHTML = `<p style="color:#f75555;">No se pudo cargar el recetario.</p>`;
-                return;
-            }
-
-            const handIngredientIds = Array.from(carousel.querySelectorAll('.ingredient-card'))
-                                        .map(card => card.getAttribute('data-id'));
-
-            ALL_DISH_RECIPES.forEach(dish => {
+            ALL_DISH_RECIPES.forEach(recipe => {
                 const item = document.createElement('div');
                 item.className = 'recipe-item';
-                const requiredCategories = [];
-                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) requiredCategories.push('Carbohidrato');
-                if (dish.principales.length > 0 && !dish.principales.includes('-')) requiredCategories.push('Principal');
-                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) requiredCategories.push('Verdura');
-
-                const requiredText = requiredCategories.length > 0
-                    ? `Requiere: ${requiredCategories.join(', ')}`
-                    : 'No requiere categorías específicas.';
-
-                let ingredientsHTML = '<div class="recipe-ingredients">';
-                const createIngredientList = (label, ingredients) => {
-                    let html = `<strong>${label}:</strong> `;
-                    const listItems = ingredients.map(ingName => {
-                        const isAvailable = handIngredientIds.some(id => (ALL_INGREDIENT_OBJECTS.get(id)?.baseName || id) === ingName);
-                        return isAvailable ? `<span style="color: var(--selection-color); font-weight: 700;">${ingName}</span>` : ingName;
-                    });
-                    html += listItems.join(', ');
-                    return html + '<br>';
-                };
-
-                if (dish.principales.length > 0 && !dish.principales.includes('-')) ingredientsHTML += createIngredientList('Principales', dish.principales);
-                if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) ingredientsHTML += createIngredientList('Carbohidratos', dish.carbohidratos);
-                if (dish.verduras.length > 0 && !dish.verduras.includes('-')) ingredientsHTML += createIngredientList('Verduras/Extras', dish.verduras);
-
-                ingredientsHTML += '</div>';
+                
+                const carbos = recipe.carbohidratos.filter(c => c !== '-').join(', ');
+                const principals = recipe.principales.filter(p => p !== '-').join(', ');
+                const verduras = recipe.verduras.filter(v => v !== '-').join(', ');
 
                 item.innerHTML = `
-                    <h4>${dish.emoji} ${dish.name} (Valor: ${dish.points || 1} 💰)</h4>
-                    <p style="font-size:0.9em; font-style:italic; color:#b0b8c5; margin-bottom: 0;">${requiredText}</p>
-                    ${ingredientsHTML}
+                    <h4>${recipe.emoji || '🍽️'} ${recipe.name} (${recipe.points} Monedas)</h4>
+                    <div class="recipe-ingredients">
+                        ${carbos ? `**Carbohidratos:** ${carbos}<br>` : ''}
+                        ${principals ? `**Principales:** ${principals}<br>` : ''}
+                        ${verduras ? `**Verduras:** ${verduras}<br>` : ''}
+                        ${!carbos && !principals && !verduras ? '*(Plato básico o especial con requerimientos no listados)*' : ''}
+                    </div>
                 `;
                 availableRecipesContainer.appendChild(item);
             });
-        }
-        function showRecipesPopup() {
-            renderAllRecipes();
             recipePopup.style.display = 'block';
         }
-
+        
         function hideRecipesPopup() {
-            recipePopup.style.display = 'none';
+             recipePopup.style.display = 'none';
         }
 
+        function handleResetGame() {
+            if (!confirm("¿Estás seguro de que quieres REINICIAR el juego? Se perderá todo tu progreso (Platos creados, monedas, jugadas restantes).")) {
+                return;
+            }
 
-        // --- Inicialización ---
+            // Limpiar localStorage
+            localStorage.removeItem('dishCreator_score');
+            localStorage.removeItem('dishCreator_coins');
+            localStorage.removeItem('dishCreator_playsRemaining');
+            localStorage.removeItem('dishCreator_discardsRemaining');
+            localStorage.removeItem('dishCreator_successfullyCreatedDishes');
+            localStorage.removeItem('dishCreator_usedIngredientIds');
 
-        async function initializeCarousel() {
-            let menuDatabase;
+            // Resetear estado de la pantalla
+            window.location.reload(); 
+        }
+
+        function handleShuffleCards() {
+            if (isProcessingPlay || usedIngredientIds.length === 0) return;
             
-            // MODIFICACIÓN: Intentar cargar la DB de menú desde localStorage si está disponible (prioridad 1)
-            try {
-                const storedMenu = localStorage.getItem('MENU_DB'); // Asumo que el main.js guarda la DB completa
-                if (storedMenu) {
-                    menuDatabase = JSON.parse(storedMenu);
-                    console.log("Menú cargado desde localStorage (incluye platos desbloqueados).");
-                }
-            } catch (e) {
-                console.warn("Error al cargar MENU_DB desde localStorage. Se usará el archivo estático.", e);
-            }
+            AVAILABLE_INGREDIENT_POOL.push(...usedIngredientIds);
+            usedIngredientIds = [];
+            AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
             
-            // Si no está en localStorage o falló, cargar desde el archivo estático (prioridad 2)
-            if (!menuDatabase) {
-                try {
-                    const response = await fetch(MENU_DB_PATH);
-                    if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
-                    menuDatabase = await response.json();
-                    console.log("Menú cargado desde archivo estático.");
-                } catch (e) {
-                    showMessage("ERROR CRÍTICO: No se puede cargar la librería de Platos (menu_db).", 'failure');
-                    return;
-                }
-            }
-
-
-            setupDishRecipes(menuDatabase);
-
-            const success = await loadFilteredIngredients();
-
-            if (success && ALL_DISH_RECIPES.length > 0) {
-                if (AVAILABLE_INGREDIENT_POOL.length === 0 && usedIngredientIds.length > 0) {
-                     AVAILABLE_INGREDIENT_POOL.push(...usedIngredientIds);
-                     usedIngredientIds = [];
-                }
-                AVAILABLE_INGREDIENT_POOL = AVAILABLE_INGREDIENT_POOL.sort(() => Math.random() - 0.5);
-                fillCarousel();
-            } else if (ALL_DISH_RECIPES.length === 0) {
-                 showMessage("ERROR: No hay recetas para jugar.", 'failure');
-            }
+            showMessage(`Mazo rebarajado. Se añadieron ${AVAILABLE_INGREDIENT_POOL.length} cartas.`, 'default');
+            
             updateStats();
+            fillCarousel();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeCarousel();
+        // --- INICIALIZACIÓN ---
 
-            playButton.addEventListener('click', handlePlayCards);
-            discardButton.addEventListener('click', handleDiscardCards);
-            shuffleButton.addEventListener('click', handleShufflePool);
-            resetGameButton.addEventListener('click', resetGame);
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // 1. Cargar datos necesarios
+            const menuResponse = await fetch(MENU_DB_PATH);
+            const menuDb = await menuResponse.json();
+            setupDishRecipes(menuDb);
+            
+            const loadResult = await loadFilteredIngredients();
+            if (!loadResult) return; 
 
-            // MODIFICACIÓN 1: El stack de platos ahora abre el popup
+            // 2. Inicializar estado y UI
+            updateStats();
+            fillCarousel(); 
+            
+            // 3. Configurar eventos
+            playButton.addEventListener('click', handlePlay);
+            discardButton.addEventListener('click', handleDiscard);
+            resetGameButton.addEventListener('click', handleResetGame);
+            shuffleButton.addEventListener('click', handleShuffleCards);
+
+            // Modificación: createdDishesStack (el mazo de platos) ahora abre el popup de platos
             createdDishesStack.addEventListener('click', showCollectedDishesPopup);
-            // El close button ahora está dentro del popup-content, por lo que usamos querySelector
+            // El botón de cerrar ya está dentro del popup-content, por lo que usamos querySelector
             dishPopup.querySelector('.close-button').addEventListener('click', hideCollectedDishesPopup);
 
             // MODIFICACIÓN 2: El nuevo botón de acción ahora carga pantalla2
