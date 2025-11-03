@@ -202,9 +202,7 @@ function desbloquearRecompensa(recompensa, isSilent = false) {
 
         const nuevoPlato = {
             nombre: `${COMODIN_EMOJI} ${newDishName} (${newIngredientName})`, 
-            carbohidratos: platoCarbo,
-            principales: platoPrincipal,
-            verduras: platoVerduras
+            principales: platoPrincipal
         };
 
         const existePlato = menuData.platos_principales.find(plato => plato.nombre === nuevoPlato.nombre);
