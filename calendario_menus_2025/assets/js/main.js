@@ -6,7 +6,7 @@ const loadedArea = document.getElementById("loaded-content-area");
 const closeButton = document.getElementById("close-overlay-button");
 const galleriesContainer = document.getElementById('galleries-container');
 
-let menuData = null;      // Almacena la data de menu_db.json
+let menuData = null;       // Almacena la data de menu_db.json
 let inventarioData = null; // Almacena la data de inventario_db.json (el array de items)
 let logrosData = null;     // Almacena la data de logros_db.json
 
@@ -115,7 +115,7 @@ async function cargarLogros() {
 }
 
 // ===============================================
-// SINCRONIZACIÓN INICIAL DE RECOMPENSAS (NUEVA FUNCIÓN)
+// SINCRONIZACIÓN INICIAL DE RECOMPENSAS
 // ===============================================
 
 /** * Itera sobre los logros. Si un logro está marcado como 'obtenido: true' en el momento de la carga,
@@ -145,15 +145,14 @@ function sincronizarRecompensasIniciales() {
 
 
 // ===============================================
-// LÓGICA DE RECOMPENSAS (MODIFICADA CON isSilent)
+// LÓGICA DE RECOMPENSAS
 // ===============================================
 
 /** * Procesa la recompensa de un logro (añade ingrediente y plato).
- * **REGLA:** El ingrediente es siempre 'principal' y el plato solo lo contiene a él.
  * @param {object} recompensa - Objeto con las propiedades ingrediente_comodin y plato_nuevo.
  * @param {boolean} isSilent - Si es true, suprime los alerts. Usado para carga inicial.
  */
-function desbloquearRecompensa(recompensa, isSilent = false) { // Acepta el nuevo parámetro
+function desbloquearRecompensa(recompensa, isSilent = false) { 
     let isUpdated = false;
     let newIngredientName = null;
     
@@ -168,12 +167,11 @@ function desbloquearRecompensa(recompensa, isSilent = false) { // Acepta el nuev
         // Estructura completa con valores por defecto
         const nuevoIngrediente = {
             nombre: newIngredientName,
-            categoria: newIngredientCategory, // <--- REGLA: SIEMPRE "principal"
+            categoria: newIngredientCategory, 
             activo: rIng.activo ?? true,
             cantidad_disponible: rIng.stock_inicial || 1,
             emoji: rIng.emoji || COMODIN_EMOJI, 
-            // Las propiedades de dieta deben ser especificadas o usar un default lógico para comodín principal
-            vegetariano: rIng.vegetariano ?? false, // Asumo falso si no se especifica para un principal comodín
+            vegetariano: rIng.vegetariano ?? false, 
             vegano: rIng.vegano ?? false,
             pesciboro: rIng.pesciboro ?? true,
             gourmet: rIng.gourmet ?? false
@@ -186,29 +184,26 @@ function desbloquearRecompensa(recompensa, isSilent = false) { // Acepta el nuev
             persistirInventario();
             isUpdated = true;
             console.log(`🎉 Ingrediente Comodín Desbloqueado: ${newIngredientName}`);
-            if (!isSilent) { // <-- MODIFICACIÓN: Mostrar alert solo si no es silencioso
+            if (!isSilent) { 
                 alert(`¡Has desbloqueado un ingrediente comodín: ${newIngredientName}!`); 
             }
         }
     }
 
-    // 2. Desbloquear PLATO NUEVO (Ahora con reglas estrictas)
-    // Solo se ejecuta si hay una recompensa de plato y si se pudo determinar el nombre del ingrediente.
+    // 2. Desbloquear PLATO NUEVO
     if (recompensa.plato_nuevo && newIngredientName) { 
         const rPlato = recompensa.plato_nuevo;
         const newDishName = rPlato.nombre;
 
-        // **REGLA DE PLATO EXCLUSIVO:**
-        // Solo el ingrediente comodín desbloqueado está en 'principales'. Los otros están vacíos.
+        // REGLA: Plato exclusivo con el comodín como único principal
         const platoCarbo = [];    
         const platoPrincipal = [newIngredientName]; 
         const platoVerduras = []; 
 
-        // Construir el plato con el nombre modificado para incluir el emoji y el ingrediente comodín
         const nuevoPlato = {
             nombre: `${COMODIN_EMOJI} ${newDishName} (${newIngredientName})`, 
             carbohidratos: platoCarbo,
-            principales: platoPrincipal, // <--- SOLO EL INGREDIENTE COMODÍN
+            principales: platoPrincipal,
             verduras: platoVerduras
         };
 
@@ -219,20 +214,20 @@ function desbloquearRecompensa(recompensa, isSilent = false) { // Acepta el nuev
             persistirMenu();
             isUpdated = true;
             console.log(`🍽️ Plato Nuevo Desbloqueado: ${nuevoPlato.nombre}`);
-            if (!isSilent) { // <-- MODIFICACIÓN: Mostrar alert solo si no es silencioso
+            if (!isSilent) { 
                 alert(`¡Has desbloqueado la receta de plato: ${nuevoPlato.nombre}!`);
             }
         }
     }
 
-    // Opcional: Si se actualizó el inventario o el menú, refresca las galerías si están abiertas
+    // Opcional: Refrescar la vista si es necesario
     if (isUpdated && !galleriesContainer.classList.contains('hidden')) {
         renderGalleries();
     }
 }
 
 // ===============================================
-// LÓGICA DE RASTREO Y VERIFICACIÓN DE LOGROS (SIN CAMBIOS)
+// LÓGICA DE RASTREO Y VERIFICACIÓN DE LOGROS (CON CHEQUEOS DE SEGURIDAD)
 // ===============================================
 
 function verificarLogros() {
@@ -244,35 +239,51 @@ function verificarLogros() {
     const platosPrincipales = menuData.platos_principales;
     
     // --- LÓGICA DE CÁLCULO DE MÉTRICAS ---
+    
+    /** CHEQUEO DE SEGURIDAD: Usa (p.propiedad || []) para asegurar que es un array */
     const countPlatosWithIngredient = (ingredienteName) => {
         return platosPrincipales.filter(p => 
-            p.principales.includes(ingredienteName) || 
-            p.carbohidratos.includes(ingredienteName) || 
-            p.verduras.includes(ingredienteName)
+            (p.principales || []).includes(ingredienteName) || 
+            (p.carbohidratos || []).includes(ingredienteName) || 
+            (p.verduras || []).includes(ingredienteName)
         ).length;
     };
     
+    /** CHEQUEO DE SEGURIDAD: Usa (p.propiedad || []).length para evitar el TypeError */
     const checkNineItems = (p) => 
-        (p.carbohidratos.length >= 3 && p.principales.length >= 3 && p.verduras.length >= 3);
+        ((p.carbohidratos || []).length >= 3 && (p.principales || []).length >= 3 && (p.verduras || []).length >= 3);
 
     const metricasActuales = {
         total_platos_creados: platosPrincipales.length, 
         plato_con_nueve_items: platosPrincipales.some(checkNineItems) ? 1 : 0, 
-        platos_con_solo_1_carbo: platosPrincipales.filter(p => p.carbohidratos.length === 1 && (p.principales.length > 0 || p.verduras.length > 0)).length,
-        platos_con_doble_proteina: platosPrincipales.filter(p => p.principales.length >= 2).length,
-        platos_con_triple_verdura: platosPrincipales.filter(p => p.verduras.length >= 3).length,
-        platos_sin_carbohidrato: platosPrincipales.filter(p => p.carbohidratos.length === 0 && (p.principales.length > 0 || p.verduras.length > 0)).length,
-        platos_con_triple_carbo: platosPrincipales.filter(p => p.carbohidratos.length >= 3).length,
+        
+        platos_con_solo_1_carbo: platosPrincipales.filter(p => 
+            (p.carbohidratos || []).length === 1 && 
+            ((p.principales || []).length > 0 || (p.verduras || []).length > 0)
+        ).length,
+        
+        platos_con_doble_proteina: platosPrincipales.filter(p => (p.principales || []).length >= 2).length,
+        platos_con_triple_verdura: platosPrincipales.filter(p => (p.verduras || []).length >= 3).length,
+        
+        platos_sin_carbohidrato: platosPrincipales.filter(p => 
+            (p.carbohidratos || []).length === 0 && 
+            ((p.principales || []).length > 0 || (p.verduras || []).length > 0)
+        ).length,
+        
+        platos_con_triple_carbo: platosPrincipales.filter(p => (p.carbohidratos || []).length >= 3).length,
         platos_con_ingrediente_X: countPlatosWithIngredient('Tocino'), 
         total_platos_registrados: inventarioData ? inventarioData.length : 0,
-        // *** FALTA IMPLEMENTAR las siguientes métricas en tu código de creación de platos si no existen ***
-        // plato_sin_restriccion: ???
-        // total_platos_vegetarianos: ???
-        // platos_con_gourmet: ???
-        // ingredientes_casi_agotados: ???
-        // total_dias_planificados: ???
-        // ingredientes_unicos_por_semana: ???
-        // total_platos_veganos: ???
+
+        // **NOTA: Las siguientes métricas requieren lógica de rastreo adicional no incluida aquí,
+        // por lo que se dejan en 0 o con los nombres de las métricas que debes implementar:**
+        plato_sin_restriccion: 0, 
+        total_platos_vegetarianos: 0, 
+        platos_con_gourmet: 0, 
+        ingredientes_casi_agotados: 0,
+        total_dias_planificados: 0,
+        ingredientes_unicos_por_semana: 0,
+        total_platos_veganos: 0,
+        dias_con_plato_asignado_continuo: 0
     };
 
     // --- 2. ITERAR Y VERIFICAR CONDICIONES ---
@@ -284,13 +295,23 @@ function verificarLogros() {
             const valorMinimo = logro.condicion.valor_minimo;
             const valorActual = metricasActuales[metrica] || 0; 
             
-            if (valorActual >= valorMinimo) {
+            // Chequeo especial para métricas de ingrediente específico
+            let cumpleCondicion = false;
+            if (metrica === 'platos_con_ingrediente_X' && logro.condicion.param) {
+                 if (countPlatosWithIngredient(logro.condicion.param) >= valorMinimo) {
+                     cumpleCondicion = true;
+                 }
+            } else if (valorActual >= valorMinimo) {
+                 cumpleCondicion = true;
+            }
+            
+            if (cumpleCondicion) {
                 logro.obtenido = true;
                 logro.fecha_obtencion = new Date().toLocaleDateString();
                 logrosDesbloqueados = true;
                 
                 if (logro.recompensa) {
-                    // Llamada al desbloqueo con isSilent = false (es un logro cumplido en este momento)
+                    // Logro cumplido AHORA, no es silencioso
                     desbloquearRecompensa(logro.recompensa, false); 
                 }
             }
@@ -300,6 +321,7 @@ function verificarLogros() {
     // 3. PERSISTENCIA
     if (logrosDesbloqueados) {
         persistirLogros();
+        // Opcional: Refrescar la pantalla de logros si está abierta
         if (overlay.style.display === "flex" && loadedArea.querySelector('#logros-screen-content')) {
              showLogrosScreen(); 
          }
@@ -308,9 +330,9 @@ function verificarLogros() {
 
 
 // ===============================================
-// LÓGICA DE PANTALLA DE LOGROS (RESTO DE main.js)
-// ... (Se mantienen igual)
+// LÓGICA DE PANTALLA DE LOGROS Y GALERÍAS
 // ===============================================
+
 function toggleLogroDetail(logroId) {
     const detailElement = document.getElementById(`detail-${logroId}`);
     
@@ -328,6 +350,7 @@ function renderLogrosContent() {
         const isObtenido = logro.obtenido;
         const statusColor = isObtenido ? '#ffc107' : '#484f58'; 
         const condicionParam = logro.condicion.param ? `(con ${logro.condicion.param})` : '';
+        const recompensa = logro.recompensa ? '⭐️ Recompensa: Plato Exclusivo' : '';
 
         return `
             <div class="gallery-item logro-item" 
@@ -345,6 +368,7 @@ function renderLogrosContent() {
                 
                 <h4>${logro.nombre} ${isObtenido ? '✨' : ''}</h4>
                 <p style="font-size: 0.9em; margin-top: 5px; color: #c9d1d9;">${logro.descripcion}</p>
+                <p style="font-size: 0.8em; color: #ffc107;">${recompensa}</p>
                 
                 <div id="detail-${logro.id}" class="logro-detail-info" style="display: none; margin-top: 15px; padding: 10px; border-top: 1px dashed #484f58; background-color: #1a1f26; border-radius: 3px;">
                     <p style="font-weight: bold; color: #58a6ff;">📋 Condición de Desbloqueo:</p> 
@@ -417,9 +441,9 @@ function renderGalleries() {
                 ${menuData.platos_principales.map(plato => `
                     <div class="gallery-item" style="border-left: 5px solid #58a6ff; background-color: #2b313a; color: #c9d1d9; border: 1px solid #484f58;">
                         <h4>${plato.nombre}</h4>
-                        <p><strong>Carbohidratos:</strong> ${plato.carbohidratos.join(', ')}</p>
-                        <p><strong>Proteínas:</strong> ${plato.principales.join(', ')}</p>
-                        <p><strong>Verduras:</strong> ${plato.verduras.join(', ')}</p>
+                        <p><strong>Carbohidratos:</strong> ${(plato.carbohidratos || []).join(', ')}</p>
+                        <p><strong>Proteínas:</strong> ${(plato.principales || []).join(', ')}</p>
+                        <p><strong>Verduras:</strong> ${(plato.verduras || []).join(', ')}</p>
                     </div>
                 `).join('')}
             </div>
@@ -479,6 +503,6 @@ closeButton.addEventListener("click", () => {
 cargarDatosMenu();
 cargarInventario();
 cargarLogros().then(() => { 
-    sincronizarRecompensasIniciales(); // <-- NUEVA LLAMADA: Sincroniza recompensas de logros ya obtenidos
+    sincronizarRecompensasIniciales(); // Otorga recompensas de logros ya obtenidos (obtenido: true en JSON)
     verificarLogros(); 
 });
