@@ -652,6 +652,9 @@
         const MENU_DB_PATH = BASE_DATA_URL + 'menu_db.json';
         const INVENTORY_DATA_URL = BASE_DATA_URL + 'inventario_db.json';
         const ANIMATION_DURATION = 500; 
+        
+        // MODIFICACIÓN: Clave para el almacenamiento de platos desbloqueados
+        const UNLOCKED_DISHES_KEY = 'unlockedDishes'; 
 
         const DISH_EMOJI_MAP = {
             "Pasta Clásica con Salsa (a elección)": "🍝", "Bowl de Arroz, Proteína y Vegetales": "🍚",
@@ -665,22 +668,60 @@
         };
 
         let ALL_DISH_RECIPES = [];
+        
+        // MODIFICACIÓN: Función para obtener los platos desbloqueados desde localStorage
+        function getUnlockedDishes() {
+            try {
+                const unlockedDishes = localStorage.getItem(UNLOCKED_DISHES_KEY);
+                return unlockedDishes ? JSON.parse(unlockedDishes) : [];
+            } catch (e) {
+                console.error("Error al leer unlockedDishes de localStorage:", e);
+                return [];
+            }
+        }
+
         function setupDishRecipes(menuDb) {
             if (!menuDb || !menuDb.platos_principales) {
                 console.error("Base de datos de menús no válida o incompleta.");
                 showMessage("ERROR: La base de datos de platos está vacía o es incorrecta.", 'failure');
                 return;
             }
-            ALL_DISH_RECIPES = menuDb.platos_principales.map(dish => {
-                return {
-                    name: dish.nombre,
-                    emoji: DISH_EMOJI_MAP[dish.nombre] || "",
-                    carbohidratos: dish.carbohidratos || [],
-                    principales: dish.principales || [],
-                    verduras: dish.verduras || [],
-                    points: dish.puntaje || 1 // NUEVA ADICIÓN: MONEDAS (Asumiendo propiedad 'puntaje')
+            
+            // 1. Cargar recetas base del archivo estático
+            let baseRecipes = menuDb.platos_principales.map(dish => ({
+                name: dish.nombre,
+                emoji: DISH_EMOJI_MAP[dish.nombre] || "",
+                carbohidratos: dish.carbohidratos || [],
+                principales: dish.principales || [],
+                verduras: dish.verduras || [],
+                points: dish.puntaje || 1
+            }));
+            
+            // 2. Cargar platos desbloqueados
+            const unlockedDishes = getUnlockedDishes();
+            
+            // 3. Combinar (asegurando no duplicados)
+            const allRecipesMap = new Map();
+            
+            // Agregar recetas base
+            baseRecipes.forEach(recipe => allRecipesMap.set(recipe.name, recipe));
+            
+            // Agregar recetas desbloqueadas (si un plato base existe, se sobrescribe con el desbloqueado si es necesario, 
+            // pero lo importante es que los nuevos estén presentes)
+            unlockedDishes.forEach(unlockedDish => {
+                // El formato de unlockedDishes desde main.js/desbloquearRecompensa debería ser compatible o similar
+                const recipeData = {
+                    name: unlockedDish.nombre,
+                    emoji: DISH_EMOJI_MAP[unlockedDish.nombre] || unlockedDish.emoji || "",
+                    carbohidratos: unlockedDish.carbohidratos || [],
+                    principales: unlockedDish.principales || [],
+                    verduras: unlockedDish.verduras || [],
+                    points: unlockedDish.puntaje || 1 
                 };
+                allRecipesMap.set(unlockedDish.nombre, recipeData);
             });
+            
+            ALL_DISH_RECIPES = Array.from(allRecipesMap.values());
         }
 
         const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients';
@@ -1741,17 +1782,32 @@
         // --- Inicialización ---
 
         async function initializeCarousel() {
-            let menuDatabase = window.MENU_DB;
+            let menuDatabase;
+            
+            // MODIFICACIÓN: Intentar cargar la DB de menú desde localStorage si está disponible (prioridad 1)
+            try {
+                const storedMenu = localStorage.getItem('MENU_DB'); // Asumo que el main.js guarda la DB completa
+                if (storedMenu) {
+                    menuDatabase = JSON.parse(storedMenu);
+                    console.log("Menú cargado desde localStorage (incluye platos desbloqueados).");
+                }
+            } catch (e) {
+                console.warn("Error al cargar MENU_DB desde localStorage. Se usará el archivo estático.", e);
+            }
+            
+            // Si no está en localStorage o falló, cargar desde el archivo estático (prioridad 2)
             if (!menuDatabase) {
                 try {
                     const response = await fetch(MENU_DB_PATH);
                     if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
                     menuDatabase = await response.json();
+                    console.log("Menú cargado desde archivo estático.");
                 } catch (e) {
                     showMessage("ERROR CRÍTICO: No se puede cargar la librería de Platos (menu_db).", 'failure');
                     return;
                 }
             }
+
 
             setupDishRecipes(menuDatabase);
 
