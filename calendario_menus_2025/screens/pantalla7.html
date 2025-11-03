@@ -692,22 +692,47 @@
         let AVAILABLE_INGREDIENT_POOL = [];
         let ALL_INGREDIENT_OBJECTS = new Map();
 
+        /** Carga la data base del inventario, priorizando localStorage (donde main.js guarda). */
+        async function fetchBaseInventoryData() {
+            // 1. Intentar cargar desde localStorage (donde main.js actualiza el inventario completo)
+            const localData = localStorage.getItem('inventarioData');
+            if (localData) {
+                try {
+                    // La data en localStorage es solo el array 'inventario', no el objeto completo
+                    const inventoryArray = JSON.parse(localData);
+                    showMessage("Inventario base cargado desde LocalStorage. (Sincronizado)", 'default');
+                    // Devolver en el formato esperado { inventario: [...] } para ser usado por loadFilteredIngredients
+                    return { inventario: inventoryArray }; 
+                } catch (e) {
+                    console.error("Error al parsear inventario de localStorage. Fallback a base remota.", e);
+                    localStorage.removeItem('inventarioData'); 
+                }
+            }
+
+            // 2. Si no hay data válida en localStorage, cargar el archivo base remoto
+            try {
+                const response = await fetch(INVENTORY_DATA_URL);
+                if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
+                const remoteData = await response.json();
+                showMessage("Inventario base cargado desde la base de datos remota.", 'default');
+                return remoteData; // Este debería ser { inventario: [...] }
+            } catch (e) {
+                console.error("Error al cargar inventario_db.json. La librería 'inventario_db' falló.", e);
+                showMessage("ERROR: Fallo al cargar la librería de Inventario.", 'failure');
+                return { inventario: [] };
+            }
+        }
+
+
         async function loadFilteredIngredients() {
             let selectedItems = new Set();
             let customIngredients = {};
             let standardIngredientsConfig = {};
 
-            let inventory;
-            try {
-                const response = await fetch(INVENTORY_DATA_URL);
-                if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
-                inventory = await response.json();
-            } catch (e) {
-                console.error("Error al cargar inventario_db.json. La librería 'inventario_db' falló.", e);
-                showMessage("ERROR: Fallo al cargar la librería de Inventario.", 'failure');
-                inventory = { inventario: [] };
-            }
-
+            // OBTENER EL INVENTARIO BASE, PRIORIZANDO LOCALSTORAGE
+            let inventory = await fetchBaseInventoryData(); 
+            
+            // La lógica para cargar las configuraciones de selección sigue siendo la misma.
             try {
                 const storedSelection = localStorage.getItem(SELECTION_STORAGE_KEY);
                 if (storedSelection) selectedItems = new Set(JSON.parse(storedSelection).filter(item => !item.startsWith('Plato')));
@@ -1372,6 +1397,17 @@
 
             updateStats();
             
+            // **********************************************
+            // MODIFICACIÓN CLAVE: CERRAR CICLO DE LOGROS
+            // **********************************************
+            if (window.parent && typeof window.parent.verificarLogros === 'function') {
+                window.parent.verificarLogros();
+                console.log("Notificación enviada a main.js para verificar logros (Plato Creado).");
+            } else {
+                console.warn("Función window.parent.verificarLogros() no disponible. Asegúrate de que main.js la define.");
+            }
+            // **********************************************
+            
             return resultCard;
         }
 
@@ -1787,7 +1823,10 @@
             goToPantalla2Button.addEventListener('click', () => {
                 // ASUNCIÓN: Se utiliza una función global 'loadScreen' para el cambio de pantalla.
                 // Si la función tiene otro nombre o es local, esto deberá ajustarse en tu entorno.
-                if (typeof window.loadScreen === 'function') {
+                // Usamos window.parent si estamos en un iframe.
+                if (window.parent && typeof window.parent.loadScreen === 'function') {
+                    window.parent.loadScreen('pantalla2');
+                } else if (typeof window.loadScreen === 'function') {
                     window.loadScreen('pantalla2');
                 } else {
                     console.warn("La función loadScreen('pantalla2') no está definida globalmente. No se pudo cambiar la pantalla.");
