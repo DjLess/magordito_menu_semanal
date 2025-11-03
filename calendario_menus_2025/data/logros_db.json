@@ -1,8 +1,5 @@
 {
   "logros": [
-    /* =============================================== */
-    /* I. LOGROS DE CREACIÓN DE PLATILLOS (PANTALLA 7) */
-    /* =============================================== */
     {
       "id": "creador_novato",
       "nombre": "🍳 Chef en Prácticas",
@@ -83,10 +80,11 @@
       "condicion": { "metrica": "platos_con_ingrediente_gourmet", "valor_minimo": 15 },
       "obtenido": false, "fecha_obtencion": null
     },
-    
-    /* ============================================== */
-    /* II. LOGROS DE PLANIFICACIÓN DE MENÚS (PANTALLA 2)*/
-    /* ============================================== */
+
+
+
+
+
     {
       "id": "plan_semanal_full",
       "nombre": "📅 Planificador Semanal",
