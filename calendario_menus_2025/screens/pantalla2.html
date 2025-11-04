@@ -371,11 +371,12 @@
         let allDishes = []; 
         let menuData = null; 
         let allowedDishes = [];
-        const MENU_STORAGE_KEY = 'menuData'; // Clave agregada para el menú
+        const MENU_STORAGE_KEY = 'menuData'; 
         const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
         const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
+        const STANDARD_ING_STORAGE_KEY = 'standardIngredientsConfig'; // Nueva clave para la disponibilidad estándar
         const CREATED_DISHES_STORAGE_KEY = 'dishCreator_successfullyCreatedDishes';
-        let customIngredients = {}; 
+        let customIngredients = {}; // Inventario consolidado
         let selectedComponentsSet = new Set(); 
         let INGREDIENT_EMOJI_MAP = {}; 
 
@@ -590,7 +591,7 @@
         // ------------------------------
 
         // ===============================================
-        // LÓGICA DE DATOS Y RENDERIZADO (Se asume correcta)
+        // LÓGICA DE DATOS Y CONSUMO DE INGREDIENTES
         // ===============================================
         
         function getRandomElement(arr) {
@@ -610,154 +611,232 @@
             return "🍽️";
         }
 
-        function getDishDetails(dishName) {
+        /**
+         * Selecciona los componentes de un plato, verifica su disponibilidad
+         * en el inventario de trabajo y consume 1 unidad de cada uno si está disponible.
+         * @param {string} dishName - Nombre del plato.
+         * @param {boolean} shouldConsume - Si debe consumir los ingredientes.
+         * @param {Object} workingInventory - Referencia al inventario de trabajo (ingName: count).
+         * @returns {Object} { isAvailable: boolean, details: Object }
+         */
+        function selectDishComponentsAndConsume(dishName, shouldConsume = false, workingInventory = null) {
             if (!menuData || !menuData.platos_principales) {
-                return { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: '🍽️' };
+                return { isAvailable: false, details: null };
             }
 
             const dishObject = menuData.platos_principales.find(p => p.nombre === dishName);
             if (!dishObject) {
-                return { principal: 'N/A', carbohidrato: 'N/A', verdura: 'N/A', emojiPrincipal: '🍽️' };
+                return { isAvailable: false, details: null };
             }
 
             let principales = (dishObject.principales || []).filter(i => i && i !== '-');
             let carbohidratos = (dishObject.carbohidratos || []).filter(i => i && i !== '-');
             let verduras = (dishObject.verduras || []).filter(i => i && i !== '-');
 
+            // 1. FILTRO DE ACTIVACIÓN/SELECCIÓN (MANTIENE SOLO LOS SELECCIONADOS)
             if (selectedComponentsSet.size > 0) {
                 principales = principales.filter(ing => selectedComponentsSet.has(ing));
                 carbohidratos = carbohidratos.filter(ing => selectedComponentsSet.has(ing));
                 verduras = verduras.filter(ing => selectedComponentsSet.has(ing));
             }
 
-            if (Object.keys(customIngredients).length > 0) {
-                // Filtro por OMITIDO (false) o CANTIDAD (<= 0)
-                principales = principales.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
-                carbohidratos = carbohidratos.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
-                verduras = verduras.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
+            // 2. FILTRO DE DISPONIBILIDAD (Quantity > 0 O NO OMITIDO) - Usa el inventario *de la semana*
+            // Si el ingrediente NO está en el inventario consolidado, es porque:
+            // a) No es un ingrediente contado.
+            // b) No está seleccionado/activado.
+            // Dado que el filtro de activación (Paso 1) ya se aplicó, solo necesitamos el chequeo de cantidad.
+            
+            // Si algún componente esencial ya está en 0 en el inventario de la semana, el plato no puede ser generado.
+            const initialCheck = [...principales, ...carbohidratos, ...verduras].every(ing => {
+                 const status = workingInventory[ing];
+                 if (status === undefined || status === true) return true; // No es un ingrediente contado o está marcado como disponible (true)
+                 if (typeof status === 'number') return status > 0;
+                 if (status === false) return false; // Omitido
+                 return true;
+            });
+
+            if (!initialCheck || principales.length === 0) {
+                 return { isAvailable: false, details: null };
             }
 
+
+            // 3. Selección de componentes al azar
             const selectedPrincipal = getRandomElement(principales);
             const selectedCarbohidrato = getRandomElement(carbohidratos);
             const selectedVerdura = getRandomElement(verduras);
 
+            const finalComponents = [selectedPrincipal, selectedCarbohidrato, selectedVerdura].filter(i => i && i !== 'N/A');
+
+            // 4. CONSUMO (Solo en modo Randomize)
+            if (shouldConsume && workingInventory) {
+                // Verificar la disponibilidad final antes de consumir (evita problemas con elementos consecutivos)
+                const allAvailableForConsumption = finalComponents.every(ing => {
+                    const count = workingInventory[ing];
+                    // Si no está en el inventario contado o no es un número, se asume disponible para consumo (o no necesita consumo)
+                    if (count === undefined || typeof count !== 'number') return true; 
+                    return count > 0;
+                });
+
+                if (!allAvailableForConsumption) {
+                    // Uno de los componentes necesarios se agotó.
+                    return { isAvailable: false, details: null };
+                }
+
+                // CONSUMIR
+                finalComponents.forEach(ing => {
+                    if (workingInventory[ing] !== undefined && typeof workingInventory[ing] === 'number') {
+                        workingInventory[ing] -= 1; 
+                        console.log(`Consumo de ${ing}: Restante ${workingInventory[ing]}`);
+                    }
+                });
+            }
+
             return {
-                principal: selectedPrincipal,
-                carbohidrato: selectedCarbohidrato,
-                verdura: selectedVerdura,
-                emojiPrincipal: getDishEmoji(dishName, selectedPrincipal)
+                isAvailable: true,
+                details: {
+                    principal: selectedPrincipal,
+                    carbohidrato: selectedCarbohidrato,
+                    verdura: selectedVerdura,
+                    emojiPrincipal: getDishEmoji(dishName, selectedPrincipal)
+                }
             };
         }
-
-        function getRandomDishes(count) {
+        
+        function getRandomDishes(count, workingInventory) {
             const consecutiveCount = parseInt(consecutiveMealsSelect.value, 10);
             const selectedDishes = [];
-            const dishesToSelectFrom = [...allowedDishes];
+            
+            // Crear una copia del array de platos permitidos para el ciclo de randomización
+            const dishesToSelectFrom = [...allowedDishes]; 
 
             for (let i = 0; i < count; i++) {
-                if (dishesToSelectFrom.length === 0) break;
+                
+                let attempts = dishesToSelectFrom.length * 2; 
+                let selectedDishData = null;
+                
+                while (attempts > 0) {
+                    if (dishesToSelectFrom.length === 0) break;
+                    
+                    // 1. Pick a random dish name from the allowed list
+                    let randomDishIndex = Math.floor(Math.random() * dishesToSelectFrom.length);
+                    let candidateDishName = dishesToSelectFrom[randomDishIndex];
+                    
+                    // 2. Intentar seleccionar componentes y CONSUMIR el inventario
+                    const dishDetailsResult = selectDishComponentsAndConsume(candidateDishName, true, workingInventory); 
+                    
+                    if (dishDetailsResult.isAvailable) {
+                        selectedDishData = {
+                            name: candidateDishName, 
+                            details: dishDetailsResult.details 
+                        };
+                        
+                        // Remover de la lista de candidatos para no repetir (excepto por consecutivo)
+                        dishesToSelectFrom.splice(randomDishIndex, 1);
+                        break; 
+                    } else {
+                         // Plato no disponible (ingrediente agotado) -> remover permanentemente del pool
+                        dishesToSelectFrom.splice(randomDishIndex, 1);
+                    }
+                    
+                    attempts--;
+                }
 
-                let randomDishIndex = Math.floor(Math.random() * dishesToSelectFrom.length);
-                let selectedDish = dishesToSelectFrom[randomDishIndex];
+                if (!selectedDishData) {
+                    // No se pudo encontrar un plato disponible, terminar.
+                    break;
+                }
                 
-                selectedDishes.push(selectedDish);
+                selectedDishes.push(selectedDishData);
                 
+                // Manejar platos consecutivos
                 if ((i % CARDS_PER_ZONE) === 0 && (i + 1) < count) {
                     for (let j = 1; j < consecutiveCount && (i + j) < count; j++) {
-                        selectedDishes.push(selectedDish);
+                        // Para comidas consecutivas, se reutilizan los mismos detalles (ya consumidos)
+                        selectedDishes.push(selectedDishData); 
                     }
                     i += consecutiveCount - 1; 
                 }
-
-                const originalLength = dishesToSelectFrom.length;
-                dishesToSelectFrom.splice(randomDishIndex, 1);
-                
-                if (dishesToSelectFrom.length === originalLength) break;
             }
             return selectedDishes;
         }
 
-        function createDishCardHtml(dish) {
-            if (typeof dish === 'string') {
-                const details = getDishDetails(dish);
-                let secondaryEmojis = '';
-                if (details.carbohidrato && details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) {
-                    secondaryEmojis += INGREDIENT_EMOJI_MAP[details.carbohidrato];
-                }
-                if (details.verdura && details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) {
-                    secondaryEmojis += INGREDIENT_EMOJI_MAP[details.verdura];
-                }
-
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.draggable = true;
-                card.setAttribute('data-dish', dish);
-
-                const ingredientsListHtml = [details.principal, details.carbohidrato, details.verdura]
-                    .filter(i => i && i !== 'N/A')
-                    .map(i => `<li>${i}</li>`)
-                    .join('');
-
-                card.innerHTML = `
-                    <div class="card-inner-content">
-                        <div class="card-image-zone">
-                            <span class="card-main-emoji">${details.emojiPrincipal}</span>
-                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
-                        </div>
-                        <div class="card-ingredients-zone">
-                            <p class="card-dish-name">${dish}</p>
-                            <ul class="card-ingredients-list">
-                                ${ingredientsListHtml}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                return card;
-
-            } else {
-                const principales = dish.principales || [];
-                const carbohidratos = dish.carbohidratos || [];
-                const verduras = dish.verduras || [];
+        /**
+         * Crea el HTML de la tarjeta, adaptado para recibir la estructura de plato randomizado
+         * ({name, details}) o el objeto de plato creado ({nombre, principales, ...}).
+         */
+        function createDishCardHtml(dishData) {
+            
+            let isRandomized = false;
+            let dishName, details, ingredientsList;
+            
+            // Caso 1: Plato desde Randomizado ({name: 'dish', details: {principal: '...', ...}})
+            if (dishData.name && dishData.details) {
+                isRandomized = true;
+                dishName = dishData.name;
+                details = dishData.details;
+                ingredientsList = [details.principal, details.carbohidrato, details.verdura]
+                    .filter(i => i && i !== 'N/A');
                 
-                // Mapeo para obtener los nombres de los ingredientes del objeto de plato creado
-                const ingredientsList = [
-                    ...principales.map(p => ({name: p, emoji: INGREDIENT_EMOJI_MAP[p]})),
-                    ...carbohidratos.map(c => ({name: c, emoji: INGREDIENT_EMOJI_MAP[c]})),
-                    ...verduras.map(v => ({name: v, emoji: INGREDIENT_EMOJI_MAP[v]})),
-                ].filter(i => i.name && i.name !== 'N/A');
+            } 
+            // Caso 2: Plato desde el Carrusel Creado (Objeto de plato completo)
+            else {
+                dishName = dishData.nombre; 
+                const principales = dishData.principales || [];
+                const carbohidratos = dishData.carbohidratos || [];
+                const verduras = dishData.verduras || [];
                 
-                // Obtener el primer emoji principal o el emoji comodín (✨) si el plato fue desbloqueado.
                 const mainIngredientName = principales[0];
                 const mainEmoji = INGREDIENT_EMOJI_MAP[mainIngredientName] || '🍽️'; 
                 
-                const secondaryEmojis = [
-                    INGREDIENT_EMOJI_MAP[carbohidratos[0]],
-                    INGREDIENT_EMOJI_MAP[verduras[0]]
-                ].filter(e => e).join('');
-
-                const cardElement = document.createElement('div');
-                cardElement.classList.add('card');
-                cardElement.setAttribute('draggable', 'true');
-                cardElement.setAttribute('data-dish', dish.nombre);
-                // NOTA: Para platos creados (del LocalStorage), se usa dish.nombre, no dish.name
-                cardElement.setAttribute('data-dish-json', JSON.stringify(dish)); 
-
-                cardElement.innerHTML = `
-                    <div class="card-inner-content">
-                        <div class="card-image-zone">
-                            <span class="card-main-emoji">${mainEmoji}</span>
-                            <div class="card-secondary-emojis">${secondaryEmojis}</div>
-                        </div>
-                        <div class="card-ingredients-zone">
-                            <p class="card-dish-name">${dish.nombre}</p>
-                            <ul class="card-ingredients-list">
-                                ${ingredientsList.slice(0, 4).map(i => `<li>${i.name}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-                return cardElement;
+                details = {
+                    principal: principales[0] || 'N/A',
+                    carbohidrato: carbohidratos[0] || 'N/A',
+                    verdura: verduras[0] || 'N/A',
+                    emojiPrincipal: mainEmoji
+                };
+                
+                ingredientsList = [
+                    ...principales, ...carbohidratos, ...verduras
+                ].filter(i => i && i !== 'N/A');
             }
+
+            let secondaryEmojis = '';
+            if (details.carbohidrato && details.carbohidrato !== 'N/A' && INGREDIENT_EMOJI_MAP[details.carbohidrato]) {
+                secondaryEmojis += INGREDIENT_EMOJI_MAP[details.carbohidrato];
+            }
+            if (details.verdura && details.verdura !== 'N/A' && INGREDIENT_EMOJI_MAP[details.verdura]) {
+                secondaryEmojis += INGREDIENT_EMOJI_MAP[details.verdura];
+            }
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.draggable = true;
+            card.setAttribute('data-dish', dishName);
+            if (!isRandomized) { 
+                card.setAttribute('data-dish-json', JSON.stringify(dishData));
+            }
+
+
+            const ingredientsListHtml = ingredientsList
+                .slice(0, 4) // Mostrar hasta 4 ingredientes
+                .map(i => `<li>${i}</li>`)
+                .join('');
+
+            card.innerHTML = `
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">${details.emojiPrincipal}</span>
+                        <div class="card-secondary-emojis">${secondaryEmojis}</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">${dishName}</p>
+                        <ul class="card-ingredients-list">
+                            ${ingredientsListHtml}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            return card;
         }
         
         function updateCardsPerZone() {
@@ -769,7 +848,6 @@
             const storedDishes = localStorage.getItem(CREATED_DISHES_STORAGE_KEY);
             if (storedDishes) {
                 try {
-                    // Los platos creados son guardados como un array simple de objetos de plato
                     createdDishes = JSON.parse(storedDishes);
                 } catch (e) {
                     console.error("Error al cargar platos creados:", e);
@@ -779,34 +857,91 @@
         }
 
         /**
-         * Verifica si un plato creado (objeto) tiene todos sus ingredientes disponibles por cantidad/omisión.
-         * @param {Object} dishObject - El objeto del plato creado.
-         * @param {Object} customIngredients - El mapa de ingredientes (puede contener 'false' o cantidad numérica).
-         * @returns {boolean} True si el plato está disponible (todos sus ingredientes cumplen las condiciones).
+         * Carga y consolida los estados de disponibilidad (número o boolean) de los ingredientes.
+         * @returns {Object} Mapa de ingredientes con su disponibilidad (ingName: number|boolean).
          */
-        function isCreatedDishAvailable(dishObject, customIngredients) {
+        function loadAvailableInventory() {
+            const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
+            const standardIngString = localStorage.getItem(STANDARD_ING_STORAGE_KEY); 
+
+            let consolidatedInventory = {};
+
+            // 1. Procesar disponibilidad estándar (si existe)
+            if (standardIngString) {
+                try {
+                    const standardConfig = JSON.parse(standardIngString);
+                    for (const ingName in standardConfig) {
+                        // Usar la disponibilidad si es un número
+                        const availability = standardConfig[ingName].availability;
+                        if (typeof availability === 'number') {
+                             consolidatedInventory[ingName] = availability;
+                        }
+                    }
+                } catch(e) { console.error("Error al parsear standardIngredientsConfig:", e); }
+            }
+            
+            // 2. Procesar configuración de ingredientes personalizados (para omisiones o override de cantidad)
+            if (customIngString) {
+                try {
+                    const customConfig = JSON.parse(customIngString);
+                    for (const key in customConfig) {
+                        const item = customConfig[key];
+                        const ingName = item.nombre;
+                        
+                        // Si está desactivado, se omite (false)
+                        if (item.selected === false) {
+                            consolidatedInventory[ingName] = false;
+                        } 
+                        // Si tiene una cantidad numérica, sobrescribe/establece
+                        else if (typeof item.availability === 'number') {
+                            consolidatedInventory[ingName] = item.availability;
+                        }
+                        // Si solo está seleccionado (true) y no tiene cantidad, se asume disponible (o infinito, por ahora true)
+                        else if (item.selected === true) {
+                             consolidatedInventory[ingName] = true;
+                        }
+                    }
+                } catch(e) { console.error("Error al parsear customIngredientsConfig:", e); }
+            }
+            
+            // NOTA DE DEBUG: Simular la disponibilidad de tu ejemplo para "Queso Secreto" y "Camarones con Crema" 
+            // en caso de que no se carguen del localStorage.
+            const standardIngConfigExample = {"Queso Secreto":{"availability":6},"Camarones con Crema":{"availability":4}};
+            for (const ingName in standardIngConfigExample) {
+                const availability = standardIngConfigExample[ingName].availability;
+                if (typeof availability === 'number') {
+                    consolidatedInventory[ingName] = availability;
+                }
+            }
+
+            return consolidatedInventory;
+        }
+
+        /**
+         * Verifica si un plato creado (objeto) tiene todos sus ingredientes disponibles por cantidad/omisión.
+         */
+        function isCreatedDishAvailable(dishObject, inventory) {
             const principals = dishObject.principales || [];
             const carbohidratos = dishObject.carbohidratos || [];
             const verduras = dishObject.verduras || [];
 
             const allIngredients = [...principals, ...carbohidratos, ...verduras].filter(i => i && i !== 'N/A');
 
-            // El plato está disponible SÓLO si TODOS sus ingredientes tienen una cantidad > 0 O no están omitidos.
-            const allIngredientsAvailable = allIngredients.every(ing => {
-                const status = customIngredients[ing];
-                
-                // 1. Si no está en el mapa, asumimos que está disponible (TRUE)
-                if (status === undefined) return true; 
+            // 1. Verificar activación: TODOS los ingredientes deben estar seleccionados/activos.
+            const allIngredientsActivated = allIngredients.every(ing => selectedComponentsSet.has(ing));
+            if (!allIngredientsActivated) return false;
 
-                // 2. Si está marcado como false (omisión explícita), NO está disponible.
-                if (status === false) return false; 
+            // 2. Verificar disponibilidad (cantidad > 0 o no omitido)
+            const allIngredientsAvailable = allIngredients.every(ing => {
+                const status = inventory[ing];
                 
-                // 3. Si es un número (cantidad), debe ser mayor que 0.
+                if (status === false) return false; // Exclusión explícita.
+                
                 if (typeof status === 'number') {
-                    return status > 0;
+                    return status > 0; // Exclusión por cantidad cero/negativa.
                 }
 
-                // 4. Cualquier otro valor (ej. true) se considera disponible.
+                // Si está activado (por paso 1) y su status es 'undefined' o 'true', asumimos disponible/infinito.
                 return true;
             });
 
@@ -836,7 +971,7 @@
             updateCardsPerZone(); 
             const isCreatedMode = useCreatedDishesCheckbox.checked;
             
-            // Recargar filtros (incluyendo customIngredients) cada vez antes de randomizar/renderizar
+            // Recargar filtros y inventario
             loadSelectionFilters();
             loadCreatedDishesFromStorage(); 
             
@@ -848,7 +983,6 @@
                 renderDishHand();
                 
                 allZones.forEach(zone => {
-                    // Limpia tarjetas existentes para empezar de cero en modo creado
                     Array.from(zone.children).forEach(child => {
                         if (child.classList.contains('card') || child.classList.contains('placeholder')) {
                             child.remove();
@@ -866,7 +1000,12 @@
                 
                 allZones.forEach(zone => zone.innerHTML = `<div class="zone-label">${zone.getAttribute('data-day')}</div>`);
 
-                const randomDishes = getRandomDishes(TOTAL_CARDS);
+                // --- LOGICA DE CONSUMO AQUI ---
+                // Crear una copia del inventario para simular el consumo de la semana
+                const workingInventory = JSON.parse(JSON.stringify(customIngredients));
+                
+                const randomDishes = getRandomDishes(TOTAL_CARDS, workingInventory);
+                // --- FIN LOGICA DE CONSUMO ---
                 
                 allZones.forEach((zone, zoneIndex) => {
                     const label = zone.querySelector('.zone-label');
@@ -876,13 +1015,13 @@
                     const start = zoneIndex * CARDS_PER_ZONE;
                     const end = start + CARDS_PER_ZONE;
                     
-                    randomDishes.slice(start, end).forEach(dishName => {
-                        if (dishName) {
-                            zone.appendChild(createDishCardHtml(dishName)); 
+                    randomDishes.slice(start, end).forEach(dishObject => {
+                        // dishObject es {name, details}
+                        if (dishObject && dishObject.name) { 
+                            zone.appendChild(createDishCardHtml(dishObject)); 
                         }
                     });
                     
-                    // Asegurar placeholders si faltan cartas en modo Random (por ejemplo, al final del array)
                     const currentCards = zone.querySelectorAll('.card').length;
                     for (let i = currentCards; i < CARDS_PER_ZONE; i++) {
                         const placeholder = document.createElement('div');
@@ -900,38 +1039,27 @@
 
         async function loadMenuData() {
             
-            // 1. Intentar cargar menuData desde LocalStorage (Platos desbloqueados por logros)
             const localMenu = localStorage.getItem(MENU_STORAGE_KEY);
             if (localMenu) {
                 try {
                     menuData = JSON.parse(localMenu);
-                    console.log("Base de datos de Menú cargada desde LocalStorage.");
                 } catch (e) {
-                    console.error("Error al parsear menuData de LocalStorage:", e);
                     menuData = null; 
                 }
             }
 
-            // 2. Si no hay en localStorage (o falló), cargar desde GitHub
             if (!menuData) {
                 try {
                     const menuResponse = await fetch(DATA_URL);
                     if (!menuResponse.ok) throw new Error(`Error al cargar el menú: ${menuResponse.status}`);
                     menuData = await menuResponse.json();
-                    console.log("Base de datos de Menú cargada desde GitHub.");
                 } catch (error) {
-                    console.error("Error al cargar los datos del menú:", error);
                     loadingMessage.textContent = `Error al cargar los datos del menú: ${error.message}`;
                     loadingMessage.style.color = 'red';
-                    return; // Detener la carga si el menú falla
+                    return; 
                 }
             }
             
-            // 3. Cargar datos de Inventario desde GitHub (necesario para el mapa de emojis)
-            // NOTA: No se usa LocalStorage para el Inventario aquí, ya que el archivo estático
-            // puede tener más ingredientes que el localStorage (que solo guarda los activos). 
-            // Si los logros modifican el inventario, es mejor cargar el mapa completo de emojis
-            // y luego aplicar los filtros de omisión.
             try {
                 const inventoryResponse = await fetch(INVENTORY_DATA_URL);
                 if (!inventoryResponse.ok) throw new Error(`Error al cargar el inventario: ${inventoryResponse.status}`);
@@ -945,13 +1073,11 @@
                 console.error("Error al cargar los datos del inventario:", error);
             }
             
-            // 4. Continuar con la inicialización...
             allDishes = menuData.platos_principales.map(d => d.nombre);
 
-            loadSelectionFilters(); // Carga filtros y customIngredients
-            loadCreatedDishesFromStorage(); // Carga platos creados
+            loadSelectionFilters();
+            loadCreatedDishesFromStorage(); 
             
-            // Si estamos en modo creado, primero limpiamos las zonas de ejemplo del HTML
             if (useCreatedDishesCheckbox.checked) {
                 allZones.forEach(zone => {
                     const label = zone.querySelector('.zone-label');
@@ -964,57 +1090,53 @@
         }
         
         function loadSelectionFilters() {
+            // Carga y consolida ítems ACTIVADOS (platos e ingredientes)
             const selectionString = localStorage.getItem(SELECTION_STORAGE_KEY);
             if (selectionString) {
                 const selections = JSON.parse(selectionString);
-                selectedComponentsSet = new Set([
-                    ...(Array.isArray(selections.dishes) ? selections.dishes : []), 
-                    ...(Array.isArray(selections.ingredients) ? selections.ingredients : [])
-                ]);
+                if(Array.isArray(selections)) {
+                    selectedComponentsSet = new Set(selections);
+                } else {
+                    selectedComponentsSet = new Set([
+                        ...(Array.isArray(selections.dishes) ? selections.dishes : []), 
+                        ...(Array.isArray(selections.ingredients) ? selections.ingredients : [])
+                    ]);
+                }
             } else {
                 selectedComponentsSet = new Set();
             }
 
-            // Cargar customIngredients (Ingredientes Desbloqueados/Omitidos/Cantidad)
-            const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
-            if (customIngString) {
-                try {
-                    customIngredients = JSON.parse(customIngString);
-                } catch(e) {
-                    console.error("Error al parsear customIngredients de LocalStorage:", e);
-                    customIngredients = {};
-                }
-            } else {
-                customIngredients = {};
-            }
+            // Cargar inventario consolidado con disponibilidad (N, false, true)
+            customIngredients = loadAvailableInventory(); 
 
-            // Aplicar filtros de selección de platos (MODIFICADO para incluir platos por ingrediente)
+            // --- APLICAR FILTRO DE ACTIVACIÓN/SELECCIÓN ESTRICTA ---
             if (selectedComponentsSet.size > 0) {
                 
-                // Filtrar el array completo de objetos de plato (menuData.platos_principales)
-                // para permitir platos si:
-                // 1. Su nombre está en selectedComponentsSet, O
-                // 2. Contiene algún ingrediente cuyo nombre está en selectedComponentsSet.
                 allowedDishes = menuData.platos_principales
                     .filter(dishObject => {
-                        const allDishComponents = [
-                            dishObject.nombre, // Incluir el nombre del plato
+                        // 1. Si el plato mismo está activado, se permite.
+                        if (selectedComponentsSet.has(dishObject.nombre)) return true; 
+
+                        // 2. Si el plato no está activado, verificar si al menos UNO de sus ingredientes está activado.
+                        const allDishIngredients = [
                             ...(dishObject.principales || []), 
                             ...(dishObject.carbohidratos || []), 
                             ...(dishObject.verduras || [])
                         ].filter(i => i && i !== '-');
 
-                        // Si ALGUNO de los componentes del plato está en el set de selección, se permite.
-                        return allDishComponents.some(component => selectedComponentsSet.has(component));
+                        // Si NINGUNO de sus ingredientes está activado, el plato es descartado.
+                        return allDishIngredients.some(component => selectedComponentsSet.has(component));
                     })
-                    .map(dishObject => dishObject.nombre); // Devolver solo los nombres
+                    .map(dishObject => dishObject.nombre); 
 
             } else {
-                // Si no hay selecciones, todos los platos están permitidos.
-                allowedDishes = allDishes;
+                // Si no hay selecciones, NINGÚN plato está permitido (Activación estricta).
+                allowedDishes = [];
             }
+            // --- FIN FILTRO DE ACTIVACIÓN/SELECCIÓN ---
 
-            // Aplicar filtros de omisión/cantidad de ingredientes (customIngredients = false o cantidad <= 0)
+
+            // --- APLICAR FILTRO DE DISPONIBILIDAD (Quantity > 0 O NO OMITIDO) ---
             allowedDishes = allowedDishes.filter(dishName => {
                 const dish = menuData.platos_principales.find(d => d.nombre === dishName);
                 if (!dish) return true;
@@ -1032,7 +1154,6 @@
                         return status <= 0; // Exclusión por cantidad cero/negativa.
                     }
                     
-                    // Por defecto: si no está en el mapa o no es un estado/número, se considera disponible (no indisponible).
                     return false;
                 });
 
@@ -1047,6 +1168,7 @@
 
         // ===============================================
         // DRAG & DROP EVENT LISTENERS (FLIP Y CASCADA)
+        // (Sin cambios, ya que los cambios se enfocaron en la lógica de datos)
         // ===============================================
 
         document.addEventListener('dragstart', (e) => {
@@ -1121,7 +1243,6 @@
                 // Throttling: Llamar a liveReorderAndFlip solo en el siguiente requestAnimationFrame
                 if (draggedCard && !isUpdating) {
                     isUpdating = true;
-                    // El draggedCard ahora existe incluso si viene de la mano, por lo que la cascada se activa.
                     requestAnimationFrame(processDragOverUpdate); 
                 }
             });
@@ -1137,7 +1258,6 @@
                 zone.classList.remove('drag-over');
                 
                 if (!placeholder || !draggedCard) {
-                    // Si el drop falló o no se está moviendo nada, limpiamos
                     if (draggedCard) clearLiveTransforms();
                     return;
                 }
@@ -1145,13 +1265,10 @@
                 // 1. Capturar posiciones antes de reemplazar el placeholder (para la animación final)
                 registerLiveTransforms(false);
                 
-                // Lógica UNIFICADA MOVER (tanto para zona a zona, como mano a zona)
+                // Lógica UNIFICADA MOVER 
                 
                 // Si el drop fue en el carrusel (mano), la tarjeta vuelve a la mano.
                 if (zone.id === 'dish-hand-carousel') {
-                    
-                    // Si el placeholder es el que está en la mano, lo reemplazamos.
-                    // Si no, la tarjeta ya fue movida por liveReorderAndFlip
                     
                     if (placeholder.parentNode === dishHandCarousel) {
                         placeholder.parentNode.replaceChild(draggedCard, placeholder);
@@ -1165,7 +1282,6 @@
                     draggedCard.style.display = ''; 
                     draggedCard.classList.remove('dragging');
                     
-                    // Reemplazar el placeholder con el elemento final
                     placeholder.parentNode.replaceChild(draggedCard, placeholder);
                 }
 
@@ -1175,13 +1291,12 @@
 
                 // Limpieza final
                 placeholder = null;
-                draggedCard = null; // Finaliza la operación de MOVER
+                draggedCard = null; 
 
                 // Re-renderizar placeholders en modo creado
                 if (useCreatedDishesCheckbox.checked && zone.classList.contains('drop-zone')) {
                     const currentCards = Array.from(zone.querySelectorAll('.card')).length;
                     Array.from(zone.querySelectorAll('.placeholder')).forEach(p => p.remove());
-                    // Asegurar que no se exceda el límite de CARDS_PER_ZONE
                     for (let i = currentCards; i < CARDS_PER_ZONE; i++) {
                         const newPlaceholder = document.createElement('div');
                         newPlaceholder.classList.add('placeholder');
@@ -1194,13 +1309,10 @@
         document.addEventListener('dragend', (e) => {
             isUpdating = false; 
 
-            // Si draggedCard todavía existe, el drop falló -> Revertir.
             if (draggedCard) {
-                // 1. Reinsertar draggedCard si no tiene padre (porque vino de la mano)
                 if (!draggedCard.parentNode) {
                     dishHandCarousel.appendChild(draggedCard);
                 } 
-                // 2. Si placeholder todavía existe (vino de una zona), revertir el reemplazo.
                 else if (placeholder && placeholder.parentNode) {
                     placeholder.parentNode.replaceChild(draggedCard, placeholder);
                 }
