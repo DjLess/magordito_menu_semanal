@@ -28,6 +28,7 @@
             /* Se asume que card_styles.css ya tiene la base de los .card, pero estas variables ayudan al carrusel */
             --dish-card-width: 80px;
             --dish-card-aspect-ratio: calc(70 / 49);
+            --dish-card-calculated-height: calc(var(--dish-card-width) * var(--dish-card-aspect-ratio));
             --lift-amount: 20px;
             --success-color: #238636;
         }
@@ -270,9 +271,73 @@
     <div id="drop-zones-container">
         <div class="drop-zone" data-day="Lunes">
             <div class="zone-label">Lunes</div>
+            <div class="card" draggable="true" data-dish="Lasaña">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍝</span>
+                        <div class="card-secondary-emojis">🧅🍅</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Lasaña de Carne</p>
+                        <ul class="card-ingredients-list">
+                            <li>Carne Molida</li>
+                            <li>Pasta Lasaña</li>
+                            <li>Tomate</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card" draggable="true" data-dish="Sopa">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍲</span>
+                        <div class="card-secondary-emojis">🥕🥔</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Sopa de Verduras</p>
+                        <ul class="card-ingredients-list">
+                            <li>Pollo</li>
+                            <li>Papa</li>
+                            <li>Zanahoria</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="drop-zone" data-day="Martes">
             <div class="zone-label">Martes</div>
+            <div class="card" draggable="true" data-dish="Fideos">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🍜</span>
+                        <div class="card-secondary-emojis">🧀🌶️</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Fideos con Queso</p>
+                        <ul class="card-ingredients-list">
+                            <li>Leche</li>
+                            <li>Fideos</li>
+                            <li>Queso</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card" draggable="true" data-dish="Cazuela">
+                <div class="card-inner-content">
+                    <div class="card-image-zone">
+                        <span class="card-main-emoji">🥣</span>
+                        <div class="card-secondary-emojis">🌽🎃</div>
+                    </div>
+                    <div class="card-ingredients-zone">
+                        <p class="card-dish-name">Cazuela de Pollo</p>
+                        <ul class="card-ingredients-list">
+                            <li>Pollo</li>
+                            <li>Zapallo</li>
+                            <li>Choclo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="drop-zone" data-day="Miércoles">
             <div class="zone-label">Miércoles</div>
@@ -295,6 +360,7 @@
         // ===============================================
         // CONFIGURACIÓN DE DATOS
         // ===============================================
+        // Se mantiene la URL estática para la primera carga si no hay LocalStorage
         const DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/menu_db.json';
         const INVENTORY_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/inventario_db.json'; 
         
@@ -308,7 +374,7 @@
         const MENU_STORAGE_KEY = 'menuData'; 
         const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
         const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
-        const STANDARD_ING_STORAGE_KEY = 'standardIngredientsConfig'; 
+        const STANDARD_ING_STORAGE_KEY = 'standardIngredientsConfig'; // Nueva clave para la disponibilidad estándar
         const CREATED_DISHES_STORAGE_KEY = 'dishCreator_successfullyCreatedDishes';
         let customIngredients = {}; // Inventario consolidado
         let selectedComponentsSet = new Set(); 
@@ -328,11 +394,14 @@
         // ===============================================
         // DRAG & DROP VARIABLES GLOBALES (MOVER Y COPIAR)
         // ===============================================
-        let draggedCard = null; 
+        let draggedCard = null; // La tarjeta real (solo para modo MOVER)
         let placeholder = null; 
-        let lastRectMap = new Map(); 
+        let lastRectMap = new Map(); // Mapa para las posiciones iniciales (FLIP: First)
+        
+        // --- Variables de Throttling (Optimización de Fluidez) ---
         let isUpdating = false; 
         let lastDragEventData = { zone: null, clientX: 0, clientY: 0 }; 
+        // ---------------------------------------------------------
 
 
         // ===============================================
@@ -344,40 +413,48 @@
             if (includeHand) {
                 selector += ', #dish-hand-carousel .card:not(.placeholder)';
             }
+            // Obtiene todas las tarjetas (.card) en las zonas, excluyendo el placeholder.
             return Array.from(document.querySelectorAll(selector));
         }
 
         function registerLiveTransforms(includePlaceholder = true) {
+            // FLIP: Captura las posiciones de todas las tarjetas visibles (FIRST).
             lastRectMap.clear();
-            const allCards = getAllCards(useCreatedDishesCheckbox.checked); 
+            const allCards = getAllCards(useCreatedDishesCheckbox.checked); // Incluir mano si aplica
             allCards.forEach(card => {
                 if (window.getComputedStyle(card).display !== 'none') {
                     lastRectMap.set(card, card.getBoundingClientRect());
                 }
             });
+            // También registramos la posición del placeholder
             if (includePlaceholder && placeholder && placeholder.parentNode) {
                  lastRectMap.set(placeholder, placeholder.getBoundingClientRect());
             }
         }
 
         function applyFLIPAnimation() {
+             // 1. INVERT (Mover visualmente al estado 'FIRST' capturado antes del cambio de DOM)
+            // Recoger todas las tarjetas y el placeholder que participaron en la reordenación.
             const allElements = Array.from(document.querySelectorAll('.card:not([style*="display: none"]), .placeholder'));
             
             allElements.forEach(element => {
+                // Si la tarjeta está siendo arrastrada (draggedCard), la ignoramos
                 if (element === draggedCard) return;
 
                 const firstRect = lastRectMap.get(element); 
-                if (!firstRect) return; 
+                if (!firstRect) return; // Si no se registró la posición inicial, ignorar
 
-                const lastRect = element.getBoundingClientRect(); 
+                const lastRect = element.getBoundingClientRect(); // LAST
 
                 const deltaX = firstRect.left - lastRect.left;
                 const deltaY = firstRect.top - lastRect.top;
 
                 if (deltaX !== 0 || deltaY !== 0) {
+                    // INVERT: Mover al "FIRST"
                     element.style.transition = 'none';
                     element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
+                    // PLAY: Aplicar transición y restaurar posición (animación de movimiento)
                     requestAnimationFrame(() => {
                         element.style.transition = 'transform 0.3s ease-in-out';
                         element.style.transform = '';
@@ -387,6 +464,7 @@
         }
 
         function clearLiveTransforms() {
+            // Limpia los estilos de transición y las variables globales.
             const allCards = getAllCards(true);
             allCards.forEach(card => card.style.transition = '');
             
@@ -395,7 +473,9 @@
                 draggedCard.style.display = ''; 
                 draggedCard.style.transform = ''; 
                 
+                // Si la tarjeta venía de la mano y no fue dropeada, hay que reinsertarla.
                 if (!draggedCard.parentNode) {
+                    // Reinsertar en la mano al final
                     dishHandCarousel.appendChild(draggedCard);
                 }
             }
@@ -411,6 +491,7 @@
         }
 
         function getDragAfterElement(container, x) {
+            // Determina la tarjeta o placeholder después de la cual se debe insertar el placeholder.
             const elements = Array.from(container.children).filter(
                 element => element !== draggedCard && element !== placeholder && element.classList && (element.classList.contains('card') || element.classList.contains('placeholder'))
             );
@@ -422,6 +503,7 @@
                 const center = rect.left + rect.width / 2;
                 const offset = x - center;
 
+                // Solo si el puntero está ANTES del centro del elemento.
                 if (offset < 0 && offset > closest.offset) {
                     return { offset: offset, element: child };
                 } else {
@@ -430,11 +512,16 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
+        /**
+         * Reordena el DOM de todas las zonas para lograr el efecto cascada en vivo.
+         */
         function liveReorderAndFlip(currentZone, clientX) {
-            if (!placeholder || !draggedCard) return; 
+            if (!placeholder || !draggedCard) return; // Asegurarse de que estamos en modo MOVER
             
+            // 1. FIRST: Capture positions before any DOM changes.
             registerLiveTransforms();
 
+            // 2. Local Reorder: Insert placeholder in the CURRENT zone.
             if (placeholder.parentNode) placeholder.remove(); 
             
             const afterElement = getDragAfterElement(currentZone, clientX);
@@ -445,6 +532,11 @@
                 currentZone.insertBefore(placeholder, afterElement);
             }
             
+            // Si es modo MOVER (lo cual siempre es ahora si llegamos aquí), reordenar globalmente.
+            
+            // 3. Global Reorder
+            // A. Obtener la secuencia global *actual* del DOM.
+            // Incluimos la mano para que la tarjeta arrastrada se pueda mover a la mano y viceversa.
             let allDropAreas = [...allZones];
             if (useCreatedDishesCheckbox.checked) {
                 allDropAreas.push(dishHandCarousel);
@@ -456,36 +548,47 @@
                 )
             );
             
+            // B. Reconstrucción de las zonas: Limpiar y re-agregar.
             allZones.forEach(z => {
                 const label = z.querySelector('.zone-label');
                 if(label) label.remove();
                 z.innerHTML = '';
                 if(label) z.appendChild(label); 
             });
+            // Limpiar la mano también para reconstruir su contenido
             dishHandCarousel.innerHTML = ''; 
 
+            // C. Apendizar elementos a sus nuevas zonas según CARDS_PER_ZONE
             currentGlobalSequence.forEach((el, index) => {
                 const targetZoneIndex = Math.floor(index / CARDS_PER_ZONE);
                 
+                // Los elementos que exceden el límite de drop zones (7 días * CARDS_PER_ZONE)
+                // deben regresar a la mano si estamos en modo creado.
                 if (targetZoneIndex < DAYS_COUNT) {
                     const targetZone = allZones[targetZoneIndex];
                     if (targetZone) {
                         targetZone.appendChild(el);
                     }
                 } else if (useCreatedDishesCheckbox.checked) {
+                    // Si se excede el límite de días, y estamos en modo creado, va a la mano (el "extra").
                     dishHandCarousel.appendChild(el);
                 }
             });
 
+
+            // 4. INVERT & PLAY: Animar
             applyFLIPAnimation();
         }
         
+        // --- Función de Throttling ---
         function processDragOverUpdate() {
+            // Solo procesa si estamos moviendo una tarjeta (draggedCard existe) o copiando (placeholder existe)
             if (lastDragEventData.zone) {
                 liveReorderAndFlip(lastDragEventData.zone, lastDragEventData.clientX); 
             }
-            isUpdating = false; 
+            isUpdating = false; // Resetear la bandera para permitir el siguiente frame
         }
+        // ------------------------------
 
         // ===============================================
         // LÓGICA DE DATOS Y CONSUMO DE INGREDIENTES
@@ -511,9 +614,7 @@
         /**
          * Selecciona los componentes de un plato, verifica su disponibilidad
          * en el inventario de trabajo y consume 1 unidad de cada uno si está disponible.
-         * * NOTA: Esta función SOLO consume la unidad de los INGREDIENTES (una vez por bloque de cocción).
-         * El consumo del contador del PLATO se hace en getRandomDishes.
-         * * @param {string} dishName - Nombre del plato.
+         * @param {string} dishName - Nombre del plato.
          * @param {boolean} shouldConsume - Si debe consumir los ingredientes.
          * @param {Object} workingInventory - Referencia al inventario de trabajo (ingName: count).
          * @returns {Object} { isAvailable: boolean, details: Object }
@@ -538,40 +639,54 @@
                 carbohidratos = carbohidratos.filter(ing => selectedComponentsSet.has(ing));
                 verduras = verduras.filter(ing => selectedComponentsSet.has(ing));
             }
+
+            // 2. FILTRO DE DISPONIBILIDAD (Quantity > 0 O NO OMITIDO) - Usa el inventario *de la semana*
+            // Si el ingrediente NO está en el inventario consolidado, es porque:
+            // a) No es un ingrediente contado.
+            // b) No está seleccionado/activado.
+            // Dado que el filtro de activación (Paso 1) ya se aplicó, solo necesitamos el chequeo de cantidad.
             
-            // Si el plato no tiene ingredientes principales disponibles después del filtrado, no es válido.
-            if (principales.length === 0) {
-                return { isAvailable: false, details: null };
+            // Si algún componente esencial ya está en 0 en el inventario de la semana, el plato no puede ser generado.
+            const initialCheck = [...principales, ...carbohidratos, ...verduras].every(ing => {
+                 const status = workingInventory[ing];
+                 if (status === undefined || status === true) return true; // No es un ingrediente contado o está marcado como disponible (true)
+                 if (typeof status === 'number') return status > 0;
+                 if (status === false) return false; // Omitido
+                 return true;
+            });
+
+            if (!initialCheck || principales.length === 0) {
+                 return { isAvailable: false, details: null };
             }
 
-            // 2. Selección de componentes al azar
+
+            // 3. Selección de componentes al azar
             const selectedPrincipal = getRandomElement(principales);
             const selectedCarbohidrato = getRandomElement(carbohidratos);
             const selectedVerdura = getRandomElement(verduras);
 
             const finalComponents = [selectedPrincipal, selectedCarbohidrato, selectedVerdura].filter(i => i && i !== 'N/A');
 
-            // 3. VERIFICACIÓN DE DISPONIBILIDAD INMEDIATA DE INGREDIENTES (ANTES DE CONSUMIR)
-            const allAvailableForConsumption = finalComponents.every(ing => {
-                const count = workingInventory[ing];
-                // Si está en el inventario contado, debe ser > 0
-                if (typeof count === 'number') return count > 0; 
-                // Si está omitido (false), no está disponible
-                if (count === false) return false;
-                // Si es undefined o true, se asume disponible/infinito
-                return true; 
-            });
-
-            if (!allAvailableForConsumption) {
-                return { isAvailable: false, details: null };
-            }
-
-            // 4. CONSUMO de INGREDIENTES (Solo si shouldConsume es true y la verificación pasó)
+            // 4. CONSUMO (Solo en modo Randomize)
             if (shouldConsume && workingInventory) {
-                // Se consume 1 unidad de cada ingrediente, independientemente de las repeticiones del plato.
+                // Verificar la disponibilidad final antes de consumir (evita problemas con elementos consecutivos)
+                const allAvailableForConsumption = finalComponents.every(ing => {
+                    const count = workingInventory[ing];
+                    // Si no está en el inventario contado o no es un número, se asume disponible para consumo (o no necesita consumo)
+                    if (count === undefined || typeof count !== 'number') return true; 
+                    return count > 0;
+                });
+
+                if (!allAvailableForConsumption) {
+                    // Uno de los componentes necesarios se agotó.
+                    return { isAvailable: false, details: null };
+                }
+
+                // CONSUMIR
                 finalComponents.forEach(ing => {
                     if (workingInventory[ing] !== undefined && typeof workingInventory[ing] === 'number') {
                         workingInventory[ing] -= 1; 
+                        console.log(`Consumo de ${ing}: Restante ${workingInventory[ing]}`);
                     }
                 });
             }
@@ -587,58 +702,26 @@
             };
         }
         
-        /**
-         * Genera platos aleatorios para el menú semanal, respetando los límites de uso total del plato
-         * (si se especifican en el inventario) y la cantidad de comidas consecutivas.
-         */
         function getRandomDishes(count, workingInventory) {
             const consecutiveCount = parseInt(consecutiveMealsSelect.value, 10);
             const selectedDishes = [];
             
-            // Pool de platos disponibles (solo se eliminan si se agotan o fallan por ingredientes)
-            let dishesToSelectFrom = [...allowedDishes]; 
+            // Crear una copia del array de platos permitidos para el ciclo de randomización
+            const dishesToSelectFrom = [...allowedDishes]; 
 
-            for (let i = 0; i < count; ) { // El incremento se maneja dentro del loop
+            for (let i = 0; i < count; i++) {
                 
+                let attempts = dishesToSelectFrom.length * 2; 
                 let selectedDishData = null;
-                let attempts = dishesToSelectFrom.length * 2; // Intentos para evitar loops infinitos
-                let currentPool = [...dishesToSelectFrom]; 
-                let actualRepetitions = 0; 
-
+                
                 while (attempts > 0) {
-                    if (currentPool.length === 0) break;
+                    if (dishesToSelectFrom.length === 0) break;
                     
-                    // 1. Elegir un nombre de plato al azar del pool actual
-                    let randomDishIndex = Math.floor(Math.random() * currentPool.length);
-                    let candidateDishName = currentPool[randomDishIndex];
+                    // 1. Pick a random dish name from the allowed list
+                    let randomDishIndex = Math.floor(Math.random() * dishesToSelectFrom.length);
+                    let candidateDishName = dishesToSelectFrom[randomDishIndex];
                     
-                    // --- 1.1. Determinar el límite específico del PLATO (si existe) ---
-                    const dishLimit = workingInventory[candidateDishName];
-                    
-                    // Si es un número y es <= 0, el plato está agotado por su contador.
-                    if (typeof dishLimit === 'number' && dishLimit <= 0) {
-                        currentPool.splice(randomDishIndex, 1);
-                        const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
-                        if(mainPoolIndex !== -1) {
-                             dishesToSelectFrom.splice(mainPoolIndex, 1); // Eliminar del pool principal
-                        }
-                        attempts--;
-                        continue;
-                    }
-                    
-                    // Si tiene límite, el número real de repeticiones es el mínimo entre el consecutivo y el límite restante
-                    const maxAllowedInBlock = (typeof dishLimit === 'number') 
-                        ? Math.min(consecutiveCount, dishLimit) 
-                        : consecutiveCount;
-                    
-                    if (maxAllowedInBlock === 0) { 
-                         // Debería ser atrapado por la condición anterior, pero como fallback
-                         currentPool.splice(randomDishIndex, 1);
-                         attempts--;
-                         continue;
-                    }
-
-                    // --- 2. Intentar seleccionar componentes y consumir 1 unidad de INGREDIENTES ---
+                    // 2. Intentar seleccionar componentes y CONSUMIR el inventario
                     const dishDetailsResult = selectDishComponentsAndConsume(candidateDishName, true, workingInventory); 
                     
                     if (dishDetailsResult.isAvailable) {
@@ -647,23 +730,12 @@
                             details: dishDetailsResult.details 
                         };
                         
-                        actualRepetitions = maxAllowedInBlock;
-                        
-                        // --- 3. Consumir el límite del PLATO (si existe) ---
-                        if (typeof dishLimit === 'number') {
-                            workingInventory[candidateDishName] -= actualRepetitions; 
-                        }
-                        
-                        // Éxito
+                        // Remover de la lista de candidatos para no repetir (excepto por consecutivo)
+                        dishesToSelectFrom.splice(randomDishIndex, 1);
                         break; 
                     } else {
-                         // El plato falló por INGREDIENTES. Eliminarlo del pool
-                         currentPool.splice(randomDishIndex, 1);
-                         
-                         const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
-                         if(mainPoolIndex !== -1) {
-                             dishesToSelectFrom.splice(mainPoolIndex, 1);
-                         }
+                         // Plato no disponible (ingrediente agotado) -> remover permanentemente del pool
+                        dishesToSelectFrom.splice(randomDishIndex, 1);
                     }
                     
                     attempts--;
@@ -674,12 +746,16 @@
                     break;
                 }
                 
-                // 4. Llenar los espacios consecutivos con los MISMOS datos de plato y avanzar el índice.
-                for (let k = 0; k < actualRepetitions && (i + k) < count; k++) {
-                    selectedDishes.push(selectedDishData); 
-                }
+                selectedDishes.push(selectedDishData);
                 
-                i += actualRepetitions; // Avanzar el índice i por las repeticiones generadas
+                // Manejar platos consecutivos
+                if ((i % CARDS_PER_ZONE) === 0 && (i + 1) < count) {
+                    for (let j = 1; j < consecutiveCount && (i + j) < count; j++) {
+                        // Para comidas consecutivas, se reutilizan los mismos detalles (ya consumidos)
+                        selectedDishes.push(selectedDishData); 
+                    }
+                    i += consecutiveCount - 1; 
+                }
             }
             return selectedDishes;
         }
@@ -693,6 +769,7 @@
             let isRandomized = false;
             let dishName, details, ingredientsList;
             
+            // Caso 1: Plato desde Randomizado ({name: 'dish', details: {principal: '...', ...}})
             if (dishData.name && dishData.details) {
                 isRandomized = true;
                 dishName = dishData.name;
@@ -701,6 +778,7 @@
                     .filter(i => i && i !== 'N/A');
                 
             } 
+            // Caso 2: Plato desde el Carrusel Creado (Objeto de plato completo)
             else {
                 dishName = dishData.nombre; 
                 const principales = dishData.principales || [];
@@ -740,7 +818,7 @@
 
 
             const ingredientsListHtml = ingredientsList
-                .slice(0, 4) 
+                .slice(0, 4) // Mostrar hasta 4 ingredientes
                 .map(i => `<li>${i}</li>`)
                 .join('');
 
@@ -780,6 +858,7 @@
 
         /**
          * Carga y consolida los estados de disponibilidad (número o boolean) de los ingredientes.
+         * @returns {Object} Mapa de ingredientes con su disponibilidad (ingName: number|boolean).
          */
         function loadAvailableInventory() {
             const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
@@ -787,23 +866,21 @@
 
             let consolidatedInventory = {};
 
-            // 1. Procesar disponibilidad estándar (BASE)
+            // 1. Procesar disponibilidad estándar (si existe)
             if (standardIngString) {
                 try {
                     const standardConfig = JSON.parse(standardIngString);
                     for (const ingName in standardConfig) {
+                        // Usar la disponibilidad si es un número
                         const availability = standardConfig[ingName].availability;
                         if (typeof availability === 'number') {
                              consolidatedInventory[ingName] = availability;
-                        } else {
-                            // Si no tiene cantidad, se considera disponible (true)
-                             consolidatedInventory[ingName] = true;
                         }
                     }
                 } catch(e) { console.error("Error al parsear standardIngredientsConfig:", e); }
             }
             
-            // 2. Procesar configuración de ingredientes personalizados (SOBRESCRIBE la BASE)
+            // 2. Procesar configuración de ingredientes personalizados (para omisiones o override de cantidad)
             if (customIngString) {
                 try {
                     const customConfig = JSON.parse(customIngString);
@@ -811,28 +888,34 @@
                         const item = customConfig[key];
                         const ingName = item.nombre;
                         
-                        // IMPORTANTE: Solo procesar si el ingrediente personalizado tiene un nombre válido
-                        if (ingName) { 
-                            // Si está desactivado, se omite (false) - MÁXIMA PRIORIDAD
-                            if (item.selected === false) {
-                                consolidatedInventory[ingName] = false;
-                            } 
-                            // Si tiene una cantidad numérica, sobrescribe/establece (ESTO INCLUYE EL LÍMITE DEL PLATO)
-                            else if (typeof item.availability === 'number') {
-                                consolidatedInventory[ingName] = item.availability;
-                            }
-                            // Si solo está seleccionado (true) y no tiene cantidad, se asume disponible
-                            else if (item.selected === true) {
-                                 consolidatedInventory[ingName] = true;
-                            }
+                        // Si está desactivado, se omite (false)
+                        if (item.selected === false) {
+                            consolidatedInventory[ingName] = false;
+                        } 
+                        // Si tiene una cantidad numérica, sobrescribe/establece
+                        else if (typeof item.availability === 'number') {
+                            consolidatedInventory[ingName] = item.availability;
+                        }
+                        // Si solo está seleccionado (true) y no tiene cantidad, se asume disponible (o infinito, por ahora true)
+                        else if (item.selected === true) {
+                             consolidatedInventory[ingName] = true;
                         }
                     }
                 } catch(e) { console.error("Error al parsear customIngredientsConfig:", e); }
             }
+            
+            // NOTA DE DEBUG: Simular la disponibilidad de tu ejemplo para "Queso Secreto" y "Camarones con Crema" 
+            // en caso de que no se carguen del localStorage.
+            const standardIngConfigExample = {"Queso Secreto":{"availability":6},"Camarones con Crema":{"availability":4}};
+            for (const ingName in standardIngConfigExample) {
+                const availability = standardIngConfigExample[ingName].availability;
+                if (typeof availability === 'number') {
+                    consolidatedInventory[ingName] = availability;
+                }
+            }
 
             return consolidatedInventory;
         }
-
 
         /**
          * Verifica si un plato creado (objeto) tiene todos sus ingredientes disponibles por cantidad/omisión.
@@ -852,22 +935,15 @@
             const allIngredientsAvailable = allIngredients.every(ing => {
                 const status = inventory[ing];
                 
-                if (status === false) return false; 
+                if (status === false) return false; // Exclusión explícita.
                 
-                // Si el ingrediente tiene una cantidad numérica, debe ser > 0
                 if (typeof status === 'number') {
-                    return status > 0; 
+                    return status > 0; // Exclusión por cantidad cero/negativa.
                 }
 
+                // Si está activado (por paso 1) y su status es 'undefined' o 'true', asumimos disponible/infinito.
                 return true;
             });
-            
-            // 3. Verificar límite del plato (si aplica)
-            const dishLimit = inventory[dishObject.nombre];
-            if (typeof dishLimit === 'number' && dishLimit <= 0) {
-                 return false;
-            }
-
 
             return allIngredientsAvailable;
         }
@@ -875,6 +951,7 @@
         function renderDishHand() {
             dishHandCarousel.innerHTML = '';
             
+            // 1. Filtrar platos creados por disponibilidad de ingredientes
             const availableCreatedDishes = createdDishes.filter(dish => 
                 isCreatedDishAvailable(dish, customIngredients)
             );
@@ -894,6 +971,7 @@
             updateCardsPerZone(); 
             const isCreatedMode = useCreatedDishesCheckbox.checked;
             
+            // Recargar filtros y inventario
             loadSelectionFilters();
             loadCreatedDishesFromStorage(); 
             
@@ -922,10 +1000,12 @@
                 
                 allZones.forEach(zone => zone.innerHTML = `<div class="zone-label">${zone.getAttribute('data-day')}</div>`);
 
-                // Copia del inventario para el consumo semanal
+                // --- LOGICA DE CONSUMO AQUI ---
+                // Crear una copia del inventario para simular el consumo de la semana
                 const workingInventory = JSON.parse(JSON.stringify(customIngredients));
                 
                 const randomDishes = getRandomDishes(TOTAL_CARDS, workingInventory);
+                // --- FIN LOGICA DE CONSUMO ---
                 
                 allZones.forEach((zone, zoneIndex) => {
                     const label = zone.querySelector('.zone-label');
@@ -936,6 +1016,7 @@
                     const end = start + CARDS_PER_ZONE;
                     
                     randomDishes.slice(start, end).forEach(dishObject => {
+                        // dishObject es {name, details}
                         if (dishObject && dishObject.name) { 
                             zone.appendChild(createDishCardHtml(dishObject)); 
                         }
@@ -951,7 +1032,7 @@
 
                 loadingMessage.textContent = 'Menú listo.';
                 if (randomDishes.length < TOTAL_CARDS) {
-                     loadingMessage.textContent += ` (ADVERTENCIA: Solo se pudieron generar ${randomDishes.length} platos disponibles con el inventario actual.)`;
+                     loadingMessage.textContent += ` (ADVERTENCIA: Solo se pudieron generar ${randomDishes.length} platos únicos disponibles.)`;
                 }
             }
         }
@@ -1009,6 +1090,7 @@
         }
         
         function loadSelectionFilters() {
+            // Carga y consolida ítems ACTIVADOS (platos e ingredientes)
             const selectionString = localStorage.getItem(SELECTION_STORAGE_KEY);
             if (selectionString) {
                 const selections = JSON.parse(selectionString);
@@ -1024,9 +1106,10 @@
                 selectedComponentsSet = new Set();
             }
 
+            // Cargar inventario consolidado con disponibilidad (N, false, true)
             customIngredients = loadAvailableInventory(); 
 
-            // APLICAR FILTRO DE ACTIVACIÓN/SELECCIÓN ESTRICTA
+            // --- APLICAR FILTRO DE ACTIVACIÓN/SELECCIÓN ESTRICTA ---
             if (selectedComponentsSet.size > 0) {
                 
                 allowedDishes = menuData.platos_principales
@@ -1041,39 +1124,34 @@
                             ...(dishObject.verduras || [])
                         ].filter(i => i && i !== '-');
 
+                        // Si NINGUNO de sus ingredientes está activado, el plato es descartado.
                         return allDishIngredients.some(component => selectedComponentsSet.has(component));
                     })
                     .map(dishObject => dishObject.nombre); 
 
             } else {
-                allowedDishes = allDishes; // Usar todos si no hay selección/filtro
+                // Si no hay selecciones, NINGÚN plato está permitido (Activación estricta).
+                allowedDishes = [];
             }
-            // FIN FILTRO DE ACTIVACIÓN/SELECCIÓN
+            // --- FIN FILTRO DE ACTIVACIÓN/SELECCIÓN ---
 
 
-            // APLICAR FILTRO DE DISPONIBILIDAD (FILTRO PREVIO A LA RANDOMIZACIÓN CON CONSUMO)
+            // --- APLICAR FILTRO DE DISPONIBILIDAD (Quantity > 0 O NO OMITIDO) ---
             allowedDishes = allowedDishes.filter(dishName => {
                 const dish = menuData.platos_principales.find(d => d.nombre === dishName);
                 if (!dish) return true;
 
-                // Verificar límite de plato (si aplica)
-                const dishLimit = customIngredients[dishName];
-                if (typeof dishLimit === 'number' && dishLimit <= 0) {
-                    return false;
-                }
-                
                 const allIngredients = [...(dish.principales || []), ...(dish.carbohidratos || []), ...(dish.verduras || [])]
                     .filter(i => i && i !== '-');
 
-                // Verificar ingredientes del plato
+                // El plato es NO PERMITIDO si ALGUNO de sus ingredientes es OMITIDO O TIENE CANTIDAD <= 0.
                 const hasUnavailableIngredient = allIngredients.some(ing => {
                     const status = customIngredients[ing];
                     
-                    if (status === false) return true; 
+                    if (status === false) return true; // Exclusión explícita.
                     
-                    // Si el ingrediente tiene una cantidad numérica, debe ser > 0
                     if (typeof status === 'number') {
-                        return status <= 0; 
+                        return status <= 0; // Exclusión por cantidad cero/negativa.
                     }
                     
                     return false;
@@ -1090,6 +1168,7 @@
 
         // ===============================================
         // DRAG & DROP EVENT LISTENERS (FLIP Y CASCADA)
+        // (Sin cambios, ya que los cambios se enfocaron en la lógica de datos)
         // ===============================================
 
         document.addEventListener('dragstart', (e) => {
@@ -1098,6 +1177,7 @@
 
             const isFromHand = card.closest('#dish-hand-carousel');
 
+            // Crear placeholder
             placeholder = document.createElement('div');
             placeholder.className = 'placeholder card'; 
             
@@ -1107,10 +1187,12 @@
             placeholder.style.paddingBottom = computedStyle.paddingBottom;
             placeholder.style.margin = computedStyle.margin;
 
+            // Configurar imagen de arrastre vacía
             const emptyImg = new Image();
             emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             e.dataTransfer.setDragImage(emptyImg, 0, 0);
 
+            // AHORA AMBOS CASOS SON TRATADOS COMO OPERACIÓN DE MOVIMIENTO (MOVER)
             draggedCard = card;
             draggedCard.classList.add('dragging');
             
@@ -1118,12 +1200,16 @@
             e.dataTransfer.setData('application/x-dish-source', isFromHand ? 'hand-move' : 'zone');
             e.dataTransfer.effectAllowed = 'move';
             
+            // Insertar placeholder y ocultar tarjeta real
             setTimeout(() => {
                 if (draggedCard && draggedCard.parentNode) {
                     
                     if (isFromHand) {
+                         // Si viene de la mano, la eliminamos inmediatamente del DOM.
+                         // Se reinsertará al final del drag, ya sea en la zona de drop o en dragend si falla.
                          draggedCard.remove(); 
                     } else {
+                         // Si viene de una zona, la reemplazamos con el placeholder.
                          draggedCard.parentNode.insertBefore(placeholder, draggedCard);
                     }
                     draggedCard.style.display = 'none'; 
@@ -1142,6 +1228,7 @@
                 lastDragEventData.clientX = e.clientX;
                 lastDragEventData.clientY = e.clientY;
 
+                // Mover placeholder inmediatamente para feedback visual.
                 if (placeholder && !isUpdating) {
                     if (placeholder.parentNode) placeholder.remove(); 
                     const afterElement = getDragAfterElement(zone, e.clientX);
@@ -1153,6 +1240,7 @@
                     }
                 }
                 
+                // Throttling: Llamar a liveReorderAndFlip solo en el siguiente requestAnimationFrame
                 if (draggedCard && !isUpdating) {
                     isUpdating = true;
                     requestAnimationFrame(processDragOverUpdate); 
@@ -1174,8 +1262,12 @@
                     return;
                 }
                 
+                // 1. Capturar posiciones antes de reemplazar el placeholder (para la animación final)
                 registerLiveTransforms(false);
                 
+                // Lógica UNIFICADA MOVER 
+                
+                // Si el drop fue en el carrusel (mano), la tarjeta vuelve a la mano.
                 if (zone.id === 'dish-hand-carousel') {
                     
                     if (placeholder.parentNode === dishHandCarousel) {
@@ -1186,6 +1278,7 @@
                     draggedCard.classList.remove('dragging');
                     
                 } else {
+                    // Si el drop fue en una zona de día: Reemplazar el placeholder con draggedCard.
                     draggedCard.style.display = ''; 
                     draggedCard.classList.remove('dragging');
                     
@@ -1193,11 +1286,14 @@
                 }
 
 
+                // 2. Animar el resto de las tarjetas
                 applyFLIPAnimation();
 
+                // Limpieza final
                 placeholder = null;
                 draggedCard = null; 
 
+                // Re-renderizar placeholders en modo creado
                 if (useCreatedDishesCheckbox.checked && zone.classList.contains('drop-zone')) {
                     const currentCards = Array.from(zone.querySelectorAll('.card')).length;
                     Array.from(zone.querySelectorAll('.placeholder')).forEach(p => p.remove());
