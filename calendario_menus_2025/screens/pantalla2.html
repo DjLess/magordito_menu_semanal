@@ -631,9 +631,10 @@
             }
 
             if (Object.keys(customIngredients).length > 0) {
-                principales = principales.filter(ing => customIngredients[ing] !== false);
-                carbohidratos = carbohidratos.filter(ing => customIngredients[ing] !== false);
-                verduras = verduras.filter(ing => customIngredients[ing] !== false);
+                // Filtro por OMITIDO (false) o CANTIDAD (<= 0)
+                principales = principales.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
+                carbohidratos = carbohidratos.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
+                verduras = verduras.filter(ing => customIngredients[ing] !== false && (typeof customIngredients[ing] !== 'number' || customIngredients[ing] > 0));
             }
 
             const selectedPrincipal = getRandomElement(principales);
@@ -777,15 +778,56 @@
             }
         }
 
+        /**
+         * Verifica si un plato creado (objeto) tiene todos sus ingredientes disponibles por cantidad/omisión.
+         * @param {Object} dishObject - El objeto del plato creado.
+         * @param {Object} customIngredients - El mapa de ingredientes (puede contener 'false' o cantidad numérica).
+         * @returns {boolean} True si el plato está disponible (todos sus ingredientes cumplen las condiciones).
+         */
+        function isCreatedDishAvailable(dishObject, customIngredients) {
+            const principals = dishObject.principales || [];
+            const carbohidratos = dishObject.carbohidratos || [];
+            const verduras = dishObject.verduras || [];
+
+            const allIngredients = [...principals, ...carbohidratos, ...verduras].filter(i => i && i !== 'N/A');
+
+            // El plato está disponible SÓLO si TODOS sus ingredientes tienen una cantidad > 0 O no están omitidos.
+            const allIngredientsAvailable = allIngredients.every(ing => {
+                const status = customIngredients[ing];
+                
+                // 1. Si no está en el mapa, asumimos que está disponible (TRUE)
+                if (status === undefined) return true; 
+
+                // 2. Si está marcado como false (omisión explícita), NO está disponible.
+                if (status === false) return false; 
+                
+                // 3. Si es un número (cantidad), debe ser mayor que 0.
+                if (typeof status === 'number') {
+                    return status > 0;
+                }
+
+                // 4. Cualquier otro valor (ej. true) se considera disponible.
+                return true;
+            });
+
+            return allIngredientsAvailable;
+        }
+
         function renderDishHand() {
             dishHandCarousel.innerHTML = '';
-            if (createdDishes.length > 0) {
-                createdDishes.forEach(dish => {
+            
+            // 1. Filtrar platos creados por disponibilidad de ingredientes
+            const availableCreatedDishes = createdDishes.filter(dish => 
+                isCreatedDishAvailable(dish, customIngredients)
+            );
+            
+            if (availableCreatedDishes.length > 0) {
+                availableCreatedDishes.forEach(dish => {
                     const card = createDishCardHtml(dish);
                     dishHandCarousel.appendChild(card);
                 });
             } else {
-                dishHandCarousel.innerHTML = '<p style="color: #484f58; margin: auto;">No tienes platos creados en tu colección. Desmarca la casilla para usar platos aleatorios.</p>';
+                dishHandCarousel.innerHTML = '<p style="color: #484f58; margin: auto;">No tienes platos creados disponibles con tus ingredientes activos o en suficiente cantidad.</p>';
             }
         }
         
@@ -793,6 +835,10 @@
             
             updateCardsPerZone(); 
             const isCreatedMode = useCreatedDishesCheckbox.checked;
+            
+            // Recargar filtros (incluyendo customIngredients) cada vez antes de randomizar/renderizar
+            loadSelectionFilters();
+            loadCreatedDishesFromStorage(); 
             
             randomizeButton.style.display = isCreatedMode ? 'none' : 'block';
             dishHandCarousel.style.display = isCreatedMode ? 'flex' : 'none';
@@ -929,7 +975,7 @@
                 selectedComponentsSet = new Set();
             }
 
-            // Cargar customIngredients (Ingredientes Desbloqueados/Omitidos)
+            // Cargar customIngredients (Ingredientes Desbloqueados/Omitidos/Cantidad)
             const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
             if (customIngString) {
                 try {
@@ -968,7 +1014,7 @@
                 allowedDishes = allDishes;
             }
 
-            // Aplicar filtros de omisión de ingredientes (customIngredients = false)
+            // Aplicar filtros de omisión/cantidad de ingredientes (customIngredients = false o cantidad <= 0)
             allowedDishes = allowedDishes.filter(dishName => {
                 const dish = menuData.platos_principales.find(d => d.nombre === dishName);
                 if (!dish) return true;
@@ -976,13 +1022,25 @@
                 const allIngredients = [...(dish.principales || []), ...(dish.carbohidratos || []), ...(dish.verduras || [])]
                     .filter(i => i && i !== '-');
 
-                const hasOmittedIngredient = allIngredients.some(ing => customIngredients[ing] === false);
+                // El plato es NO PERMITIDO si ALGUNO de sus ingredientes es OMITIDO O TIENE CANTIDAD <= 0.
+                const hasUnavailableIngredient = allIngredients.some(ing => {
+                    const status = customIngredients[ing];
+                    
+                    if (status === false) return true; // Exclusión explícita.
+                    
+                    if (typeof status === 'number') {
+                        return status <= 0; // Exclusión por cantidad cero/negativa.
+                    }
+                    
+                    // Por defecto: si no está en el mapa o no es un estado/número, se considera disponible (no indisponible).
+                    return false;
+                });
 
-                return !hasOmittedIngredient; 
+                return !hasUnavailableIngredient; 
             });
             
             if (allowedDishes.length === 0 && !useCreatedDishesCheckbox.checked) {
-                loadingMessage.textContent = 'ADVERTENCIA: No hay platos disponibles con los filtros y omisiones seleccionadas.';
+                loadingMessage.textContent = 'ADVERTENCIA: No hay platos disponibles con los filtros, omisiones o cantidades de ingredientes seleccionadas.';
                 loadingMessage.style.color = 'orange';
             }
         }
