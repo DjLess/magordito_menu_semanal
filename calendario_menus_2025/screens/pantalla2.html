@@ -576,7 +576,9 @@
         /**
          * Selecciona los componentes de un plato, verifica su disponibilidad
          * en el inventario de trabajo y consume 1 unidad de cada uno si está disponible.
-         * @param {string} dishName - Nombre del plato.
+         * * NOTA: Esta función SOLO consume la unidad de los INGREDIENTES (una vez por bloque de cocción).
+         * El consumo del contador del PLATO se hace en getRandomDishes.
+         * * @param {string} dishName - Nombre del plato.
          * @param {boolean} shouldConsume - Si debe consumir los ingredientes.
          * @param {Object} workingInventory - Referencia al inventario de trabajo (ingName: count).
          * @returns {Object} { isAvailable: boolean, details: Object }
@@ -614,7 +616,7 @@
 
             const finalComponents = [selectedPrincipal, selectedCarbohidrato, selectedVerdura].filter(i => i && i !== 'N/A');
 
-            // 3. VERIFICACIÓN DE DISPONIBILIDAD INMEDIATA (ANTES DE CONSUMIR)
+            // 3. VERIFICACIÓN DE DISPONIBILIDAD INMEDIATA DE INGREDIENTES (ANTES DE CONSUMIR)
             const allAvailableForConsumption = finalComponents.every(ing => {
                 const count = workingInventory[ing];
                 // Si está en el inventario contado, debe ser > 0
@@ -629,8 +631,9 @@
                 return { isAvailable: false, details: null };
             }
 
-            // 4. CONSUMO (Solo si shouldConsume es true y la verificación pasó)
+            // 4. CONSUMO de INGREDIENTES (Solo si shouldConsume es true y la verificación pasó)
             if (shouldConsume && workingInventory) {
+                // Se consume 1 unidad de cada ingrediente, independientemente de las repeticiones del plato.
                 finalComponents.forEach(ing => {
                     if (workingInventory[ing] !== undefined && typeof workingInventory[ing] === 'number') {
                         workingInventory[ing] -= 1; 
@@ -653,18 +656,15 @@
             const consecutiveCount = parseInt(consecutiveMealsSelect.value, 10);
             const selectedDishes = [];
             
-            // La lista de platos disponibles se mantiene para permitir repetición, 
-            // solo se elimina si se agota el inventario.
+            // Pool de platos disponibles (solo se eliminan si se agotan)
             let dishesToSelectFrom = [...allowedDishes]; 
 
-            // Iterar por bloques de comidas consecutivas
-            for (let i = 0; i < count; i += consecutiveCount) { 
+            for (let i = 0; i < count; ) { // El incremento se maneja dentro del loop
                 
                 let selectedDishData = null;
                 let attempts = dishesToSelectFrom.length * 2; 
-                
-                // Usamos una copia del pool principal que se encoge si hay fallas
                 let currentPool = [...dishesToSelectFrom]; 
+                let actualRepetitions = 0; 
 
                 while (attempts > 0) {
                     if (currentPool.length === 0) break;
@@ -673,8 +673,33 @@
                     let randomDishIndex = Math.floor(Math.random() * currentPool.length);
                     let candidateDishName = currentPool[randomDishIndex];
                     
-                    // 2. Intentar seleccionar componentes y CONSUMIR el inventario ONCE (para todo el bloque consecutivo)
-                    // Esto asegura que la combinación de ingredientes sea la misma para todas las comidas del bloque.
+                    // --- 1.1. Determinar el límite específico del PLATO (si existe) ---
+                    const dishLimit = workingInventory[candidateDishName];
+                    
+                    // Si es un número y es <= 0, el plato está agotado por su contador.
+                    if (typeof dishLimit === 'number' && dishLimit <= 0) {
+                        currentPool.splice(randomDishIndex, 1);
+                        const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
+                        if(mainPoolIndex !== -1) {
+                             dishesToSelectFrom.splice(mainPoolIndex, 1);
+                        }
+                        attempts--;
+                        continue;
+                    }
+                    
+                    // Si tiene límite, el número real de repeticiones es el mínimo entre el consecutivo y el límite restante
+                    const maxAllowedInBlock = (typeof dishLimit === 'number') 
+                        ? Math.min(consecutiveCount, dishLimit) 
+                        : consecutiveCount;
+                    
+                    if (maxAllowedInBlock === 0) { 
+                         currentPool.splice(randomDishIndex, 1);
+                         attempts--;
+                         continue;
+                    }
+
+                    // --- 2. Intentar seleccionar componentes y consumir 1 unidad de INGREDIENTES ---
+                    // Esto valida la disponibilidad de los ingredientes para la cocción.
                     const dishDetailsResult = selectDishComponentsAndConsume(candidateDishName, true, workingInventory); 
                     
                     if (dishDetailsResult.isAvailable) {
@@ -683,15 +708,19 @@
                             details: dishDetailsResult.details 
                         };
                         
-                        // Éxito: El plato tiene inventario disponible. Salir del loop interno.
+                        actualRepetitions = maxAllowedInBlock;
+                        
+                        // --- 3. Consumir el límite del PLATO (si existe) ---
+                        if (typeof dishLimit === 'number') {
+                            workingInventory[candidateDishName] -= actualRepetitions; 
+                        }
+                        
+                        // Éxito: El plato es válido y el inventario (ingredientes y plato) fue consumido.
                         break; 
                     } else {
-                         // El plato falló (inventario agotado o no disponible).
-                         
-                         // Quitarlo del pool de candidatos actual.
+                         // El plato falló por INGREDIENTES. Revertir el pool.
                          currentPool.splice(randomDishIndex, 1);
                          
-                         // También quitarlo del pool principal, para que no se intente de nuevo en la semana.
                          const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
                          if(mainPoolIndex !== -1) {
                              dishesToSelectFrom.splice(mainPoolIndex, 1);
@@ -706,10 +735,12 @@
                     break;
                 }
                 
-                // 3. Llenar los espacios consecutivos con los MISMOS datos de plato.
-                for (let k = 0; k < consecutiveCount && (i + k) < count; k++) {
+                // 4. Llenar los espacios consecutivos con los MISMOS datos de plato y avanzar el índice.
+                for (let k = 0; k < actualRepetitions && (i + k) < count; k++) {
                     selectedDishes.push(selectedDishData); 
                 }
+                
+                i += actualRepetitions; // Avanzar el índice i por las repeticiones generadas
             }
             return selectedDishes;
         }
@@ -834,6 +865,7 @@
             }
             
             // 2. Procesar configuración de ingredientes personalizados (SOBRESCRIBE la BASE)
+            // Esto es crucial, ya que un plato con contador (ej. "Pizza Comodín": 5) se almacenará aquí.
             if (customIngString) {
                 try {
                     const customConfig = JSON.parse(customIngString);
@@ -884,12 +916,20 @@
                 
                 if (status === false) return false; 
                 
+                // Si el ingrediente tiene una cantidad numérica, debe ser > 0
                 if (typeof status === 'number') {
                     return status > 0; 
                 }
 
                 return true;
             });
+            
+            // 3. Verificar límite del plato (si aplica)
+            const dishLimit = inventory[dishObject.nombre];
+            if (typeof dishLimit === 'number' && dishLimit <= 0) {
+                 return false;
+            }
+
 
             return allIngredientsAvailable;
         }
@@ -1068,7 +1108,7 @@
                     .map(dishObject => dishObject.nombre); 
 
             } else {
-                allowedDishes = [];
+                allowedDishes = allDishes; // Usar todos si no hay selección/filtro
             }
             // FIN FILTRO DE ACTIVACIÓN/SELECCIÓN
 
@@ -1078,14 +1118,22 @@
                 const dish = menuData.platos_principales.find(d => d.nombre === dishName);
                 if (!dish) return true;
 
+                // Verificar límite de plato (si aplica)
+                const dishLimit = customIngredients[dishName];
+                if (typeof dishLimit === 'number' && dishLimit <= 0) {
+                    return false;
+                }
+                
                 const allIngredients = [...(dish.principales || []), ...(dish.carbohidratos || []), ...(dish.verduras || [])]
                     .filter(i => i && i !== '-');
 
+                // Verificar ingredientes del plato
                 const hasUnavailableIngredient = allIngredients.some(ing => {
                     const status = customIngredients[ing];
                     
                     if (status === false) return true; 
                     
+                    // Si el ingrediente tiene una cantidad numérica, debe ser > 0
                     if (typeof status === 'number') {
                         return status <= 0; 
                     }
