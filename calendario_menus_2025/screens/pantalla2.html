@@ -360,6 +360,7 @@
         // ===============================================
         // CONFIGURACIÓN DE DATOS
         // ===============================================
+        // Se mantiene la URL estática para la primera carga si no hay LocalStorage
         const DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/menu_db.json';
         const INVENTORY_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/inventario_db.json'; 
         
@@ -370,6 +371,7 @@
         let allDishes = []; 
         let menuData = null; 
         let allowedDishes = [];
+        const MENU_STORAGE_KEY = 'menuData'; // Clave agregada para el menú
         const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
         const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
         const CREATED_DISHES_STORAGE_KEY = 'dishCreator_successfullyCreatedDishes';
@@ -716,22 +718,27 @@
                 const carbohidratos = dish.carbohidratos || [];
                 const verduras = dish.verduras || [];
                 
+                // Mapeo para obtener los nombres de los ingredientes del objeto de plato creado
                 const ingredientsList = [
-                    ...principales.map(p => ({name: p.name, emoji: p.emoji})),
-                    ...carbohidratos.map(c => ({name: c.name, emoji: c.emoji})),
-                    ...verduras.map(v => ({name: v.name, emoji: v.emoji})),
+                    ...principales.map(p => ({name: p, emoji: INGREDIENT_EMOJI_MAP[p]})),
+                    ...carbohidratos.map(c => ({name: c, emoji: INGREDIENT_EMOJI_MAP[c]})),
+                    ...verduras.map(v => ({name: v, emoji: INGREDIENT_EMOJI_MAP[v]})),
                 ].filter(i => i.name && i.name !== 'N/A');
                 
-                const mainEmoji = principales[0]?.emoji || '🍽️'; 
+                // Obtener el primer emoji principal o el emoji comodín (✨) si el plato fue desbloqueado.
+                const mainIngredientName = principales[0];
+                const mainEmoji = INGREDIENT_EMOJI_MAP[mainIngredientName] || '🍽️'; 
+                
                 const secondaryEmojis = [
-                    carbohidratos[0]?.emoji,
-                    verduras[0]?.emoji
+                    INGREDIENT_EMOJI_MAP[carbohidratos[0]],
+                    INGREDIENT_EMOJI_MAP[verduras[0]]
                 ].filter(e => e).join('');
 
                 const cardElement = document.createElement('div');
                 cardElement.classList.add('card');
                 cardElement.setAttribute('draggable', 'true');
-                cardElement.setAttribute('data-dish', dish.name);
+                cardElement.setAttribute('data-dish', dish.nombre);
+                // NOTA: Para platos creados (del LocalStorage), se usa dish.nombre, no dish.name
                 cardElement.setAttribute('data-dish-json', JSON.stringify(dish)); 
 
                 cardElement.innerHTML = `
@@ -741,7 +748,7 @@
                             <div class="card-secondary-emojis">${secondaryEmojis}</div>
                         </div>
                         <div class="card-ingredients-zone">
-                            <p class="card-dish-name">${dish.name}</p>
+                            <p class="card-dish-name">${dish.nombre}</p>
                             <ul class="card-ingredients-list">
                                 ${ingredientsList.slice(0, 4).map(i => `<li>${i.name}</li>`).join('')}
                             </ul>
@@ -761,6 +768,7 @@
             const storedDishes = localStorage.getItem(CREATED_DISHES_STORAGE_KEY);
             if (storedDishes) {
                 try {
+                    // Los platos creados son guardados como un array simple de objetos de plato
                     createdDishes = JSON.parse(storedDishes);
                 } catch (e) {
                     console.error("Error al cargar platos creados:", e);
@@ -845,12 +853,40 @@
         }
 
         async function loadMenuData() {
+            
+            // 1. Intentar cargar menuData desde LocalStorage (Platos desbloqueados por logros)
+            const localMenu = localStorage.getItem(MENU_STORAGE_KEY);
+            if (localMenu) {
+                try {
+                    menuData = JSON.parse(localMenu);
+                    console.log("Base de datos de Menú cargada desde LocalStorage.");
+                } catch (e) {
+                    console.error("Error al parsear menuData de LocalStorage:", e);
+                    menuData = null; 
+                }
+            }
+
+            // 2. Si no hay en localStorage (o falló), cargar desde GitHub
+            if (!menuData) {
+                try {
+                    const menuResponse = await fetch(DATA_URL);
+                    if (!menuResponse.ok) throw new Error(`Error al cargar el menú: ${menuResponse.status}`);
+                    menuData = await menuResponse.json();
+                    console.log("Base de datos de Menú cargada desde GitHub.");
+                } catch (error) {
+                    console.error("Error al cargar los datos del menú:", error);
+                    loadingMessage.textContent = `Error al cargar los datos del menú: ${error.message}`;
+                    loadingMessage.style.color = 'red';
+                    return; // Detener la carga si el menú falla
+                }
+            }
+            
+            // 3. Cargar datos de Inventario desde GitHub (necesario para el mapa de emojis)
+            // NOTA: No se usa LocalStorage para el Inventario aquí, ya que el archivo estático
+            // puede tener más ingredientes que el localStorage (que solo guarda los activos). 
+            // Si los logros modifican el inventario, es mejor cargar el mapa completo de emojis
+            // y luego aplicar los filtros de omisión.
             try {
-                const menuResponse = await fetch(DATA_URL);
-                if (!menuResponse.ok) throw new Error(`Error al cargar el menú: ${menuResponse.status}`);
-                menuData = await menuResponse.json();
-                allDishes = menuData.platos_principales.map(d => d.nombre);
-                
                 const inventoryResponse = await fetch(INVENTORY_DATA_URL);
                 if (!inventoryResponse.ok) throw new Error(`Error al cargar el inventario: ${inventoryResponse.status}`);
                 const inventoryData = await inventoryResponse.json();
@@ -859,26 +895,26 @@
                 inventoryData.inventario.forEach(item => {
                     INGREDIENT_EMOJI_MAP[item.nombre] = item.emoji; 
                 });
-
-                loadSelectionFilters();
-                loadCreatedDishesFromStorage(); 
-
-                // Si estamos en modo creado, primero limpiamos las zonas de ejemplo del HTML
-                if (useCreatedDishesCheckbox.checked) {
-                    allZones.forEach(zone => {
-                        const label = zone.querySelector('.zone-label');
-                        zone.innerHTML = '';
-                        zone.appendChild(label);
-                    });
-                }
-                
-                renderCards(); 
-
             } catch (error) {
-                console.error("Error al cargar los datos:", error);
-                loadingMessage.textContent = `Error al cargar los datos: ${error.message}`;
-                loadingMessage.style.color = 'red';
+                console.error("Error al cargar los datos del inventario:", error);
             }
+            
+            // 4. Continuar con la inicialización...
+            allDishes = menuData.platos_principales.map(d => d.nombre);
+
+            loadSelectionFilters(); // Carga filtros y customIngredients
+            loadCreatedDishesFromStorage(); // Carga platos creados
+            
+            // Si estamos en modo creado, primero limpiamos las zonas de ejemplo del HTML
+            if (useCreatedDishesCheckbox.checked) {
+                allZones.forEach(zone => {
+                    const label = zone.querySelector('.zone-label');
+                    zone.innerHTML = '';
+                    zone.appendChild(label);
+                });
+            }
+            
+            renderCards(); 
         }
         
         function loadSelectionFilters() {
@@ -893,19 +929,27 @@
                 selectedComponentsSet = new Set();
             }
 
+            // Cargar customIngredients (Ingredientes Desbloqueados/Omitidos)
             const customIngString = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
             if (customIngString) {
-                customIngredients = JSON.parse(customIngString);
+                try {
+                    customIngredients = JSON.parse(customIngString);
+                } catch(e) {
+                    console.error("Error al parsear customIngredients de LocalStorage:", e);
+                    customIngredients = {};
+                }
             } else {
                 customIngredients = {};
             }
 
+            // Aplicar filtros de selección de platos
             if (selectedComponentsSet.size > 0) {
                 allowedDishes = allDishes.filter(dishName => selectedComponentsSet.has(dishName));
             } else {
                 allowedDishes = allDishes;
             }
 
+            // Aplicar filtros de omisión de ingredientes (customIngredients = false)
             allowedDishes = allowedDishes.filter(dishName => {
                 const dish = menuData.platos_principales.find(d => d.nombre === dishName);
                 if (!dish) return true;
