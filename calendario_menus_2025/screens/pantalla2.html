@@ -942,10 +942,29 @@
                 customIngredients = {};
             }
 
-            // Aplicar filtros de selección de platos
+            // Aplicar filtros de selección de platos (MODIFICADO para incluir platos por ingrediente)
             if (selectedComponentsSet.size > 0) {
-                allowedDishes = allDishes.filter(dishName => selectedComponentsSet.has(dishName));
+                
+                // Filtrar el array completo de objetos de plato (menuData.platos_principales)
+                // para permitir platos si:
+                // 1. Su nombre está en selectedComponentsSet, O
+                // 2. Contiene algún ingrediente cuyo nombre está en selectedComponentsSet.
+                allowedDishes = menuData.platos_principales
+                    .filter(dishObject => {
+                        const allDishComponents = [
+                            dishObject.nombre, // Incluir el nombre del plato
+                            ...(dishObject.principales || []), 
+                            ...(dishObject.carbohidratos || []), 
+                            ...(dishObject.verduras || [])
+                        ].filter(i => i && i !== '-');
+
+                        // Si ALGUNO de los componentes del plato está en el set de selección, se permite.
+                        return allDishComponents.some(component => selectedComponentsSet.has(component));
+                    })
+                    .map(dishObject => dishObject.nombre); // Devolver solo los nombres
+
             } else {
+                // Si no hay selecciones, todos los platos están permitidos.
                 allowedDishes = allDishes;
             }
 
