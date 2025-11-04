@@ -28,7 +28,6 @@
             /* Se asume que card_styles.css ya tiene la base de los .card, pero estas variables ayudan al carrusel */
             --dish-card-width: 80px;
             --dish-card-aspect-ratio: calc(70 / 49);
-            --dish-card-calculated-height: calc(var(--dish-card-width) * var(--dish-card-aspect-ratio));
             --lift-amount: 20px;
             --success-color: #238636;
         }
@@ -271,73 +270,9 @@
     <div id="drop-zones-container">
         <div class="drop-zone" data-day="Lunes">
             <div class="zone-label">Lunes</div>
-            <div class="card" draggable="true" data-dish="Lasaña">
-                <div class="card-inner-content">
-                    <div class="card-image-zone">
-                        <span class="card-main-emoji">🍝</span>
-                        <div class="card-secondary-emojis">🧅🍅</div>
-                    </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">Lasaña de Carne</p>
-                        <ul class="card-ingredients-list">
-                            <li>Carne Molida</li>
-                            <li>Pasta Lasaña</li>
-                            <li>Tomate</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="card" draggable="true" data-dish="Sopa">
-                <div class="card-inner-content">
-                    <div class="card-image-zone">
-                        <span class="card-main-emoji">🍲</span>
-                        <div class="card-secondary-emojis">🥕🥔</div>
-                    </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">Sopa de Verduras</p>
-                        <ul class="card-ingredients-list">
-                            <li>Pollo</li>
-                            <li>Papa</li>
-                            <li>Zanahoria</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="drop-zone" data-day="Martes">
             <div class="zone-label">Martes</div>
-            <div class="card" draggable="true" data-dish="Fideos">
-                <div class="card-inner-content">
-                    <div class="card-image-zone">
-                        <span class="card-main-emoji">🍜</span>
-                        <div class="card-secondary-emojis">🧀🌶️</div>
-                    </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">Fideos con Queso</p>
-                        <ul class="card-ingredients-list">
-                            <li>Leche</li>
-                            <li>Fideos</li>
-                            <li>Queso</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="card" draggable="true" data-dish="Cazuela">
-                <div class="card-inner-content">
-                    <div class="card-image-zone">
-                        <span class="card-main-emoji">🥣</span>
-                        <div class="card-secondary-emojis">🌽🎃</div>
-                    </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">Cazuela de Pollo</p>
-                        <ul class="card-ingredients-list">
-                            <li>Pollo</li>
-                            <li>Zapallo</li>
-                            <li>Choclo</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="drop-zone" data-day="Miércoles">
             <div class="zone-label">Miércoles</div>
@@ -652,17 +587,21 @@
             };
         }
         
+        /**
+         * Genera platos aleatorios para el menú semanal, respetando los límites de uso total del plato
+         * (si se especifican en el inventario) y la cantidad de comidas consecutivas.
+         */
         function getRandomDishes(count, workingInventory) {
             const consecutiveCount = parseInt(consecutiveMealsSelect.value, 10);
             const selectedDishes = [];
             
-            // Pool de platos disponibles (solo se eliminan si se agotan)
+            // Pool de platos disponibles (solo se eliminan si se agotan o fallan por ingredientes)
             let dishesToSelectFrom = [...allowedDishes]; 
 
             for (let i = 0; i < count; ) { // El incremento se maneja dentro del loop
                 
                 let selectedDishData = null;
-                let attempts = dishesToSelectFrom.length * 2; 
+                let attempts = dishesToSelectFrom.length * 2; // Intentos para evitar loops infinitos
                 let currentPool = [...dishesToSelectFrom]; 
                 let actualRepetitions = 0; 
 
@@ -681,7 +620,7 @@
                         currentPool.splice(randomDishIndex, 1);
                         const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
                         if(mainPoolIndex !== -1) {
-                             dishesToSelectFrom.splice(mainPoolIndex, 1);
+                             dishesToSelectFrom.splice(mainPoolIndex, 1); // Eliminar del pool principal
                         }
                         attempts--;
                         continue;
@@ -693,13 +632,13 @@
                         : consecutiveCount;
                     
                     if (maxAllowedInBlock === 0) { 
+                         // Debería ser atrapado por la condición anterior, pero como fallback
                          currentPool.splice(randomDishIndex, 1);
                          attempts--;
                          continue;
                     }
 
                     // --- 2. Intentar seleccionar componentes y consumir 1 unidad de INGREDIENTES ---
-                    // Esto valida la disponibilidad de los ingredientes para la cocción.
                     const dishDetailsResult = selectDishComponentsAndConsume(candidateDishName, true, workingInventory); 
                     
                     if (dishDetailsResult.isAvailable) {
@@ -715,10 +654,10 @@
                             workingInventory[candidateDishName] -= actualRepetitions; 
                         }
                         
-                        // Éxito: El plato es válido y el inventario (ingredientes y plato) fue consumido.
+                        // Éxito
                         break; 
                     } else {
-                         // El plato falló por INGREDIENTES. Revertir el pool.
+                         // El plato falló por INGREDIENTES. Eliminarlo del pool
                          currentPool.splice(randomDishIndex, 1);
                          
                          const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
@@ -865,7 +804,6 @@
             }
             
             // 2. Procesar configuración de ingredientes personalizados (SOBRESCRIBE la BASE)
-            // Esto es crucial, ya que un plato con contador (ej. "Pizza Comodín": 5) se almacenará aquí.
             if (customIngString) {
                 try {
                     const customConfig = JSON.parse(customIngString);
@@ -879,11 +817,11 @@
                             if (item.selected === false) {
                                 consolidatedInventory[ingName] = false;
                             } 
-                            // Si tiene una cantidad numérica, sobrescribe/establece
+                            // Si tiene una cantidad numérica, sobrescribe/establece (ESTO INCLUYE EL LÍMITE DEL PLATO)
                             else if (typeof item.availability === 'number') {
                                 consolidatedInventory[ingName] = item.availability;
                             }
-                            // Si solo está seleccionado (true) y no tiene cantidad, se asume disponible (o infinito, por ahora true)
+                            // Si solo está seleccionado (true) y no tiene cantidad, se asume disponible
                             else if (item.selected === true) {
                                  consolidatedInventory[ingName] = true;
                             }
