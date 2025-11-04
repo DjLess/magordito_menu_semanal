@@ -601,7 +601,7 @@
             for (let i = 0; i < count; ) { // El incremento se maneja dentro del loop
                 
                 let selectedDishData = null;
-                let attempts = dishesToSelectFrom.length * 2; // Intentos para evitar loops infinitos
+                let attempts = dishesToSelectFrom.length * 2; 
                 let currentPool = [...dishesToSelectFrom]; 
                 let actualRepetitions = 0; 
 
@@ -632,7 +632,6 @@
                         : consecutiveCount;
                     
                     if (maxAllowedInBlock === 0) { 
-                         // Debería ser atrapado por la condición anterior, pero como fallback
                          currentPool.splice(randomDishIndex, 1);
                          attempts--;
                          continue;
@@ -652,12 +651,21 @@
                         // --- 3. Consumir el límite del PLATO (si existe) ---
                         if (typeof dishLimit === 'number') {
                             workingInventory[candidateDishName] -= actualRepetitions; 
+                            
+                            // *** CORRECCIÓN CRUCIAL: ELIMINACIÓN INMEDIATA DEL PLATO SI SE AGOTA ***
+                            if (workingInventory[candidateDishName] <= 0) {
+                                const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
+                                if(mainPoolIndex !== -1) {
+                                    dishesToSelectFrom.splice(mainPoolIndex, 1);
+                                }
+                            }
+                            // *******************************************************************
                         }
                         
                         // Éxito
                         break; 
                     } else {
-                         // El plato falló por INGREDIENTES. Eliminarlo del pool
+                         // El plato falló por INGREDIENTES. Eliminarlo del pool (tanto el actual como el principal)
                          currentPool.splice(randomDishIndex, 1);
                          
                          const mainPoolIndex = dishesToSelectFrom.indexOf(candidateDishName);
@@ -922,7 +930,7 @@
                 
                 allZones.forEach(zone => zone.innerHTML = `<div class="zone-label">${zone.getAttribute('data-day')}</div>`);
 
-                // Copia del inventario para el consumo semanal
+                // Copia del inventario para el consumo semanal (es crucial que sea una copia)
                 const workingInventory = JSON.parse(JSON.stringify(customIngredients));
                 
                 const randomDishes = getRandomDishes(TOTAL_CARDS, workingInventory);
