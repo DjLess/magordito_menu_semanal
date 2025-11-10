@@ -196,9 +196,9 @@ function desbloquearRecompensa(recompensa, isSilent = false) {
         const newDishName = rPlato.nombre;
 
         // REGLA: Plato exclusivo con el comodín como único principal
-        const platoCarbo = [];    
+      //  const platoCarbo = [];    
         const platoPrincipal = [newIngredientName]; 
-        const platoVerduras = []; 
+      //  const platoVerduras = []; 
 
         const nuevoPlato = {
             nombre: `${COMODIN_EMOJI} ${newDishName} (${newIngredientName})`, 
