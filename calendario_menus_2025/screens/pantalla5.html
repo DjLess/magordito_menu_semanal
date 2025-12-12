@@ -478,6 +478,7 @@
         if (!targetSlot) return; 
 
         const rect = targetSlot.getBoundingClientRect();
+        const galleryRect = magicBoxesGallery.getBoundingClientRect(); // Posición de la galería en el viewport
         
         const floatingEl = document.createElement('div');
         floatingEl.classList.add('floating-ingredient');
@@ -495,20 +496,30 @@
 
         document.body.appendChild(floatingEl);
         
-        // Posicionamiento inicial: justo encima del slot de la caja.
-        // Aproximadamente la mitad de la burbuja (60px/2 = 30px)
-        const bubbleSizeOffset = 30; 
-        const initialLeft = rect.left + rect.width / 2 - bubbleSizeOffset; 
-        const initialTop = rect.top + window.scrollY - bubbleSizeOffset;
+        const bubbleSizeOffset = 30; // La burbuja mide 60px. Offset = 30px.
+
+        // ⭐️ CORRECCIÓN CLAVE: Calcular la posición LEFT compensando el scroll horizontal de la galería.
+        
+        // 1. Posición X del slot relativa al inicio del contenido scrollable de la galería.
+        //    (Slot Viewport X - Galería Viewport X) + (Scroll Galería)
+        const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
+        
+        // 2. Posición X final absoluta en el documento (body).
+        //    (Posición relativa al contenido scrollable) + (Posición inicial de la Galería en el Viewport/Documento) + (Offset para centrar la burbuja sobre el slot)
+        const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset; 
+        
+        const initialLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
+
+        // La posición TOP sigue siendo relativa al viewport + scroll vertical de la ventana (si lo hubiera).
+        const initialTop = rect.top + window.scrollY - bubbleSizeOffset; 
         
         // 1. Establecer la posición (sin animación)
         floatingEl.style.left = `${initialLeft}px`;
         floatingEl.style.top = `${initialTop}px`; 
 
-        // 2. Iniciar la animación de levitación (que también maneja la opacidad de 0 a 1)
+        // 2. Iniciar la animación de levitación
         requestAnimationFrame(() => {
             floatingEl.style.opacity = '1';
-            // La animación subtle-float se encarga del resto del transform (levitación)
         });
 
         floatingEl.addEventListener('click', () => {
@@ -531,8 +542,14 @@
             const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingName}"]`);
             if (targetSlot) {
                 const rect = targetSlot.getBoundingClientRect();
+                const galleryRect = magicBoxesGallery.getBoundingClientRect();
                 const bubbleSizeOffset = 30; 
-                const finalLeft = rect.left + rect.width / 2 - bubbleSizeOffset;
+                
+                // ⭐️ CORRECCIÓN CLAVE: Calcular la posición final de la caída compensando el scroll.
+                const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
+                const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset;
+                const finalLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
+
                 const finalTop = rect.top + window.scrollY - bubbleSizeOffset;
 
                 // Forzar la posición final para que el CSS 'falling' haga la transición.
@@ -626,8 +643,6 @@
             const checkbox = item.querySelector('input[type="checkbox"]');
             checkbox.addEventListener('change', () => {
                 handleSelection(ingData.nombre); 
-                
-                // La lógica de handleSelection sincroniza el estado visual (flotante/caja)
             });
 
             listContainer.appendChild(item);
@@ -677,7 +692,6 @@
                 rotate(720deg) 
             `;
             
-            // ⭐️ CRUCIAL: Mantener opacidad a 1 durante el proceso de absorción
             el.style.opacity = '1'; 
             el.style.animation = 'none'; 
             
