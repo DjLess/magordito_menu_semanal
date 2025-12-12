@@ -38,18 +38,18 @@
         }
 
         /* ------------------------------------------------------------------- */
-        /* CONTENEDOR DE LISTA INICIAL (Overlay Flotante) */
+        /* CONTENEDOR DE LISTA INICIAL (Overlay Flotante/Lista de Compras) */
         /* ------------------------------------------------------------------- */
         #initial-selection-container {
             background-color: #1f242b;
             border: 1px solid var(--box-border-color);
             border-radius: 8px;
             padding: 15px;
-            /* CAMBIO CLAVE: Posicionamiento Fixed para Overlay */
+            /* Posicionamiento Fixed para Overlay */
             position: fixed; 
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0.8); /* Empieza un poco más pequeño */
+            transform: translate(-50%, -50%) scale(0.8); 
             z-index: 1000; 
             max-width: 90%; 
             max-height: 90vh;
@@ -86,27 +86,19 @@
             border-bottom: 1px dashed #30363d;
         }
         
-        #minimize-button, #maximize-button {
+        .list-close-button {
             padding: 8px 15px;
             border: none;
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
-        }
-        
-        #minimize-button { background-color: #ffa500; color: #161b22; }
-        #maximize-button { background-color: var(--accent-color); color: #161b22; }
-
-        .minimized #initial-selection-list {
-            max-height: 0;
-            opacity: 0;
-            padding: 0;
-            transition: max-height 0.5s ease-in-out, opacity 0.3s;
+            background-color: #ffa500; 
+            color: #161b22;
         }
 
         /* ------------------------------------------------------------------- */
-        /* GALERÍA DE CAJAS MÁGICAS (Con Scroll Horizontal) */
+        /* GALERÍA DE CAJAS MÁGICAS (Simulando el Supermercado) */
         /* ------------------------------------------------------------------- */
 
         /* Contenedor que maneja el posicionamiento de las flechas */
@@ -122,13 +114,13 @@
         /* Contenedor principal de las cajas: habilita el scroll horizontal */
         #magic-boxes-gallery {
             display: flex;
-            flex-wrap: nowrap; /* CRUCIAL: Mantiene los elementos en una sola línea */
-            overflow-x: scroll; /* Permite el scroll horizontal */
+            flex-wrap: nowrap; 
+            overflow-x: scroll; 
             overflow-y: hidden;
-            scroll-behavior: smooth; /* Para la animación de las flechas */
+            scroll-behavior: smooth; 
             gap: 20px;
             padding: 20px 0;
-            width: 90%; /* Limitar el ancho para que quepan las flechas */
+            width: 90%; 
             -webkit-overflow-scrolling: touch;
         }
         
@@ -143,7 +135,7 @@
         
         .magic-box {
             width: 150px;
-            min-width: 150px; /* Asegura que la caja no se comprima */
+            min-width: 150px; 
             height: 150px;
             background-color: var(--box-bg-color);
             border: 3px solid var(--box-border-color);
@@ -215,8 +207,8 @@
             z-index: 100;
             cursor: pointer;
             text-align: center;
-            opacity: 0; /* Empieza invisible, JS lo anima */
-            /* La transición se usa para la reubicación y el efecto final de absorción */
+            opacity: 0; 
+            /* La transición se usa para la reubicación, caída y el efecto final de absorción */
             transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.05s, top 0.05s;
             animation: subtle-float 2s ease-in-out infinite alternate;
         }
@@ -237,7 +229,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Para el efecto de reventón */
             transition: all 0.5s ease-in-out; 
         }
 
@@ -268,30 +259,34 @@
         
         /* Efecto de Caída / Burbuja Reventada */
         .floating-ingredient.falling {
-            animation: none; /* Detener el flote sutil */
+            animation: none; 
             opacity: 0;
-            /* La cúbica proporciona un efecto de caída con "rebote" */
             transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s; 
-            transform: translateY(0) scale(0.2) !important; /* Vuelve a la posición del slot */
+            transform: translateY(0) scale(0.2) !important; 
         }
         .floating-ingredient.falling .ing-bubble {
             background: transparent;
             box-shadow: none;
             border: 0;
-            transform: scale(3); /* Simula expansión rápida (reventón) */
+            transform: scale(3); 
             opacity: 0;
         }
 
         /* ------------------------------------------------------------------- */
-        /* BOTÓN DE ACCIÓN Y VÓRTICE FINAL */
+        /* BOTONES FIJOS DE ACCIÓN */
         /* ------------------------------------------------------------------- */
-        /* ... (Estilos de accept-button y vortex-container sin cambios) */
-        #accept-button {
+        #fixed-actions {
             position: fixed;
             bottom: 20px;
-            left: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            gap: 15px;
+        }
+
+        #accept-button, #toggle-list-button {
             padding: 15px 25px;
-            background-color: var(--success-color);
             color: white;
             border: none;
             border-radius: 50px;
@@ -300,7 +295,10 @@
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
             transition: background-color 0.3s;
-            z-index: 200;
+        }
+
+        #accept-button {
+            background-color: var(--success-color);
         }
         
         #accept-button:disabled {
@@ -308,6 +306,11 @@
             cursor: not-allowed;
         }
 
+        #toggle-list-button {
+            background-color: var(--accent-color);
+        }
+
+        /* Contenedor del Vórtice de Animación */
         #vortex-container {
             position: fixed;
             top: 0;
@@ -328,7 +331,7 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
+        
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -341,11 +344,14 @@
     <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
     <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
 
+    <div style="margin-bottom: 10px; font-size: 1.1em; color: #fff;">El Supermercado Mágico (Cajas de Ingredientes)</div>
+
     <div id="initial-selection-container" class="minimized">
+        <h3>Lista de Compras 🛒</h3>
+        <p>Marca o desmarca los ingredientes para enviarlos a la cocina.</p>
         <div id="initial-selection-list"> 
             </div>
-        <button id="minimize-button" onclick="toggleInitialList('minimize')">Minimizar Lista</button>
-        <button id="maximize-button" onclick="toggleInitialList('maximize')" style="display:none;">Traer Lista</button>
+        <button class="list-close-button" onclick="toggleInitialList('minimize')">Cerrar Lista</button>
     </div>
     
     <div id="gallery-wrapper">
@@ -359,7 +365,10 @@
         <div class="vortex"></div>
     </div>
     
-    <button id="accept-button" onclick="handleFinalAnimation()" disabled>Aceptar (0 ingredientes)</button>
+    <div id="fixed-actions">
+        <button id="toggle-list-button" onclick="toggleInitialList('maximize')">🛒 Ver Lista de Compras</button>
+        <button id="accept-button" onclick="handleFinalAnimation()" disabled>Aceptar (0 ingredientes)</button>
+    </div>
 
 
 <script>
@@ -379,7 +388,7 @@
     let floatingElements = new Map();
     let inventoryDetailsMap = new Map();
 
-    // Asumimos que esta función existe en main.js para la navegación
+    // En caso de que se cargue fuera del iframe, usamos una función placeholder
     if (typeof window.loadContent !== 'function') {
          window.loadContent = (url) => console.log(`DEBUG: Navegando a ${url}`);
     }
@@ -434,7 +443,6 @@
         
         if (!ingData) return;
 
-        // Se usa el slot de la caja como elemento visual de referencia.
         const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
         
         if (isSelected) {
@@ -454,7 +462,7 @@
         }
         
         saveSelectionToStorage();
-        // Sincronizar el checkbox
+        // Sincronizar el checkbox en la lista de compras
         const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
     }
@@ -500,7 +508,7 @@
         // 2. Iniciar la animación de levitación (que también maneja la opacidad de 0 a 1)
         requestAnimationFrame(() => {
             floatingEl.style.opacity = '1';
-            // La animación subtle-float se encarga del resto del transform
+            // La animación subtle-float se encarga del resto del transform (levitación)
         });
 
         floatingEl.addEventListener('click', () => {
@@ -542,7 +550,7 @@
 
 
     // ===============================================
-    // RENDERIZADO
+    // RENDERIZADO Y UTILIDADES
     // ===============================================
     
     function groupIngredients(ingredients) {
@@ -594,7 +602,7 @@
             if (selectedItems.has(ingData.nombre)) {
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 if (sourceSlot) {
-                    // Esperamos un poco para asegurar que el DOM esté listo para calcular la posición
+                    // Se usa createFloatingElement, que asegura el posicionamiento sobre la caja.
                     setTimeout(() => createFloatingElement(ingData, sourceSlot), 10); 
                 }
             }
@@ -619,18 +627,7 @@
             checkbox.addEventListener('change', () => {
                 handleSelection(ingData.nombre); 
                 
-                const isNowSelected = selectedItems.has(ingData.nombre);
-                const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
-                
-                if (isNowSelected) {
-                    if (sourceSlot) {
-                         sourceSlot.style.visibility = 'hidden';
-                         if (!floatingElements.has(ingData.nombre)) createFloatingElement(ingData, sourceSlot);
-                    }
-                } else {
-                    if (sourceSlot) sourceSlot.style.visibility = 'visible';
-                    removeFloatingElement(ingData.nombre);
-                }
+                // La lógica de handleSelection sincroniza el estado visual (flotante/caja)
             });
 
             listContainer.appendChild(item);
@@ -638,17 +635,10 @@
     }
     
     function toggleInitialList(action) {
-        const minimizeBtn = document.getElementById('minimize-button');
-        const maximizeBtn = document.getElementById('maximize-button');
-        
         if (action === 'minimize') {
             initialListContainer.classList.add('minimized');
-            minimizeBtn.style.display = 'none';
-            maximizeBtn.style.display = 'block';
         } else {
             initialListContainer.classList.remove('minimized');
-            minimizeBtn.style.display = 'block';
-            maximizeBtn.style.display = 'none';
         }
     }
     
@@ -660,6 +650,8 @@
         if (selectedItems.size === 0) return;
         
         acceptButton.disabled = true;
+        const toggleListButton = document.getElementById('toggle-list-button');
+        toggleListButton.disabled = true;
 
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
@@ -677,15 +669,22 @@
             const translateX = centerVortexX - (rect.left + rect.width / 2);
             const translateY = centerVortexY - (rect.top + rect.height / 2);
             
-            // ⭐️ Aplicar la animación de espiral (giro y reducción)
+            // Aplicar la animación de espiral (giro y reducción), manteniendo la opacidad
             el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
             el.style.transform = `
                 translate(${translateX}px, ${translateY}px) 
                 scale(0.01) 
-                rotate(720deg) /* Giro dramático de 2 vueltas */
+                rotate(720deg) 
             `;
-            el.style.opacity = '0';
-            el.style.animation = 'none'; // Detener el flote sutil
+            
+            // ⭐️ CRUCIAL: Mantener opacidad a 1 durante el proceso de absorción
+            el.style.opacity = '1'; 
+            el.style.animation = 'none'; 
+            
+            // Desvanecer el ingrediente justo cuando la animación termina (1.5s)
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 1000); 
         });
 
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -695,6 +694,7 @@
 
         saveSelectionToStorage();
 
+        // Llamar a loadContent en el contexto padre para la navegación
         if (window.parent && typeof window.parent.loadContent === 'function') {
             window.parent.loadContent('pantalla4.html');
         } else {
@@ -703,7 +703,7 @@
     }
 
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL (FIX: Acceso al Padre o LocalStorage)
+    // INICIALIZACIÓN PRINCIPAL
     // ===============================================
 
     async function loadMenuData() {
@@ -752,8 +752,8 @@
             
             setTimeout(() => {
                 renderMagicBoxes();
-                toggleInitialList('minimize'); 
-                loadingMessage.textContent = '¡Inventario cargado! Selecciona los ingredientes flotantes.';
+                toggleInitialList('minimize'); // Asegurar que la lista de compras esté oculta al inicio
+                loadingMessage.textContent = '¡Inventario cargado! Recolecta tus ingredientes.';
                 updateAcceptButton();
             }, 50);
 
