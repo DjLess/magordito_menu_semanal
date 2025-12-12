@@ -109,7 +109,7 @@
             gap: 20px;
             padding: 20px 0;
             width: 90%; /* Limitar el ancho para que quepan las flechas */
-            -webkit-overflow-scrolling: touch; /* Mejorar el scroll en iOS */
+            -webkit-overflow-scrolling: touch;
         }
         
         /* Ocultar la barra de scroll nativa (Opcional, para estética) */
@@ -269,14 +269,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Animación para los ingredientes al entrar al vórtice */
-        @keyframes vortex-pull {
-            to {
-                transform: translate(-50%, -50%) scale(0.1) rotate(720deg);
-                opacity: 0;
-            }
-        }
-        
     </style>
 </head>
 <body>
@@ -317,21 +309,24 @@
     const acceptButton = document.getElementById('accept-button');
 
     // DATOS GLOBALES
-    let filteredInventory = []; // Inventario después de aplicar filtros
+    let filteredInventory = []; // Inventario usado para las cajas
     let selectedItems = new Set(); // Nombres de ingredientes seleccionados
     let floatingElements = new Map(); // Mapa para rastrear los elementos flotantes: nombre -> DOM Element
     let inventoryDetailsMap = new Map(); // Mapa auxiliar para obtener datos por nombre rápidamente
 
+    // Asumimos que esta función existe en main.js para la navegación
+    if (typeof window.loadContent !== 'function') {
+         window.loadContent = (url) => console.log(`DEBUG: Navegando a ${url}`);
+    }
+    
     // ===============================================
     // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO
     // ===============================================
 
     function saveSelectionToStorage() {
-        // Guardamos la lista final de ingredientes seleccionados para pantalla4.html
         const selectionData = {
             selectedItems: Array.from(selectedItems),
         };
-        // Usamos una clave más específica para evitar colisiones con la lógica anterior de pantalla5
         localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
         updateAcceptButton();
     }
@@ -353,8 +348,13 @@
     // LÓGICA DE NAVEGACIÓN HORIZONTAL (Scroll)
     // ===============================================
     
+    /**
+     * Realiza un desplazamiento horizontal suave en la galería de cajas.
+     * @param {number} direction - 1 para derecha, -1 para izquierda.
+     */
     function scrollGallery(direction) {
-        const scrollAmount = magicBoxesGallery.clientWidth * 0.7; // Desplazar un 70% del ancho visible
+        // Desplazar un 80% del ancho visible de la galería
+        const scrollAmount = magicBoxesGallery.clientWidth * 0.8; 
         
         if (direction === 1) {
             magicBoxesGallery.scrollLeft += scrollAmount;
@@ -394,9 +394,6 @@
             if (boxSlot) {
                 boxSlot.style.visibility = 'hidden'; // Ocultar slot original
                 createFloatingElement(ingData, boxSlot);
-            } else {
-                // Caso extremo: si el ingrediente está en la lista pero no en una caja (debería estar)
-                console.warn(`No se encontró slot para ${ingName}. Creando flotante sin origen visible.`);
             }
         }
         
@@ -412,10 +409,8 @@
     function createFloatingElement(ingData, sourceElement) {
         if (floatingElements.has(ingData.nombre)) return;
 
-        // 1. Obtener la posición del slot de origen
         const rect = sourceElement.getBoundingClientRect();
         
-        // 2. Crear el elemento flotante
         const floatingEl = document.createElement('div');
         floatingEl.classList.add('floating-ingredient');
         floatingEl.setAttribute('data-name', ingData.nombre);
@@ -425,22 +420,21 @@
             <div class="ing-name">${ingData.nombre}</div>
         `;
 
-        // 3. Posicionamiento inicial: Se agrega al body y se posiciona exactamente sobre el slot
         document.body.appendChild(floatingEl);
         
-        // Posicionar con respecto a la ventana, sumando el scroll
+        // Posicionar exactamente sobre el slot
         const initialLeft = rect.left + rect.width / 2 - floatingEl.offsetWidth / 2;
         const initialTop = rect.top + window.scrollY;
         
         floatingEl.style.left = `${initialLeft}px`;
         floatingEl.style.top = `${initialTop}px`; 
 
-        // 4. Aplicar la levitación mágica después de un tick para la transición
+        // Aplicar la levitación mágica después de un tick
         requestAnimationFrame(() => {
             floatingEl.style.transform = `translateY(calc(var(--ingredient-lift) * -1)) scale(1.1)`;
         });
 
-        // 5. Agregar listener para deseleccionar (retornar a la caja)
+        // Listener para deseleccionar (retornar a la caja)
         floatingEl.addEventListener('click', () => {
             handleSelection(ingData.nombre);
         });
@@ -518,12 +512,14 @@
         });
         
         // Post-renderizado: Crear elementos flotantes para los ingredientes que ya están seleccionados
+        // Esto debe hacerse después de que las cajas estén en el DOM para calcular la posición de los slots
         filteredInventory.forEach(ingData => {
             if (selectedItems.has(ingData.nombre)) {
-                // Encontrar el slot de origen
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 if (sourceSlot) {
-                    createFloatingElement(ingData, sourceSlot);
+                    // Usar un pequeño timeout o requestAnimationFrame para asegurar que el DOM ha sido renderizado
+                    // y getBoundingClientRect() es preciso.
+                    setTimeout(() => createFloatingElement(ingData, sourceSlot), 10);
                 }
             }
         });
@@ -547,17 +543,17 @@
             const checkbox = item.querySelector('input[type="checkbox"]');
             checkbox.addEventListener('change', () => {
                 handleSelection(ingData.nombre); 
-                // Al hacer clic, se llama a handleSelection, que actualiza el estado y luego se re-renderizan los flotantes
-                // Renderizar los flotantes de nuevo es caro, pero asegura la sincronización visual en ambos sentidos.
-                // Una optimización sería solo llamar a createFloatingElement/removeFloatingElement aquí.
                 
-                // Para una sincronización más precisa:
+                // Sincronización visual entre el checkbox y el flotante:
                 const isNowSelected = selectedItems.has(ingData.nombre);
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 
                 if (isNowSelected) {
-                    if (sourceSlot) sourceSlot.style.visibility = 'hidden';
-                    if (!floatingElements.has(ingData.nombre) && sourceSlot) createFloatingElement(ingData, sourceSlot);
+                    if (sourceSlot) {
+                         sourceSlot.style.visibility = 'hidden';
+                         // Si no existe, crearlo. Usar setTimeout para que el slot ya esté invisible.
+                         if (!floatingElements.has(ingData.nombre)) setTimeout(() => createFloatingElement(ingData, sourceSlot), 10);
+                    }
                 } else {
                     if (sourceSlot) sourceSlot.style.visibility = 'visible';
                     removeFloatingElement(ingData.nombre);
@@ -588,13 +584,12 @@
     // ANIMACIÓN FINAL Y NAVEGACIÓN
     // ===============================================
 
-    /** Ejecuta la animación de vórtice y navega a pantalla 4. */
     async function handleFinalAnimation() {
         if (selectedItems.size === 0) return;
         
         acceptButton.disabled = true;
 
-        // 1. Mostrar el contenedor del vórtice en el centro
+        // 1. Mostrar el contenedor del vórtice
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
         
@@ -604,11 +599,9 @@
             const centerVortexX = vortexContainer.offsetWidth / 2;
             const centerVortexY = vortexContainer.offsetHeight / 2;
             
-            // Calcular el desplazamiento al centro de la pantalla
             const translateX = centerVortexX - (rect.left + rect.width / 2);
             const translateY = centerVortexY - (rect.top + rect.height / 2);
             
-            // Aplicar el movimiento espiral
             el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
             el.style.transform = `
                 translate(${translateX}px, ${translateY}px) 
@@ -627,35 +620,35 @@
 
         saveSelectionToStorage();
 
-        // Navegar a la pantalla de planificación
-        if (window.loadContent) {
-            window.loadContent('pantalla4.html'); 
-        } else {
-            console.log("Navegación simulada a pantalla4.html");
-        }
+        // Navegar a la pantalla 4
+        window.loadContent('pantalla4.html'); 
     }
 
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL
+    // INICIALIZACIÓN PRINCIPAL (CORREGIDA)
     // ===============================================
 
     async function loadMenuData() {
         try {
-            loadingMessage.textContent = 'Cargando inventario mágico desde el grimorio (main.js)...';
+            loadingMessage.textContent = 'Buscando el grimorio de ingredientes en el almacén mágico...';
             
-            // 1. Cargar inventario del contexto padre (main.js). Se asume que usa cargarInventario()
-            if (window.cargarInventario) {
-                await window.cargarInventario();
-            } else {
-                throw new Error("La función 'cargarInventario' no está disponible en el contexto padre (main.js).");
+            // ⭐️ CORRECCIÓN: Usar un bucle de espera para el global 'inventarioData' 
+            // seteado por main.js, en lugar de llamar a una función que no está globalmente expuesta.
+            let attempts = 0;
+            const maxAttempts = 20; // Esperar un máximo de 2 segundos
+            const delay = 100; // 100ms
+            
+            while (!window.inventarioData && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                attempts++;
             }
             
-            // 2. Usar los datos cargados en el contexto global
+            // 2. Usar los datos cargados
             if (window.inventarioData && Array.isArray(window.inventarioData)) {
-                // Usamos la lista de ingredientes que ya debería estar filtrada por la pantalla 6 si aplica.
+                // El inventarioData contiene la lista de ingredientes de la base de datos
                 filteredInventory = window.inventarioData; 
             } else {
-                throw new Error("El inventarioData del grimorio no se pudo cargar o no tiene el formato esperado.");
+                throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible después de esperar.");
             }
             
             // 3. Crear el mapa de detalles
@@ -668,12 +661,16 @@
 
             // 5. Renderizar las dos vistas
             renderInitialList();
-            renderMagicBoxes();
             
-            // 6. Configuración final
-            toggleInitialList('minimize'); // Empezamos minimizado
-            loadingMessage.textContent = '¡Inventario cargado! Selecciona los ingredientes flotantes.';
-            updateAcceptButton();
+            // Usar setTimeout para renderizar las cajas. Esto da tiempo al navegador 
+            // para que el DOM inicial se asiente, lo que hace que getBoundingClientRect() sea más preciso.
+            setTimeout(() => {
+                renderMagicBoxes();
+                toggleInitialList('minimize'); 
+                loadingMessage.textContent = '¡Inventario cargado! Selecciona los ingredientes flotantes.';
+                updateAcceptButton();
+            }, 50);
+
 
         } catch (error) {
             loadingMessage.style.color = '#f75555';
@@ -682,8 +679,8 @@
         }
     }
     
-    // Retrasar la carga para asegurar que las funciones del padre (main.js) están cargadas
-    setTimeout(loadMenuData, 100); 
+    // Llamada de inicialización
+    loadMenuData(); 
 </script>
 </body>
 </html>
