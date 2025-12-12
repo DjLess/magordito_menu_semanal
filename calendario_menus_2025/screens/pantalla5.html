@@ -506,7 +506,7 @@
             const item = document.createElement('div');
             item.classList.add('initial-item');
             
-            // ⭐️ CORRECCIÓN: Usar ingData.cantidad_disponible para la cuenta
+            // Usar ingData.cantidad_disponible para la cuenta
             item.innerHTML = `
                 <input type="checkbox" id="checklist-${ingData.nombre.replace(/\s/g, '_')}" ${isSelected ? 'checked' : ''} data-name="${ingData.nombre}">
                 <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.cantidad_disponible || 'N/A'})</label>
@@ -590,16 +590,18 @@
     }
 
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL (CORREGIDA)
+    // INICIALIZACIÓN PRINCIPAL (CORREGIDA CON RESPALDO)
     // ===============================================
 
     async function loadMenuData() {
         try {
             loadingMessage.textContent = 'Buscando el grimorio de ingredientes en el almacén mágico...';
             
-            // Esperar a que window.inventarioData sea poblado por main.js
+            let dataLoaded = null;
+
+            // 1. INTENTO 1: Esperar por la variable global del contexto padre (ruta rápida)
             let attempts = 0;
-            const maxAttempts = 20;
+            const maxAttempts = 20; // 2 segundos
             const delay = 100; 
             
             while (!window.inventarioData && attempts < maxAttempts) {
@@ -607,23 +609,38 @@
                 attempts++;
             }
             
-            // 2. Usar los datos cargados
-            if (window.inventarioData && Array.isArray(window.inventarioData)) {
-                // ⭐️ CORRECCIÓN: Filtrar por activo: true
-                filteredInventory = window.inventarioData.filter(item => item.activo === true);
-            } else {
-                throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible después de esperar.");
+            dataLoaded = window.inventarioData;
+
+            // 2. INTENTO 2: Si el global falló, cargar desde localStorage (el respaldo)
+            if (!dataLoaded) {
+                 loadingMessage.textContent = 'El grimorio no se abrió, intentando leer la copia local de ingredientes...';
+                 const localData = localStorage.getItem('inventarioData');
+                 if (localData) {
+                    try {
+                        dataLoaded = JSON.parse(localData);
+                    } catch (e) {
+                        console.error("Error al parsear inventarioData de localStorage:", e);
+                    }
+                 }
             }
             
-            // 3. Crear el mapa de detalles
+            // 3. Usar los datos cargados (ya sean del global o del local)
+            if (dataLoaded && Array.isArray(dataLoaded)) {
+                // Filtrar por activo: true
+                filteredInventory = dataLoaded.filter(item => item.activo === true);
+            } else {
+                throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible.");
+            }
+            
+            // 4. Crear el mapa de detalles
             filteredInventory.forEach(item => {
                 inventoryDetailsMap.set(item.nombre, item);
             });
 
-            // 4. Cargar la selección previa y sincronizar
+            // 5. Cargar la selección previa y sincronizar
             loadSelectionFromStorage();
 
-            // 5. Renderizar las dos vistas
+            // 6. Renderizar las dos vistas
             renderInitialList();
             
             setTimeout(() => {
