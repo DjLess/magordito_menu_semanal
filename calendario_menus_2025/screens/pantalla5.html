@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Taller del Mago - Selección de Ingredientes</title>
+    <title>El Taller del Mago: Selección de Ingredientes</title>
     
     <style>
         /* ======================================================================= */
@@ -27,8 +27,8 @@
             padding: 10px;
             text-align: center;
             font-size: 0.9em;
-            overflow-x: hidden; /* Previene overflow por la animación */
-            position: relative; /* Para la animación del vórtice */
+            overflow-x: hidden;
+            position: relative;
         }
         
         h2 {
@@ -86,18 +86,44 @@
         }
 
         /* ------------------------------------------------------------------- */
-        /* GALERÍA DE CAJAS MÁGICAS */
+        /* GALERÍA DE CAJAS MÁGICAS (Con Scroll Horizontal) */
         /* ------------------------------------------------------------------- */
+
+        /* Contenedor que maneja el posicionamiento de las flechas */
+        #gallery-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        /* Contenedor principal de las cajas: habilita el scroll horizontal */
         #magic-boxes-gallery {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-wrap: nowrap; /* CRUCIAL: Mantiene los elementos en una sola línea */
+            overflow-x: scroll; /* Permite el scroll horizontal */
+            overflow-y: hidden;
+            scroll-behavior: smooth; /* Para la animación de las flechas */
             gap: 20px;
             padding: 20px 0;
+            width: 90%; /* Limitar el ancho para que quepan las flechas */
+            -webkit-overflow-scrolling: touch; /* Mejorar el scroll en iOS */
+        }
+        
+        /* Ocultar la barra de scroll nativa (Opcional, para estética) */
+        #magic-boxes-gallery::-webkit-scrollbar {
+            display: none;
+        }
+        #magic-boxes-gallery {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
         }
         
         .magic-box {
             width: 150px;
+            min-width: 150px; /* Asegura que la caja no se comprima */
             height: 150px;
             background-color: var(--box-bg-color);
             border: 3px solid var(--box-border-color);
@@ -139,6 +165,27 @@
         .ing-slot:hover {
             background-color: #30363d;
         }
+        
+        /* Flechas de Navegación */
+        .scroll-button {
+            position: absolute;
+            padding: 10px 15px;
+            background-color: rgba(22, 27, 34, 0.8);
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        #scroll-left { left: 0; }
+        #scroll-right { right: 0; }
+
+        .scroll-button:hover {
+            background-color: var(--box-bg-color);
+        }
 
         /* ------------------------------------------------------------------- */
         /* EFECTO FLOTANTE MÁGICO */
@@ -149,12 +196,7 @@
             cursor: pointer;
             text-align: center;
             opacity: 1;
-            /* La posición inicial se establece en JS */
-            
-            /* Transiciones de movimiento y opacidad */
-            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0s, top 0s;
-            
-            /* Animación de levitación sutil */
+            transition: transform 0.5s ease-in-out, opacity 0.5s;
             animation: subtle-float 2s ease-in-out infinite alternate;
         }
         
@@ -167,7 +209,7 @@
             font-size: 0.7em;
             font-weight: 600;
             color: var(--text-color);
-            text-shadow: 0 0 5px var(--accent-color); /* Toque mágico */
+            text-shadow: 0 0 5px var(--accent-color);
         }
 
         @keyframes subtle-float {
@@ -240,7 +282,7 @@
 <body>
 
     <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
-    <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico...</div>
+    <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
 
     <div id="initial-selection-container">
         <div id="initial-selection-list"> 
@@ -249,8 +291,12 @@
         <button id="maximize-button" onclick="toggleInitialList('maximize')" style="display:none;">Traer Lista</button>
     </div>
     
-    <div id="magic-boxes-gallery">
-        </div>
+    <div id="gallery-wrapper">
+        <button id="scroll-left" class="scroll-button" onclick="scrollGallery(-1)">←</button>
+        <div id="magic-boxes-gallery">
+            </div>
+        <button id="scroll-right" class="scroll-button" onclick="scrollGallery(1)">→</button>
+    </div>
     
     <div id="vortex-container">
         <div class="vortex"></div>
@@ -270,49 +316,22 @@
     const magicBoxesGallery = document.getElementById('magic-boxes-gallery');
     const acceptButton = document.getElementById('accept-button');
 
-    // DATOS GLOBALES (Asumidos del contexto padre: main.js)
-    let inventoryData = null;  // Objeto { inventario: [...] }
+    // DATOS GLOBALES
     let filteredInventory = []; // Inventario después de aplicar filtros
     let selectedItems = new Set(); // Nombres de ingredientes seleccionados
     let floatingElements = new Map(); // Mapa para rastrear los elementos flotantes: nombre -> DOM Element
-    
-    // Asumimos estas funciones de persistencia existen en el contexto padre o global
-    if (typeof window.persistirInventario !== 'function') {
-         window.persistirInventario = () => console.warn("DEBUG: Función persistirInventario no definida.");
-    }
-    if (typeof window.cargarInventario !== 'function') {
-         window.cargarInventario = async () => { 
-             console.warn("DEBUG: Usando inventario mock.");
-             // Mock de inventario si no se puede cargar del padre
-             window.inventarioData = [
-                { nombre: 'Pollo', emoji: '🐔', categoria: 'principal', availability: 3 },
-                { nombre: 'Arroz', emoji: '🍚', categoria: 'carbohidratos', availability: 5 },
-                { nombre: 'Brócoli', emoji: '🥦', categoria: 'verduras', availability: 4 },
-                { nombre: 'Salmón', emoji: '🐟', categoria: 'principal', availability: 2 },
-                { nombre: 'Pasta', emoji: '🍝', categoria: 'carbohidratos', availability: 3 },
-                { nombre: 'Zanahoria', emoji: '🥕', categoria: 'verduras', availability: 6 },
-                { nombre: 'Pavo', emoji: '🦃', categoria: 'principal', availability: 1 },
-                { nombre: 'Quinoa', emoji: '🌾', categoria: 'carbohidratos', availability: 3 },
-                { nombre: 'Tomate', emoji: '🍅', categoria: 'verduras', availability: 5 },
-                { nombre: 'Comodín', emoji: '✨', categoria: 'especial', availability: 1 },
-             ];
-         };
-    }
-    if (typeof window.loadContent !== 'function') {
-         window.loadContent = (url) => console.log(`DEBUG: Navegando a ${url}`);
-    }
-    
-    // Mapa auxiliar para obtener datos por nombre rápidamente
-    let inventoryDetailsMap = new Map(); 
+    let inventoryDetailsMap = new Map(); // Mapa auxiliar para obtener datos por nombre rápidamente
 
     // ===============================================
     // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO
     // ===============================================
 
     function saveSelectionToStorage() {
+        // Guardamos la lista final de ingredientes seleccionados para pantalla4.html
         const selectionData = {
             selectedItems: Array.from(selectedItems),
         };
+        // Usamos una clave más específica para evitar colisiones con la lógica anterior de pantalla5
         localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
         updateAcceptButton();
     }
@@ -331,45 +350,53 @@
     }
 
     // ===============================================
+    // LÓGICA DE NAVEGACIÓN HORIZONTAL (Scroll)
+    // ===============================================
+    
+    function scrollGallery(direction) {
+        const scrollAmount = magicBoxesGallery.clientWidth * 0.7; // Desplazar un 70% del ancho visible
+        
+        if (direction === 1) {
+            magicBoxesGallery.scrollLeft += scrollAmount;
+        } else {
+            magicBoxesGallery.scrollLeft -= scrollAmount;
+        }
+    }
+
+
+    // ===============================================
     // LÓGICA DE SELECCIÓN MÁGICA
     // ===============================================
 
     /**
      * Alterna la selección de un ingrediente y aplica el efecto de levitación/retorno.
      * @param {string} ingName - Nombre del ingrediente.
-     * @param {HTMLElement} boxElement - Elemento de la caja de ingrediente (solo si se llama desde la caja).
      */
-    function handleSelection(ingName, ingId, isChecklist = false) {
+    function handleSelection(ingName) {
         const isSelected = selectedItems.has(ingName);
         const ingData = inventoryDetailsMap.get(ingName);
         
         if (!ingData) return;
 
+        // Sincronizar el slot en la caja (si existe)
+        const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
+        
         if (isSelected) {
             // DESELECCIONAR: Retornar a la caja
             selectedItems.delete(ingName);
             removeFloatingElement(ingName);
+            if (boxSlot) boxSlot.style.visibility = 'visible'; // Mostrar slot en la caja
         } else {
             // SELECCIONAR: Aplicar levitación
             selectedItems.add(ingName);
             
-            // Si se selecciona desde la checklist, necesitamos encontrar su posición en la galería
-            if (isChecklist) {
-                // En la checklist, solo marcamos. La renderización de las cajas debe sincronizarse.
-                // Por simplicidad, no creamos el elemento flotante aquí, sino que actualizamos los checkboxes de la checklist.
-                const checkbox = document.querySelector(`#checklist-${ingId}`);
-                if (checkbox) checkbox.checked = true;
-            } 
-            
-            // Si se selecciona desde la caja (o se sincroniza después de la checklist)
-            // Necesitamos saber qué slot de la caja vamos a "vaciar" y usar para el elemento flotante.
-            const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
+            // Crear y levantar el elemento flotante
             if (boxSlot) {
-                // Ocultar el slot original en la caja
-                boxSlot.style.visibility = 'hidden'; 
-                
-                // Crear y levantar el elemento flotante
+                boxSlot.style.visibility = 'hidden'; // Ocultar slot original
                 createFloatingElement(ingData, boxSlot);
+            } else {
+                // Caso extremo: si el ingrediente está en la lista pero no en una caja (debería estar)
+                console.warn(`No se encontró slot para ${ingName}. Creando flotante sin origen visible.`);
             }
         }
         
@@ -377,21 +404,12 @@
         // Sincronizar el checkbox de la lista inicial
         const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
-        
-        // Si se deselecciona, reaparecer el slot en la caja
-        if (!selectedItems.has(ingName)) {
-            const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
-            if (boxSlot) boxSlot.style.visibility = 'visible';
-        }
     }
     
     /**
      * Crea y posiciona el elemento flotante mágico.
-     * @param {object} ingData - Objeto del ingrediente.
-     * @param {HTMLElement} sourceElement - El elemento de origen (slot en la caja mágica).
      */
     function createFloatingElement(ingData, sourceElement) {
-        // Si ya está flotando, no hacer nada (o manejar un doble click si fuera necesario)
         if (floatingElements.has(ingData.nombre)) return;
 
         // 1. Obtener la posición del slot de origen
@@ -410,16 +428,16 @@
         // 3. Posicionamiento inicial: Se agrega al body y se posiciona exactamente sobre el slot
         document.body.appendChild(floatingEl);
         
-        // Usamos requestAnimationFrame para asegurar que el elemento se ha añadido al DOM
+        // Posicionar con respecto a la ventana, sumando el scroll
+        const initialLeft = rect.left + rect.width / 2 - floatingEl.offsetWidth / 2;
+        const initialTop = rect.top + window.scrollY;
+        
+        floatingEl.style.left = `${initialLeft}px`;
+        floatingEl.style.top = `${initialTop}px`; 
+
+        // 4. Aplicar la levitación mágica después de un tick para la transición
         requestAnimationFrame(() => {
-            // Posicionar con respecto a la ventana, sumando el scroll (si lo hubiera)
-            floatingEl.style.left = `${rect.left + rect.width / 2 - floatingEl.offsetWidth / 2}px`;
-            floatingEl.style.top = `${rect.top + window.scrollY}px`; 
-            
-            // 4. Aplicar la levitación mágica después de una micro-pausa para la transición
-            setTimeout(() => {
-                 floatingEl.style.transform = `translateY(calc(var(--ingredient-lift) * -1)) scale(1.1)`;
-            }, 50);
+            floatingEl.style.transform = `translateY(calc(var(--ingredient-lift) * -1)) scale(1.1)`;
         });
 
         // 5. Agregar listener para deseleccionar (retornar a la caja)
@@ -430,8 +448,25 @@
         floatingElements.set(ingData.nombre, floatingEl);
     }
     
+    /** Elimina un elemento flotante del DOM. */
+    function removeFloatingElement(ingName) {
+        const el = floatingElements.get(ingName);
+        if (el) {
+            // Animación de retorno rápida
+            el.style.transform = `translateY(0) scale(1)`;
+            el.style.opacity = '0';
+            
+            // Eliminar del DOM después de la animación
+            setTimeout(() => {
+                el.remove();
+                floatingElements.delete(ingName);
+            }, 500);
+        }
+    }
+
+
     // ===============================================
-    // LÓGICA DE RENDERIZADO
+    // RENDERIZADO
     // ===============================================
     
     /** Agrupa los ingredientes disponibles en grupos de 5. */
@@ -446,6 +481,11 @@
     /** Renderiza la galería de cajas mágicas y los slots de ingredientes. */
     function renderMagicBoxes() {
         magicBoxesGallery.innerHTML = '';
+        
+        // Limpiar elementos flotantes existentes antes de re-renderizar
+        floatingElements.forEach(el => el.remove());
+        floatingElements.clear();
+
         const ingredientGroups = groupIngredients(filteredInventory);
         
         ingredientGroups.forEach((group, index) => {
@@ -461,21 +501,31 @@
                 slot.setAttribute('data-name', ingData.nombre);
                 slot.innerHTML = ingData.emoji;
                 
-                // Si está seleccionado, ocultar el slot e inmediatamente crear el elemento flotante
+                // Si ya está seleccionado, ocultar slot inmediatamente
                 if (isSelected) {
                     slot.style.visibility = 'hidden';
-                    createFloatingElement(ingData, slot); // Asegura que el flotante se crea/recrea al cargar
                 }
                 
-                // Listener para seleccionar (aplicar levitación)
+                // Listener para seleccionar (aplicar levitación/retornar)
                 slot.addEventListener('click', () => {
-                    handleSelection(ingData.nombre); // Llama a la lógica principal de selección
+                    handleSelection(ingData.nombre);
                 });
                 
                 box.appendChild(slot);
             });
             
             magicBoxesGallery.appendChild(box);
+        });
+        
+        // Post-renderizado: Crear elementos flotantes para los ingredientes que ya están seleccionados
+        filteredInventory.forEach(ingData => {
+            if (selectedItems.has(ingData.nombre)) {
+                // Encontrar el slot de origen
+                const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
+                if (sourceSlot) {
+                    createFloatingElement(ingData, sourceSlot);
+                }
+            }
         });
     }
 
@@ -491,21 +541,30 @@
             
             item.innerHTML = `
                 <input type="checkbox" id="checklist-${ingData.nombre.replace(/\s/g, '_')}" ${isSelected ? 'checked' : ''} data-name="${ingData.nombre}">
-                <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.availability})</label>
+                <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.availability || 'N/A'})</label>
             `;
             
             const checkbox = item.querySelector('input[type="checkbox"]');
-            checkbox.addEventListener('change', (e) => {
-                // Si se marca en la checklist, debe reflejarse en las cajas
-                handleSelection(ingData.nombre, null, true); 
+            checkbox.addEventListener('change', () => {
+                handleSelection(ingData.nombre); 
+                // Al hacer clic, se llama a handleSelection, que actualiza el estado y luego se re-renderizan los flotantes
+                // Renderizar los flotantes de nuevo es caro, pero asegura la sincronización visual en ambos sentidos.
+                // Una optimización sería solo llamar a createFloatingElement/removeFloatingElement aquí.
                 
-                // Forzar la re-renderización de las cajas flotantes después de un cambio en la checklist
-                // Esta es una solución simple para sincronizar las vistas.
-                renderMagicBoxes();
+                // Para una sincronización más precisa:
+                const isNowSelected = selectedItems.has(ingData.nombre);
+                const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
+                
+                if (isNowSelected) {
+                    if (sourceSlot) sourceSlot.style.visibility = 'hidden';
+                    if (!floatingElements.has(ingData.nombre) && sourceSlot) createFloatingElement(ingData, sourceSlot);
+                } else {
+                    if (sourceSlot) sourceSlot.style.visibility = 'visible';
+                    removeFloatingElement(ingData.nombre);
+                }
             });
 
             listContainer.appendChild(item);
-            
         });
     }
     
@@ -539,21 +598,18 @@
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
         
-        const centerVortexX = vortexContainer.offsetWidth / 2;
-        const centerVortexY = vortexContainer.offsetHeight / 2;
-
-        // 2. Aplicar la animación a cada elemento flotante
-        floatingElements.forEach((el, ingName) => {
+        // 2. Aplicar la animación de vórtice a los elementos flotantes
+        floatingElements.forEach((el) => {
             const rect = el.getBoundingClientRect();
+            const centerVortexX = vortexContainer.offsetWidth / 2;
+            const centerVortexY = vortexContainer.offsetHeight / 2;
             
-            // Calcular la distancia a la que deben ser arrastrados
-            const translateX = centerVortexX - rect.left - rect.width / 2;
-            const translateY = centerVortexY - rect.top - rect.height / 2;
+            // Calcular el desplazamiento al centro de la pantalla
+            const translateX = centerVortexX - (rect.left + rect.width / 2);
+            const translateY = centerVortexY - (rect.top + rect.height / 2);
             
-            // Establecer el origen de la transformación al centro del vórtice
+            // Aplicar el movimiento espiral
             el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
-            
-            // Aplicar el movimiento espiral (combina el translate con la escala y rotación de vortex-pull)
             el.style.transform = `
                 translate(${translateX}px, ${translateY}px) 
                 scale(0.1) 
@@ -567,14 +623,16 @@
         
         // 4. Limpiar y navegar
         floatingElements.forEach(el => el.remove());
-        floatingElements.clear();
         vortexContainer.style.display = 'none';
 
-        // Guardamos la selección final antes de navegar
         saveSelectionToStorage();
 
         // Navegar a la pantalla de planificación
-        window.loadContent('pantalla4.html'); 
+        if (window.loadContent) {
+            window.loadContent('pantalla4.html'); 
+        } else {
+            console.log("Navegación simulada a pantalla4.html");
+        }
     }
 
     // ===============================================
@@ -583,19 +641,22 @@
 
     async function loadMenuData() {
         try {
-            loadingMessage.textContent = 'Cargando inventario mágico desde el grimorio...';
+            loadingMessage.textContent = 'Cargando inventario mágico desde el grimorio (main.js)...';
             
-            // 1. Cargar inventario del contexto padre (main.js)
-            await window.cargarInventario();
-            if (window.inventarioData) {
-                inventoryData = { inventario: window.inventarioData };
+            // 1. Cargar inventario del contexto padre (main.js). Se asume que usa cargarInventario()
+            if (window.cargarInventario) {
+                await window.cargarInventario();
             } else {
-                throw new Error("El inventarioData del grimorio no se pudo cargar.");
+                throw new Error("La función 'cargarInventario' no está disponible en el contexto padre (main.js).");
             }
-
-            // 2. Aplicar un filtrado básico (asumimos que la Configuración Rápida ya lo hizo, aquí solo usamos los disponibles)
-            // Para esta versión simple, usamos todo el inventario cargado.
-            filteredInventory = inventoryData.inventario || [];
+            
+            // 2. Usar los datos cargados en el contexto global
+            if (window.inventarioData && Array.isArray(window.inventarioData)) {
+                // Usamos la lista de ingredientes que ya debería estar filtrada por la pantalla 6 si aplica.
+                filteredInventory = window.inventarioData; 
+            } else {
+                throw new Error("El inventarioData del grimorio no se pudo cargar o no tiene el formato esperado.");
+            }
             
             // 3. Crear el mapa de detalles
             filteredInventory.forEach(item => {
@@ -611,7 +672,7 @@
             
             // 6. Configuración final
             toggleInitialList('minimize'); // Empezamos minimizado
-            loadingMessage.textContent = '¡Inventario cargado! Haz magia con tus ingredientes.';
+            loadingMessage.textContent = '¡Inventario cargado! Selecciona los ingredientes flotantes.';
             updateAcceptButton();
 
         } catch (error) {
