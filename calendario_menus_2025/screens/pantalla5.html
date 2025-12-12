@@ -3,1376 +3,626 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selección de Menús e Ingredientes</title>
+    <title>El Taller del Mago - Selección de Ingredientes</title>
+    
     <style>
         /* ======================================================================= */
-        /* VARIABLES DE CARTA DE INGREDIENTE Y PLATO (Integradas de pantalla3.html) */
+        /* VARIABLES Y ESTILOS BASE (Tema Oscuro Mágico) */
         /* ======================================================================= */
         :root {
             --bg-color: #0d1117;
             --text-color: #c9d1d9;
-            --card-bg-color: #2b313a; 
-            --card-border-color: #484f58;
-            --selection-color: #58a6ff;
+            --accent-color: #58a6ff; /* Azul mágico */
             --success-color: #238636;
-            --failure-color: #a00000;
-            --lift-amount: 0px; 
-            
-            /* VARIABLES PARA TARJETA DE INGREDIENTE (Ajustadas para la Galería) */
-            --ing-card-width: 90px; 
-            --ing-card-aspect-ratio: calc(70 / 49); 
-            --ing-card-calculated-height: calc(var(--ing-card-width) * var(--ing-card-aspect-ratio)); 
-            
-            /* VARIABLES PARA TARJETA DE PLATO (Ajustadas para la Galería) */
-            --dish-card-width: 120px; 
-            --dish-card-aspect-ratio: calc(70 / 49);
-            --dish-card-calculated-height: calc(var(--dish-card-width) * var(--dish-card-aspect-ratio));
+            --box-bg-color: #161b22; /* Fondo de las cajas mágicas */
+            --box-border-color: #30363d;
+            --vortex-color: rgba(88, 166, 255, 0.8);
+            --ingredient-lift: 50px; /* Distancia de levitación */
         }
         
-        /* Estilos base */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 10px;
             text-align: center;
-            font-size: 0.85em; 
+            font-size: 0.9em;
+            overflow-x: hidden; /* Previene overflow por la animación */
+            position: relative; /* Para la animación del vórtice */
         }
         
         h2 {
-            font-size: 1.4em;
+            font-size: 1.6em;
+            color: var(--accent-color);
             margin-bottom: 20px;
-            color: var(--selection-color);
         }
 
-        #main-container {
-            display: flex;
-            justify-content: space-around;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+        /* ------------------------------------------------------------------- */
+        /* CONTENEDOR DE LISTA INICIAL (Checklist de Ingredientes) */
+        /* ------------------------------------------------------------------- */
+        #initial-selection-container {
+            background-color: #1f242b;
+            border: 1px solid var(--box-border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            transition: max-height 0.5s ease-in-out, opacity 0.3s;
+        }
+        
+        #initial-selection-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding-top: 10px;
             text-align: left;
         }
-
-        .list-section {
-            flex: 1;
-            min-width: 45%;
-        }
-
-        .list-section h3 {
-            color: var(--success-color);
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
         
-        /* Contenedor de Ingredientes Personalizados (Detalles) */
-        #custom-ingredients-section {
-            background-color: #161b22;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #30363d;
-            text-align: left; /* Asegura que el contenido interno sea legible */
-        }
-        
-        #custom-ingredients-section details {
-             background-color: #1f242b;
-             border-radius: 6px;
-             border: 1px solid #484f58;
-             padding: 10px;
-        }
-        
-        #custom-ingredients-section summary {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #ffa500; /* Color naranja para destacar Custom */
-            cursor: pointer;
+        .initial-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
             padding: 5px;
+            border-bottom: 1px dashed #30363d;
         }
         
-        #custom-ingredients-list {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #30363d;
-        }
-
-
-        /* ------------------------------------------------------------------- */
-        /* LAYOUT DE COLUMNAS CON CSS GRID (Nuevo) */
-        /* ------------------------------------------------------------------- */
-
-        #dishes-list, #ingredients-list {
-            display: grid;
-            /* Columnas automáticas con un mínimo de 110px para platos, 80px para ingredientes */
-            grid-template-columns: repeat(auto-fill, minmax(var(--dish-card-width), 1fr)); 
-            gap: 15px; 
-            padding: 10px;
-            max-height: 70vh; 
-            overflow-y: auto; 
-            background-color: #161b22; /* Fondo de lista */
-            border: 1px solid #30363d;
-            border-radius: 8px;
-        }
-        
-        #ingredients-list {
-            grid-template-columns: repeat(auto-fill, minmax(var(--ing-card-width), 1fr)); 
-        }
-
-        /* Contenedor de la Tarjeta dentro del Grid */
-        .list-item { 
-            display: block; 
-            padding: 0;
-            margin-bottom: 0;
-            background-color: transparent;
+        #minimize-button, #maximize-button {
+            padding: 8px 15px;
             border: none;
+            border-radius: 4px;
+            font-weight: bold;
             cursor: pointer;
-            position: relative;
+            margin-top: 10px;
         }
+        
+        #minimize-button { background-color: #ffa500; color: #161b22; }
+        #maximize-button { background-color: var(--accent-color); color: #161b22; }
 
-        .list-item:hover {
-            background-color: transparent;
-        }
-
-        /* Clase para items seleccionados */
-        .list-item.selected .ingredient-card,
-        .list-item.selected .result-dish-card {
-            border-color: var(--selection-color) !important;
-            box-shadow: 0 0 10px var(--selection-color);
-            transform: scale(1.02);
+        .minimized #initial-selection-list {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
         }
 
         /* ------------------------------------------------------------------- */
-        /* ESTILOS DE CARTA DE INGREDIENTE (Adaptados de pantalla3.html) */
+        /* GALERÍA DE CAJAS MÁGICAS */
         /* ------------------------------------------------------------------- */
-        .ingredient-card {
-            width: 100%; 
-            height: 0;
-            padding-bottom: calc(100% * var(--ing-card-aspect-ratio)); 
-            
-            background-color: var(--card-bg-color); 
-            border: 2px solid var(--card-border-color); 
+        #magic-boxes-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .magic-box {
+            width: 150px;
+            height: 150px;
+            background-color: var(--box-bg-color);
+            border: 3px solid var(--box-border-color);
             border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
             position: relative;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-            user-select: none;
-            
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s;
-        }
-        
-        .ingredient-card:hover {
-            transform: scale(1.05); 
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6);
-        }
-
-        .ingredient-card > div.card-content-wrapper {
-            position: absolute;
-            top: 5px; 
-            left: 5px; 
-            width: calc(100% - 10px); 
-            height: calc(100% - 10px); 
+            padding: 10px;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            
-            background-color: #1f242b; 
-            border-radius: 6px; 
-            box-sizing: border-box; 
-            padding-top: 20px;
-            padding-bottom: 5px;
-        }
-        
-        .card-corner {
-            position: absolute;
-            font-size: 0.9em; 
-            font-weight: 700;
-            line-height: 1;
-            z-index: 5;
-            color: var(--text-color);
-            pointer-events: none; 
-            top: 7px;
-            left: 7px;
-        }
-
-        .card-emoji {
-            font-size: 2.5em; 
-            line-height: 1;
-            flex-grow: 1; 
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
+            gap: 5px;
+            transition: border-color 0.3s;
         }
 
-        .card-name {
-            font-size: 0.8em; 
-            font-weight: 600;
+        .box-title {
+            position: absolute;
+            top: -15px;
+            background: var(--bg-color);
+            padding: 0 8px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #ffa500;
+            font-weight: bold;
+        }
+
+        .ing-slot {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .ing-slot:hover {
+            background-color: #30363d;
+        }
+
+        /* ------------------------------------------------------------------- */
+        /* EFECTO FLOTANTE MÁGICO */
+        /* ------------------------------------------------------------------- */
+        .floating-ingredient {
+            position: absolute; 
+            z-index: 100;
+            cursor: pointer;
             text-align: center;
-            padding: 0 3px;
-            height: 2em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            overflow: hidden; 
-            text-overflow: ellipsis;
-            line-height: 1.1;
+            opacity: 1;
+            /* La posición inicial se establece en JS */
+            
+            /* Transiciones de movimiento y opacidad */
+            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0s, top 0s;
+            
+            /* Animación de levitación sutil */
+            animation: subtle-float 2s ease-in-out infinite alternate;
         }
         
-        /* Colores de Marco por Tipo */
-        .ingredient-card[data-type="Principal"] { border-color: #ff4081; } /* Rosado */
-        .ingredient-card[data-type="Carbohidrato"] { border-color: #ffeb3b; } /* Amarillo */
-        .ingredient-card[data-type="Verdura"] { border-color: #4caf50; } /* Verde */
-        .ingredient-card[data-type="Custom"] { border-color: #ffa500; } /* Naranja */
+        .floating-ingredient .ing-emoji {
+            font-size: 2.5em;
+            line-height: 1;
+        }
         
-        /* Controles de la Tarjeta de Ingrediente */
-        .ingredient-controls-overlay {
-            position: absolute;
-            bottom: 0px; 
+        .floating-ingredient .ing-name {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: var(--text-color);
+            text-shadow: 0 0 5px var(--accent-color); /* Toque mágico */
+        }
+
+        @keyframes subtle-float {
+            from { transform: translateY(calc(var(--ingredient-lift) * -1)) scale(1.1); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
+            to { transform: translateY(calc(var(--ingredient-lift) * -1.1)) scale(1.05); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
+        }
+        
+        /* ------------------------------------------------------------------- */
+        /* BOTÓN DE ACCIÓN Y VÓRTICE FINAL */
+        /* ------------------------------------------------------------------- */
+        #accept-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s;
+            z-index: 200;
+        }
+        
+        #accept-button:disabled {
+            background-color: #30363d;
+            cursor: not-allowed;
+        }
+
+        /* Contenedor de la animación del vórtice */
+        #vortex-container {
+            position: fixed;
+            top: 0;
             left: 0;
             width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 5px 5px 5px;
-            background: rgba(13, 17, 23, 0.7); 
-            border-radius: 0 0 10px 10px;
-            box-sizing: border-box;
-            z-index: 10;
-            height: 30px; 
-        }
-        
-        .ingredient-controls-overlay .availability-select {
-            width: 50px; 
-            font-size: 0.7em;
-            padding: 2px;
-        }
-        
-        .ingredient-controls-overlay input[type="checkbox"] {
-            width: 18px; 
-            height: 18px;
-            accent-color: var(--success-color);
-        }
-
-        /* ------------------------------------------------------------------- */
-        /* ESTILO DE CARTA DE PLATO (Adaptados de pantalla3.html) */
-        /* ------------------------------------------------------------------- */
-        .result-dish-card {
-            width: 100%; 
-            height: 0;
-            padding-bottom: var(--dish-card-calculated-height); 
-            
-            background-color: var(--card-bg-color); 
-            border: 2px solid var(--card-border-color);
-            border-radius: 8px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5); 
-            
-            margin: 0; 
-            cursor: pointer;
-            position: relative; 
-            user-select: none;
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-        }
-        
-        .result-dish-card:hover {
-            transform: scale(1.05); 
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.6), 0 0 10px rgba(88, 166, 255, 0.3);
-        }
-        
-        .result-dish-card .card-inner-content {
-            position: absolute;
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            display: flex;
-            flex-direction: column;
-            padding: 3px; 
-            box-sizing: border-box;
-            background-color: #1f242b; 
-            border-radius: 6px;
-        }
-        
-        .result-dish-card .card-image-zone {
-            flex: 0 0 45%; 
-            width: 100%;
-            display: flex;
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            border-radius: 4px;
-            margin-bottom: 2px;
-            background-color: #38404a; 
-            padding: 5px 0;
-        }
-
-        .result-dish-card .card-main-emoji {
-            font-size: 2em; 
-            line-height: 1; 
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.4), 0 0 7px rgba(0, 0, 0, 0.8);
-            flex-grow: 1; 
-            display: flex;
+            height: 100%;
+            pointer-events: none;
+            z-index: 150;
+            display: none;
             align-items: center;
             justify-content: center;
         }
-
-        .result-dish-card .card-secondary-emojis {
-            display: none; /* Simplificado para la galería */
-        }
         
-        .result-dish-card .card-ingredients-zone {
-            flex: 1; 
-            width: 100%;
-            background-color: #38404a;
-            border-radius: 4px;
-            padding: 5px;
-            overflow-y: auto; /* Permitir scroll si la lista es larga */
-            color: #f0f6fc;
-            text-align: center;
-            font-size: 0.75em; 
-            line-height: 1.1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start; 
-            position: relative;
+        .vortex {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(0,0,0,0) 0%, var(--vortex-color) 70%, rgba(0,0,0,0) 100%);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .result-dish-card .card-dish-name {
-            position: relative;
-            font-size: 0.85em; 
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 3px;
-            line-height: 1.1;
-        }
-
-        .result-dish-card .card-ingredients-list {
-            position: relative;
-            text-align: left;
-            font-size: 0.6em; 
-            line-height: 1.2;
-            list-style: none;
-            padding: 0 3px;
-            margin: 0;
-            flex-grow: 1;
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
-        .result-dish-card .card-ingredients-list li {
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        
-        .dish-controls-overlay {
-            position: absolute;
-            bottom: 5px; 
-            right: 5px;
-            z-index: 10;
-        }
-        
-        .dish-controls-overlay input[type="checkbox"] {
-            width: 18px; 
-            height: 18px;
-            accent-color: var(--success-color);
-        }
-        
-        /* ------------------------------------------------------------------- */
-        /* Estilos de Ingredientes Personalizados y Botones (Mantenidos) */
-        /* ------------------------------------------------------------------- */
-
-        .custom-ingredient-item {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-            border-bottom: 1px dashed #30363d;
-            padding-bottom: 10px;
-        }
-        
-        .tool-button-group {
-            display: flex; 
-            justify-content: center; 
-            gap: 15px;
-            margin-bottom: 20px; 
-        }
-        
-        /* ------------------------------------------------------------------- */
-        /* Responsive */
-        /* ------------------------------------------------------------------- */
-        @media (max-width: 768px) {
-            #main-container {
-                flex-direction: column;
-            }
-            .list-section {
-                min-width: 100%;
-            }
-            #dishes-list, #ingredients-list {
-                /* Permitir tarjetas más pequeñas en móvil */
-                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
-            }
-            .custom-ingredient-item {
-                flex-wrap: wrap;
+        /* Animación para los ingredientes al entrar al vórtice */
+        @keyframes vortex-pull {
+            to {
+                transform: translate(-50%, -50%) scale(0.1) rotate(720deg);
+                opacity: 0;
             }
         }
+        
     </style>
 </head>
 <body>
 
-    <div id="global-controls" style="text-align: center; margin-bottom: 20px;">
-        <button onclick="selectAllDishes()" style="background-color: #238636; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-right: 10px;">✅ Marcar Todos los Platos</button>
-        <button onclick="deselectAllDishes()" style="background-color: #a00000; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">❌ Desmarcar Todos los Platos</button>
-    </div>
+    <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
+    <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico...</div>
 
-    <h2>Lista de Platos e Ingredientes (Con Selección de Tarjetas)</h2>
+    <div id="initial-selection-container">
+        <div id="initial-selection-list"> 
+            </div>
+        <button id="minimize-button" onclick="toggleInitialList('minimize')">Minimizar Lista</button>
+        <button id="maximize-button" onclick="toggleInitialList('maximize')" style="display:none;">Traer Lista</button>
+    </div>
     
-    <div id="loading-message" style="color: #58a6ff; margin-top: 15px; text-align: center;">Cargando menú desde GitHub...</div>
+    <div id="magic-boxes-gallery">
+        </div>
+    
+    <div id="vortex-container">
+        <div class="vortex"></div>
+    </div>
+    
+    <button id="accept-button" onclick="handleFinalAnimation()" disabled>Aceptar (0 ingredientes)</button>
 
-    <div id="custom-ingredients-section">
-        <details>
-            <summary>✨ Configuración de Ingredientes Personalizados (5 Slots)</summary>
-            <p style="font-size:0.8em; color: #8b949e; margin-top: 10px; margin-bottom: 10px;">Define un ingrediente, su categoría, el plato asociado y la **disponibilidad (veces)**. Haz clic en "Aplicar" para guardar y actualizar las listas.</p>
-            <div id="custom-ingredients-list">
-                </div>
-            <div id="custom-status" style="margin-top: 10px; color: #f75555; text-align: center;"></div>
-        </details>
-    </div>
-    
-    <div id="main-container">
-        <div class="list-section">
-            <h3>Platos Principales</h3>
-            <div id="dishes-list">
-                </div>
-        </div>
-        <div class="list-section">
-            <h3>Ingredientes (Estándar y Personalizados)</h3>
-            <div id="ingredients-list">
-                </div>
-        </div>
-    </div>
-    
-    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #30363d;">
-        <h3 style="color: #58a6ff; margin-bottom: 15px; font-size: 1.2em;">Otras Herramientas</h3>
-        <div class="tool-button-group">
-            <button onclick="window.location.href='pantalla7.html'" style="background-color: #238636; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">JUEGO (Pantalla 7)</button>
-            <button onclick="window.location.href='pantalla2.html'" style="background-color: #58a6ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">GENERADOR DE MENÚ</button>
-            <button onclick="saveAndClose()" style="background-color: #a00000; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Guardar y Cerrar</button>
-        </div>
-    </div>
-    <script>
+
+<script>
     // ===============================================
-    // *** FUNCIÓN loadContent AÑADIDA PARA SOPORTE ***
+    // LÓGICA DE LA APLICACIÓN (Embedded JS)
     // ===============================================
-    function loadContent(filePath) {
-        console.log("Navegando a:", filePath);
-        if (typeof window.parent.loadContent === 'function') {
-            window.parent.loadContent(filePath);
-        } else {
-             alert("Error: loadContent no está definida. Si este archivo es parte de una app, asegúrese de que loadContent() sea global o use el archivo main.js. Intentando navegar a: " + filePath);
-        }
+
+    // CONSTANTES Y VARIABLES GLOBALES
+    const loadingMessage = document.getElementById('loading-message');
+    const initialListContainer = document.getElementById('initial-selection-container');
+    const magicBoxesGallery = document.getElementById('magic-boxes-gallery');
+    const acceptButton = document.getElementById('accept-button');
+
+    // DATOS GLOBALES (Asumidos del contexto padre: main.js)
+    let inventoryData = null;  // Objeto { inventario: [...] }
+    let filteredInventory = []; // Inventario después de aplicar filtros
+    let selectedItems = new Set(); // Nombres de ingredientes seleccionados
+    let floatingElements = new Map(); // Mapa para rastrear los elementos flotantes: nombre -> DOM Element
+    
+    // Asumimos estas funciones de persistencia existen en el contexto padre o global
+    if (typeof window.persistirInventario !== 'function') {
+         window.persistirInventario = () => console.warn("DEBUG: Función persistirInventario no definida.");
+    }
+    if (typeof window.cargarInventario !== 'function') {
+         window.cargarInventario = async () => { 
+             console.warn("DEBUG: Usando inventario mock.");
+             // Mock de inventario si no se puede cargar del padre
+             window.inventarioData = [
+                { nombre: 'Pollo', emoji: '🐔', categoria: 'principal', availability: 3 },
+                { nombre: 'Arroz', emoji: '🍚', categoria: 'carbohidratos', availability: 5 },
+                { nombre: 'Brócoli', emoji: '🥦', categoria: 'verduras', availability: 4 },
+                { nombre: 'Salmón', emoji: '🐟', categoria: 'principal', availability: 2 },
+                { nombre: 'Pasta', emoji: '🍝', categoria: 'carbohidratos', availability: 3 },
+                { nombre: 'Zanahoria', emoji: '🥕', categoria: 'verduras', availability: 6 },
+                { nombre: 'Pavo', emoji: '🦃', categoria: 'principal', availability: 1 },
+                { nombre: 'Quinoa', emoji: '🌾', categoria: 'carbohidratos', availability: 3 },
+                { nombre: 'Tomate', emoji: '🍅', categoria: 'verduras', availability: 5 },
+                { nombre: 'Comodín', emoji: '✨', categoria: 'especial', availability: 1 },
+             ];
+         };
+    }
+    if (typeof window.loadContent !== 'function') {
+         window.loadContent = (url) => console.log(`DEBUG: Navegando a ${url}`);
     }
     
-    // Función Guardar y Cerrar (Añadida)
-    function saveAndClose() {
-        // Aseguramos que la selección y la configuración se guarden antes de salir
-        saveSelectionToStorage();
-        alert("Selección y configuraciones guardadas. Volviendo al menú principal.");
-        
-        // Simular un retorno al menú principal. Asumo que el menú principal es pantalla1.html
-        // Si no tienes pantalla1.html, ajusta la ruta.
-        loadContent('pantalla1.html'); 
-    }
-    
-    // ===============================================
-    // CONFIGURACIÓN DE DATOS 
-    // ===============================================
-    const DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/menu_db.json';
-    const INVENTORY_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/inventario_db.json';
-    
-    const SELECTION_STORAGE_KEY = 'selectedDishesAndIngredients'; 
-    const CUSTOM_ING_STORAGE_KEY = 'customIngredientsConfig'; 
-    const STANDARD_ING_STORAGE_KEY = 'standardIngredientsConfig';
-    const WIZARD_CONFIG_STORAGE_KEY = 'menuWizardConfig'; 
-
-    let menuData = null;	
-    let inventoryData = null; 
-    let selectedItems = new Set(); 
-    let customIngredients = {}; 
-    let standardIngredientsConfig = {};
-    let activeWizardConfig = {}; 
-    let originalDishNames = new Set(); 
+    // Mapa auxiliar para obtener datos por nombre rápidamente
     let inventoryDetailsMap = new Map(); 
 
-    const dishesListContainer = document.getElementById('dishes-list');
-    const ingredientsListContainer = document.getElementById('ingredients-list');
-    const customIngredientsListContainer = document.getElementById('custom-ingredients-list');
-    const loadingMessage = document.getElementById('loading-message');
-    const customStatus = document.getElementById('custom-status');
-
-    const CATEGORIES = [
-        { value: 'principales', label: 'Principal' },
-        { value: 'carbohidratos', label: 'Carbohidrato' },
-        { value: 'verduras', label: 'Verdura' }
-    ];
-    
-    const AVAILABILITY_OPTIONS = [1, 2, 3, 4, 5, 6, 7];
-    let INGREDIENT_EMOJI_MAP = {}; 
-    
-    // MAPA DE EMOJIS DE PLATOS (Copiado de pantalla3.html)
-    let DISH_EMOJI_MAP = { 
-        "Pasta Clásica con Salsa (a elección)": "🍝", 
-        "Bowl de Arroz, Proteína y Vegetales": "🍚", 
-        "Proteína con Papa y Ensalada/Guiso": "🥔", 
-        "Garbanzos y Proteína con Acompañamiento": "🫘", 
-        "Porotos Negros con Proteína y Vegetales": "🥫", 
-        "Hamburguesa Completa (Carne o Vegana)": "🍔", 
-        "Sándwich de Proteína (Carne o Vegana)": "🥪", 
-        "Plato de Sopa (con Legumbres o Proteína)": "🥣", 
-        "Salteado Vegano Completo": "🍜", 
-        "Pizza Casera con Ensalada": "🍕", 
-        "Tallarines en Salsa Alfredo con Proteína": "🍝", 
-        "Charquicán Chileno Tradicional": "🍲", 
-        "Empanada (Pino o Queso) con Ensalada": "🥟", 
-        "Hummus con Verduras y Pan Pita": "🥙", 
-        "Ensalada Completa": "🥗", 
-    };
-    
     // ===============================================
-    // LÓGICA DE SINCRONIZACIÓN PLATO-INGREDIENTE (Mantenida)
-    // ===============================================
-    
-    // Mapa para relacionar Platos con sus Ingredientes válidos (post-filtro)
-    let dishIngredientMap = new Map(); 
-    // Contador para saber cuántos platos seleccionados requieren un ingrediente
-    let ingredientDishCount = new Map(); 
-
-    function buildDishIngredientMap() {
-        dishIngredientMap.clear();
-        if (!menuData || !menuData.platos_principales) return;
-
-        const allCategories = ['principales', 'carbohidratos', 'verduras'];
-        const customIngs = Object.values(customIngredients).filter(item => item.nombre && item.plato_asociado);
-        
-        menuData.platos_principales.forEach(dish => {
-            const dishName = dish.nombre;
-            const requiredIngredients = new Set();
-
-            allCategories.forEach(category => {
-                // Ingredientes estándar (ya filtrados)
-                if (dish[category]) {
-                    dish[category].filter(i => i && i !== '-').forEach(ing => requiredIngredients.add(ing));
-                }
-            });
-            
-            // Ingredientes personalizados asociados
-            customIngs.filter(item => item.plato_asociado === dishName).forEach(item => {
-                requiredIngredients.add(item.nombre);
-            });
-
-            dishIngredientMap.set(dishName, Array.from(requiredIngredients));
-        });
-    }
-    
-    function updateIngredientDishCount(dishName, isAdding) {
-        const ingredients = dishIngredientMap.get(dishName);
-        if (!ingredients) return;
-
-        ingredients.forEach(ingName => {
-            let currentCount = ingredientDishCount.get(ingName) || 0;
-            
-            if (isAdding) {
-                currentCount++;
-            } else {
-                currentCount = Math.max(0, currentCount - 1);
-            }
-            
-            ingredientDishCount.set(ingName, currentCount);
-            
-            // Sincronizar la selección del ingrediente
-            syncIngredientSelection(ingName, currentCount > 0);
-        });
-    }
-    
-    function syncIngredientSelection(ingName, shouldBeSelected) {
-        const ingElement = document.querySelector(`#ingredients-list .list-item[data-name="${ingName}"]`);
-        
-        // El ingrediente es personalizado si existe en customIngredients por nombre
-        const isCustom = Object.values(customIngredients).some(item => item.nombre === ingName);
-
-        if (!ingElement) {
-            // Esto puede pasar si un ingrediente del plato no existe en la lista de ingredientes (e.g., ha sido filtrado)
-            return;
-        }
-
-        // --- Lógica de Sincronización de Selección ---
-        const isCurrentlySelected = selectedItems.has(ingName);
-        
-        if (shouldBeSelected && !isCurrentlySelected) {
-            // Marcar el ingrediente
-            selectedItems.add(ingName);
-            ingElement.classList.add('selected');
-            const checkbox = ingElement.querySelector('input[type="checkbox"]');
-            if (checkbox) checkbox.checked = true;
-            
-            // Actualizar estado 'selected' del ingrediente personalizado si aplica
-            if (isCustom) {
-                const customItem = Object.values(customIngredients).find(item => item.nombre === ingName);
-                if (customItem) customItem.selected = true;
-            }
-            
-        } else if (!shouldBeSelected && isCurrentlySelected) {
-            // Desmarcar el ingrediente solo si no es requerido por *ningún* otro plato activo
-            if (ingredientDishCount.get(ingName) === 0) {
-                selectedItems.delete(ingName);
-                ingElement.classList.remove('selected');
-                const checkbox = ingElement.querySelector('input[type="checkbox"]');
-                if (checkbox) checkbox.checked = false;
-                
-                 // Actualizar estado 'selected' del ingrediente personalizado si aplica
-                if (isCustom) {
-                    const customItem = Object.values(customIngredients).find(item => item.nombre === ingName);
-                    if (customItem) customItem.selected = false;
-                }
-            }
-        }
-        // No guardar en storage aquí. `toggleSelection` se encargará de guardar al final del proceso.
-    }
-
-    // -------------------------------------------------------------
-    // Función de ayuda
-    // -------------------------------------------------------------
-    function getEmoji(name) {
-        return INGREDIENT_EMOJI_MAP[name] || "🍽️";
-    }
-
-    // ===============================================
-    // LÓGICA DE SELECCIÓN GLOBAL (NUEVO)
-    // ===============================================
-
-    function selectAllDishes() {
-        if (!menuData || !menuData.platos_principales) return;
-        
-        let changed = false;
-        
-        // 1. Marcar todos los platos disponibles en selectedItems
-        menuData.platos_principales.forEach(dish => {
-            const dishName = dish.nombre;
-            if (!selectedItems.has(dishName)) {
-                selectedItems.add(dishName);
-                // 2. Actualizar contador de ingredientes
-                updateIngredientDishCount(dishName, true); 
-                changed = true;
-            }
-        });
-        
-        // No es necesario modificar manualmente los ingredientes personalizados aquí,
-        // ya que updateIngredientDishCount() se encarga de agregarlos a selectedItems si son requeridos.
-
-        if (changed) {
-            saveSelectionToStorage();
-            // Re-renderizar para actualizar el estado visual
-            renderDishesList();
-            renderIngredientsList();
-        }
-    }
-
-    function deselectAllDishes() {
-        if (!menuData || !menuData.platos_principales) return;
-        
-        let changed = false;
-
-        // 1. Desmarcar todos los platos disponibles
-        menuData.platos_principales.forEach(dish => {
-            const dishName = dish.nombre;
-            if (selectedItems.has(dishName)) {
-                selectedItems.delete(dishName);
-                // 2. Descontar ingredientes
-                updateIngredientDishCount(dishName, false); 
-                changed = true;
-            }
-        });
-        
-        // 3. Desmarcar ingredientes personalizados seleccionados manualmente (sin plato activo que los requiera)
-        // La lógica de updateIngredientDishCount ya maneja desmarcar los ingredientes (incluidos custom)
-        // si su contador llega a 0. Solo aseguramos que se refleje la deselección manual de custom.
-        Object.values(customIngredients).forEach(item => {
-            if (item.selected && item.nombre) {
-                 // Si el ingrediente personalizado está seleccionado y su contador es 0 (o no existe), lo desmarcamos
-                 if ((ingredientDishCount.get(item.nombre) || 0) === 0) {
-                     item.selected = false;
-                     selectedItems.delete(item.nombre);
-                     changed = true;
-                 }
-            }
-        });
-
-
-        if (changed) {
-            saveSelectionToStorage();
-            // Re-renderizar para actualizar el estado visual
-            renderDishesList();
-            renderIngredientsList();
-        }
-    }
-
-    // ===============================================
-    // LÓGICA DE FILTRADO (Mantenida)
-    // ===============================================
-
-    function processDataWithDietFilters(config, menuData, inventoryData) {
-        if (!inventoryData || !inventoryData.inventario) return;
-        
-        // Clonar inventoryData.inventario para re-aplicar filtros cada vez
-        const initialInventory = JSON.parse(JSON.stringify(inventoryData.inventario));
-        
-        const isHipocalorica = config.carbohidratos === 'hipocalorica';
-        const userRestrictions = Array.isArray(config.restricciones) ? config.restricciones : ['ninguna'];
-        const restrictionsToCheck = ['gluten', 'lactosa', 'frutos_secos', 'mariscos', 'soja', 'huevo'];
-
-        const filteredInventory = initialInventory.filter(item => {
-            let isIncluded = true;
-            
-            // 1. FILTROS DIETÉTICOS
-            if (config.tipoDieta === 'vegetariano' && !item.vegetariano) isIncluded = false;
-            if (config.tipoDieta === 'vegano' && !item.vegano) isIncluded = false;
-            if (config.tipoDieta === 'pescetariano' && !(item.pescetariano || item.vegetariano || item.vegano)) isIncluded = false;
-            
-            // 2. FILTRO GOURMET
-            if (config.estiloGourmet === 'tradicional' && item.gourmet) {
-                isIncluded = false;
-            }
-
-            // 3. FILTRO DE RESTRICCIONES
-            if (!userRestrictions.includes('ninguna')) {
-                restrictionsToCheck.forEach(restriction => {
-                    if (userRestrictions.includes(restriction) && item[restriction]) {
-                        isIncluded = false;
-                    }
-                });
-            }
-
-            // 4. FILTRO DE INGREDIENTES ESPECÍFICOS A ELIMINAR (No implementado en pantalla5)
-
-            return isIncluded;
-        });
-
-        // Aplicar filtros a los platos
-        if (menuData && menuData.platos_principales) {
-            // Clonar menuData.platos_principales para re-aplicar filtros
-            const initialPlatos = JSON.parse(JSON.stringify(menuData.platos_principales.map(d => ({...d})))); 
-            const validIngredients = new Set(filteredInventory.map(item => item.nombre));
-            const allCategories = ['principales', 'carbohidratos', 'verduras'];
-
-            menuData.platos_principales = initialPlatos.map(dish => {
-                 // Crear una copia del plato para modificar sus listas de ingredientes
-                const filteredDish = {...dish};
-
-                allCategories.forEach(category => {
-                    if (filteredDish[category]) {
-                        filteredDish[category] = filteredDish[category].map(ing => {
-                            let ingValid = ing && ing !== '-' && validIngredients.has(ing);
-                            // Aplicar filtro Hipocalórico
-                            if (ingValid && isHipocalorica && category === 'carbohidratos') {
-                                return '-';
-                            }
-                            // Aplicar filtro de ingredientes dietéticos
-                            return ingValid ? ing : '-';
-                        });
-                    }
-                });
-                
-                return filteredDish;
-            }).filter(dish => {
-                if (!dish.principales || dish.principales.length === 0) {
-                    return true;
-                }
-                const validPrimaryCount = dish.principales.filter(ing => ing && ing !== '-').length;
-                return validPrimaryCount > 0;
-            });
-        }
-
-        // Actualizar el inventario para el renderizado (aunque en realidad usamos inventoryDetailsMap)
-        // Se mantiene para coherencia, pero el mapeo se hace en loadMenuData
-        inventoryData.inventario = filteredInventory;
-    }
-
-    // ===============================================
-    // LÓGICA DE ALMACENAMIENTO y SELECCIÓN (Mantenida)
+    // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO
     // ===============================================
 
     function saveSelectionToStorage() {
-        localStorage.setItem(SELECTION_STORAGE_KEY, JSON.stringify(Array.from(selectedItems)));
-        localStorage.setItem(CUSTOM_ING_STORAGE_KEY, JSON.stringify(customIngredients));
-        localStorage.setItem(STANDARD_ING_STORAGE_KEY, JSON.stringify(standardIngredientsConfig));
-    }
-
-    // `isDish` es una nueva bandera para diferenciar si se toca un plato o un ingrediente
-    function toggleSelection(itemName, itemElement, isCustom = false, isDish = false) {
-        const isSelected = selectedItems.has(itemName);
-        
-        if (isDish) {
-            // --- Lógica para Platos ---
-            if (isSelected) {
-                // Desmarcar plato
-                selectedItems.delete(itemName);
-                itemElement.classList.remove('selected');
-                updateIngredientDishCount(itemName, false); // Descontar ingredientes
-            } else {
-                // Marcar plato
-                selectedItems.add(itemName);
-                itemElement.classList.add('selected');
-                updateIngredientDishCount(itemName, true); // Contar ingredientes
-            }
-        } else {
-            // --- Lógica para Ingredientes (Manual) ---
-            if (isSelected) {
-                selectedItems.delete(itemName);
-                itemElement.classList.remove('selected');
-                if (isCustom) {
-                    const customItem = Object.values(customIngredients).find(item => item.nombre === itemName);
-                    if (customItem) customItem.selected = false;
-                }
-            } else {
-                selectedItems.add(itemName);
-                itemElement.classList.add('selected');
-                if (isCustom) {
-                    const customItem = Object.values(customIngredients).find(item => item.nombre === itemName);
-                    if (customItem) customItem.selected = true;
-                }
-            }
-        }
-
-        saveSelectionToStorage();
-    }
-
-    // ===============================================
-    // LÓGICA DE RENDERIZADO (Mantenida)
-    // ===============================================
-    
-    // --- HELPERS PARA CARTAS (Mantenidos) ---
-    function createIngredientCardHtml(ingData, isSelected, availabilitySelectHtml) {
-        const ingName = ingData.name;
-        const typeLabel = ingData.category || ingData.type;
-        const emoji = getEmoji(ingData.name); // Usamos el nombre base para el emoji
-        
-        const checkboxChecked = isSelected ? 'checked' : '';
-        const controlsHtml = `
-            <div class="ingredient-controls-overlay">
-                ${ingData.type === 'standard' || ingData.type === 'custom' ? availabilitySelectHtml : ''}
-                <input type="checkbox" data-item-name="${ingName}" ${checkboxChecked}>
-            </div>
-        `;
-
-        return `
-            <div class="ingredient-card" data-id="${ingName}" data-type="${typeLabel}">
-                <div class="card-content-wrapper">
-                    <span class="card-corner">
-                        ${typeLabel.charAt(0)}
-                    </span>
-                    <div class="card-emoji">${emoji}</div>
-                    <div class="card-name">${ingName}</div>
-                </div>
-                ${controlsHtml}
-            </div>
-        `;
-    }
-
-    function createDishCardHtml(dish, isSelected) {
-        const dishName = dish.nombre;
-        const dishEmoji = DISH_EMOJI_MAP[dishName] || "🍽️";
-        const checkboxChecked = isSelected ? 'checked' : '';
-        
-        const ingredientsRequired = [];
-        if (dish.principales) ingredientsRequired.push(`P: ${dish.principales.filter(i => i && i !== '-').join(', ') || 'N/A'}`);
-        if (dish.carbohidratos) ingredientsRequired.push(`C: ${dish.carbohidratos.filter(i => i && i !== '-').join(', ') || 'N/A'}`);
-        if (dish.verduras) ingredientsRequired.push(`V: ${dish.verduras.filter(i => i && i !== '-').join(', ') || 'N/A'}`);
-        
-        const ingredientsListHtml = ingredientsRequired
-            .map(text => `<li>${text}</li>`)
-            .join('');
-
-        return `
-            <div class="result-dish-card" data-dish="${dishName}">
-                <div class="card-inner-content">
-                    <div class="card-image-zone">
-                        <span class="card-main-emoji">${dishEmoji}</span>
-                    </div>
-                    <div class="card-ingredients-zone">
-                        <p class="card-dish-name">${dishName}</p>
-                        <ul class="card-ingredients-list">
-                            ${ingredientsListHtml || '<li>Ingredientes no especificados</li>'}
-                        </ul>
-                    </div>
-                </div>
-                <div class="dish-controls-overlay">
-                    <input type="checkbox" data-item-name="${dishName}" ${checkboxChecked}>
-                </div>
-            </div>
-        `;
-    }
-
-    // --- RENDERIZADO PRINCIPAL (Mantenida) ---
-    
-    function renderDishesList() {
-        if (!menuData || !menuData.platos_principales) return;
-        dishesListContainer.innerHTML = '';
-        
-        menuData.platos_principales.forEach(dish => {
-            const dishName = dish.nombre;
-            // La selección se basa en selectedItems, que ha sido actualizado por loadMenuData o los botones
-            const isSelected = selectedItems.has(dishName);
-
-            const itemDiv = document.createElement('div');
-            itemDiv.classList.add('list-item');
-            if (isSelected) itemDiv.classList.add('selected');
-            itemDiv.setAttribute('data-name', dishName);
-            
-            itemDiv.innerHTML = createDishCardHtml(dish, isSelected);
-
-            // Listener al click de la carta
-            itemDiv.addEventListener('click', (e) => {
-                // Prevenir que el click en el checkbox dispare la selección dos veces
-                if (e.target.type === 'checkbox') return;
-                
-                // ⭐️ USO DE isDish = true
-                toggleSelection(dishName, itemDiv, false, true); 
-                
-                // Actualizar el estado visual del checkbox
-                const checkbox = itemDiv.querySelector('input[type="checkbox"]');
-                if (checkbox) checkbox.checked = selectedItems.has(dishName);
-            });
-            
-            // Listener directo al checkbox
-            const checkbox = itemDiv.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                checkbox.addEventListener('change', () => {
-                     // ⭐️ USO DE isDish = true
-                    toggleSelection(dishName, itemDiv, false, true);
-                    if (selectedItems.has(dishName)) {
-                        itemDiv.classList.add('selected');
-                    } else {
-                        itemDiv.classList.remove('selected');
-                    }
-                });
-            }
-
-            dishesListContainer.appendChild(itemDiv);
-        });
-    }
-
-    function renderIngredientsList() {
-        if (!inventoryData) return;
-        
-        // 1. Recolectar y clasificar todos los ingredientes (Mantenido)
-        const allIngredients = new Map();
-        inventoryDetailsMap.forEach((details, ing) => {
-            const config = standardIngredientsConfig[ing] || { availability: details.availability || 1 };
-            allIngredients.set(ing, { 
-                type: 'standard', 
-                name: ing, 
-                category: details.category, 
-                availability: config.availability, 
-                ...details
-            });
-        });
-
-        Object.values(customIngredients).forEach(item => {
-            if (item.nombre) {
-                const categoryLabel = CATEGORIES.find(c => c.value === item.categoria)?.label;
-                allIngredients.set(item.nombre, { 
-                    type: 'custom', 
-                    name: item.nombre, 
-                    category: categoryLabel || 'Custom', 
-                    availability: item.availability || 2, 
-                });
-            }
-        });
-
-        const categorizedIngredients = { 
-            'Principal': [], 
-            'Carbohidrato': [], 
-            'Verdura': [], 
-            'Custom': [], // Temporalmente aquí
-            'No Asignado': [] 
+        const selectionData = {
+            selectedItems: Array.from(selectedItems),
         };
-        allIngredients.forEach(ingData => {
-            const key = ingData.type === 'custom' ? 'Custom' : (ingData.category || 'No Asignado');
-            categorizedIngredients[key].push(ingData);
-        });
+        localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
+        updateAcceptButton();
+    }
+    
+    function loadSelectionFromStorage() {
+        const localSelection = localStorage.getItem('magicIngredientSelection');
+        if (localSelection) {
+            const selection = JSON.parse(localSelection);
+            selectedItems = new Set(selection.selectedItems);
+        }
+    }
+    
+    function updateAcceptButton() {
+        acceptButton.textContent = `Aceptar (${selectedItems.size} ingredientes)`;
+        acceptButton.disabled = selectedItems.size === 0;
+    }
 
-        Object.values(categorizedIngredients).forEach(list => {
-            list.sort((a, b) => a.name.localeCompare(b.name));
-        });
+    // ===============================================
+    // LÓGICA DE SELECCIÓN MÁGICA
+    // ===============================================
 
-        const categoryOrder = [ 
-            { key: 'Principal', title: 'Principales 🥩/🍗/🐟' }, 
-            { key: 'Carbohidrato', title: 'Carbohidratos 🍚/🍝' }, 
-            { key: 'Verdura', title: 'Verduras 🥗/🥦' }, 
-            { key: 'No Asignado', title: 'Otros / Sin Categoría ❓' },
-            { key: 'Custom', title: 'Personalizados (P) ✨' } // Movido al final
-        ];
-
-        ingredientsListContainer.innerHTML = '';
+    /**
+     * Alterna la selección de un ingrediente y aplica el efecto de levitación/retorno.
+     * @param {string} ingName - Nombre del ingrediente.
+     * @param {HTMLElement} boxElement - Elemento de la caja de ingrediente (solo si se llama desde la caja).
+     */
+    function handleSelection(ingName, ingId, isChecklist = false) {
+        const isSelected = selectedItems.has(ingName);
+        const ingData = inventoryDetailsMap.get(ingName);
         
-        // 4. Renderizar categorías y elementos
-        categoryOrder.forEach(cat => {
-            const ingredients = categorizedIngredients[cat.key];
-            if (ingredients.length === 0) return;
-            
-            // Si es la categoría Custom, no renderizar un header visible en la lista
-            // Simplemente renderizamos las tarjetas si existen.
-            if (cat.key !== 'Custom') {
-                const header = document.createElement('h4');
-                header.classList.add('category-header');
-                header.textContent = cat.title;
-                ingredientsListContainer.appendChild(header);
-            }
-            
-            // Crear contenedor para los ingredientes de la categoría
-            const categoryDiv = document.createElement('div');
-            // Usar una clase para las categorías, que mantenga el layout de grid de ingredientsListContainer
-            categoryDiv.style.display = 'contents'; 
+        if (!ingData) return;
 
-            ingredients.forEach(ingData => {
-                const itemName = ingData.name;
-                const isCustom = ingData.type === 'custom';
-                // La selección se basa en selectedItems, que ha sido actualizado por loadMenuData o syncIngredientSelection
-                const isSelected = selectedItems.has(itemName); 
+        if (isSelected) {
+            // DESELECCIONAR: Retornar a la caja
+            selectedItems.delete(ingName);
+            removeFloatingElement(ingName);
+        } else {
+            // SELECCIONAR: Aplicar levitación
+            selectedItems.add(ingName);
+            
+            // Si se selecciona desde la checklist, necesitamos encontrar su posición en la galería
+            if (isChecklist) {
+                // En la checklist, solo marcamos. La renderización de las cajas debe sincronizarse.
+                // Por simplicidad, no creamos el elemento flotante aquí, sino que actualizamos los checkboxes de la checklist.
+                const checkbox = document.querySelector(`#checklist-${ingId}`);
+                if (checkbox) checkbox.checked = true;
+            } 
+            
+            // Si se selecciona desde la caja (o se sincroniza después de la checklist)
+            // Necesitamos saber qué slot de la caja vamos a "vaciar" y usar para el elemento flotante.
+            const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
+            if (boxSlot) {
+                // Ocultar el slot original en la caja
+                boxSlot.style.visibility = 'hidden'; 
                 
-                const itemDiv = document.createElement('div');
-                itemDiv.classList.add('list-item');
-                if (isSelected) itemDiv.classList.add('selected');
-                itemDiv.setAttribute('data-name', itemName);
+                // Crear y levantar el elemento flotante
+                createFloatingElement(ingData, boxSlot);
+            }
+        }
+        
+        saveSelectionToStorage();
+        // Sincronizar el checkbox de la lista inicial
+        const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
+        if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
+        
+        // Si se deselecciona, reaparecer el slot en la caja
+        if (!selectedItems.has(ingName)) {
+            const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
+            if (boxSlot) boxSlot.style.visibility = 'visible';
+        }
+    }
+    
+    /**
+     * Crea y posiciona el elemento flotante mágico.
+     * @param {object} ingData - Objeto del ingrediente.
+     * @param {HTMLElement} sourceElement - El elemento de origen (slot en la caja mágica).
+     */
+    function createFloatingElement(ingData, sourceElement) {
+        // Si ya está flotando, no hacer nada (o manejar un doble click si fuera necesario)
+        if (floatingElements.has(ingData.nombre)) return;
+
+        // 1. Obtener la posición del slot de origen
+        const rect = sourceElement.getBoundingClientRect();
+        
+        // 2. Crear el elemento flotante
+        const floatingEl = document.createElement('div');
+        floatingEl.classList.add('floating-ingredient');
+        floatingEl.setAttribute('data-name', ingData.nombre);
+        
+        floatingEl.innerHTML = `
+            <div class="ing-emoji">${ingData.emoji}</div>
+            <div class="ing-name">${ingData.nombre}</div>
+        `;
+
+        // 3. Posicionamiento inicial: Se agrega al body y se posiciona exactamente sobre el slot
+        document.body.appendChild(floatingEl);
+        
+        // Usamos requestAnimationFrame para asegurar que el elemento se ha añadido al DOM
+        requestAnimationFrame(() => {
+            // Posicionar con respecto a la ventana, sumando el scroll (si lo hubiera)
+            floatingEl.style.left = `${rect.left + rect.width / 2 - floatingEl.offsetWidth / 2}px`;
+            floatingEl.style.top = `${rect.top + window.scrollY}px`; 
+            
+            // 4. Aplicar la levitación mágica después de una micro-pausa para la transición
+            setTimeout(() => {
+                 floatingEl.style.transform = `translateY(calc(var(--ingredient-lift) * -1)) scale(1.1)`;
+            }, 50);
+        });
+
+        // 5. Agregar listener para deseleccionar (retornar a la caja)
+        floatingEl.addEventListener('click', () => {
+            handleSelection(ingData.nombre);
+        });
+
+        floatingElements.set(ingData.nombre, floatingEl);
+    }
+    
+    // ===============================================
+    // LÓGICA DE RENDERIZADO
+    // ===============================================
+    
+    /** Agrupa los ingredientes disponibles en grupos de 5. */
+    function groupIngredients(ingredients) {
+        const groups = [];
+        for (let i = 0; i < ingredients.length; i += 5) {
+            groups.push(ingredients.slice(i, i + 5));
+        }
+        return groups;
+    }
+
+    /** Renderiza la galería de cajas mágicas y los slots de ingredientes. */
+    function renderMagicBoxes() {
+        magicBoxesGallery.innerHTML = '';
+        const ingredientGroups = groupIngredients(filteredInventory);
+        
+        ingredientGroups.forEach((group, index) => {
+            const box = document.createElement('div');
+            box.classList.add('magic-box');
+            box.innerHTML = `<div class="box-title">Caja Mágica ${index + 1}</div>`;
+            
+            group.forEach(ingData => {
+                const isSelected = selectedItems.has(ingData.nombre);
                 
-                let availabilitySelectHtml = '';
-                if (ingData.type === 'standard' || ingData.type === 'custom') { // Permitir disponibilidad también para custom
-                    const currentAvailability = ingData.availability;
-                    let selectHtml = `<select class="availability-select" data-item-name="${itemName}">`;
-                    AVAILABILITY_OPTIONS.forEach(option => {
-                        selectHtml += `<option value="${option}" ${option === currentAvailability ? 'selected' : ''}>${option}</option>`;
-                    });
-                    selectHtml += `</select>`;
-                    availabilitySelectHtml = `
-                        <label style="font-size:0.7em; color: var(--text-color);">Disp:</label>
-                        ${selectHtml}
-                    `;
+                const slot = document.createElement('div');
+                slot.classList.add('ing-slot');
+                slot.setAttribute('data-name', ingData.nombre);
+                slot.innerHTML = ingData.emoji;
+                
+                // Si está seleccionado, ocultar el slot e inmediatamente crear el elemento flotante
+                if (isSelected) {
+                    slot.style.visibility = 'hidden';
+                    createFloatingElement(ingData, slot); // Asegura que el flotante se crea/recrea al cargar
                 }
                 
-                // USAR LA FUNCIÓN DE CARTA
-                itemDiv.innerHTML = createIngredientCardHtml(ingData, isSelected, availabilitySelectHtml);
-                
-                // 5. Añadir Listeners
-                
-                // Listener de selección al CLICK DEL CONTENEDOR DE LA CARTA
-                itemDiv.addEventListener('click', (e) => {
-                    // Prevenir que el click en el select o checkbox dispare la selección dos veces
-                    if (e.target.closest('.availability-select') || e.target.type === 'checkbox') return;
-
-                    // ⭐️ USO DE isDish = false (es ingrediente)
-                    toggleSelection(itemName, itemDiv, isCustom, false);
-                    
-                    // Actualizar el estado visual del checkbox
-                    const checkbox = itemDiv.querySelector('input[type="checkbox"]');
-                    if (checkbox) checkbox.checked = selectedItems.has(itemName);
+                // Listener para seleccionar (aplicar levitación)
+                slot.addEventListener('click', () => {
+                    handleSelection(ingData.nombre); // Llama a la lógica principal de selección
                 });
                 
-                // Listener directo al checkbox
-                const checkbox = itemDiv.querySelector('input[type="checkbox"]');
-                if (checkbox) {
-                    checkbox.addEventListener('change', () => {
-                        // ⭐️ USO DE isDish = false (es ingrediente)
-                        toggleSelection(itemName, itemDiv, isCustom, false);
-                        if (selectedItems.has(itemName)) {
-                            itemDiv.classList.add('selected');
-                        } else {
-                            itemDiv.classList.remove('selected');
-                        }
-                    });
-                }
-
-
-                // Listener para el dropdown de disponibilidad
-                const selectElement = itemDiv.querySelector('.availability-select');
-                if (selectElement) {
-                    selectElement.addEventListener('change', (e) => {
-                         if (isCustom) {
-                            const customItem = Object.values(customIngredients).find(item => item.nombre === itemName);
-                            if (customItem) customItem.availability = parseInt(e.target.value, 10);
-                        } else {
-                             standardIngredientsConfig[itemName] = standardIngredientsConfig[itemName] || {};
-                             standardIngredientsConfig[itemName].availability = parseInt(e.target.value, 10);
-                        }
-                        saveSelectionToStorage();
-                    });
-                }
-                
-                categoryDiv.appendChild(itemDiv);
+                box.appendChild(slot);
             });
             
-            ingredientsListContainer.appendChild(categoryDiv);
+            magicBoxesGallery.appendChild(box);
         });
     }
 
-    // ===============================================
-    // LÓGICA DE INGREDIENTES PERSONALIZADOS (Mantenida y Corregida)
-    // ===============================================
+    /** Renderiza la lista inicial de ingredientes (checklist). */
+    function renderInitialList() {
+        const listContainer = document.getElementById('initial-selection-list');
+        listContainer.innerHTML = '';
 
-    function setupCustomIngredients() {
-        if (!menuData || !menuData.platos_principales || menuData.platos_principales.length === 0) {
-            customStatus.textContent = "No se pudieron cargar los platos para la asociación.";
-            return;
-        }
-        customIngredientsListContainer.innerHTML = '';
-        const firstDishName = menuData.platos_principales[0]?.nombre || 'Plato N/A';
-        
-        for (let i = 1; i <= 5; i++) {
-            const id = `custom_ing_${i}`;
-            if (!customIngredients[id]) {
-                customIngredients[id] = { nombre: '', categoria: CATEGORIES[0].value, plato_asociado: firstDishName, selected: false, availability: 2 };
-            }
-            const item = customIngredients[id];
-
-            const div = document.createElement('div');
-            div.classList.add('custom-ingredient-item');
-            div.setAttribute('data-id', id);
-
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.placeholder = `Ingrediente Personalizado ${i}`;
-            nameInput.value = item.nombre;
-            nameInput.addEventListener('input', (e) => {
-                item.nombre = e.target.value.trim();
-            });
-
-            const categorySelect = document.createElement('select');
-            CATEGORIES.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat.value;
-                option.textContent = cat.label;
-                if (item.categoria === cat.value) option.selected = true;
-                categorySelect.appendChild(option);
-            });
-            categorySelect.addEventListener('change', (e) => {
-                item.categoria = e.target.value;
-            });
+        filteredInventory.forEach(ingData => {
+            const isSelected = selectedItems.has(ingData.nombre);
+            const item = document.createElement('div');
+            item.classList.add('initial-item');
             
-            const availabilitySelect = document.createElement('select');
-            AVAILABILITY_OPTIONS.forEach(optionValue => {
-                const option = document.createElement('option');
-                option.value = optionValue;
-                option.textContent = `Disp: ${optionValue}`;
-                if (item.availability === optionValue) option.selected = true;
-                availabilitySelect.appendChild(option);
-            });
-            availabilitySelect.addEventListener('change', (e) => {
-                item.availability = parseInt(e.target.value, 10);
-            });
-
-            const dishSelect = document.createElement('select');
-            dishSelect.style.flexGrow = '1';
-            menuData.platos_principales.forEach(dish => {
-                const option = document.createElement('option');
-                option.value = dish.nombre;
-                option.textContent = dish.nombre;
-                if (item.plato_asociado === dish.nombre) option.selected = true;
-                dishSelect.appendChild(option);
-            });
-            dishSelect.addEventListener('change', (e) => {
-                item.plato_asociado = e.target.value;
+            item.innerHTML = `
+                <input type="checkbox" id="checklist-${ingData.nombre.replace(/\s/g, '_')}" ${isSelected ? 'checked' : ''} data-name="${ingData.nombre}">
+                <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.availability})</label>
+            `;
+            
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', (e) => {
+                // Si se marca en la checklist, debe reflejarse en las cajas
+                handleSelection(ingData.nombre, null, true); 
+                
+                // Forzar la re-renderización de las cajas flotantes después de un cambio en la checklist
+                // Esta es una solución simple para sincronizar las vistas.
+                renderMagicBoxes();
             });
 
-            const applyButton = document.createElement('button');
-            applyButton.textContent = 'Aplicar';
-            applyButton.style.backgroundColor = '#58a6ff';
-            applyButton.style.color = 'white';
-            applyButton.style.border = 'none';
-            applyButton.style.padding = '5px 10px';
-            applyButton.style.borderRadius = '4px';
-            applyButton.style.cursor = 'pointer';
-            applyButton.addEventListener('click', () => {
-                if (item.nombre.length > 0) {
-                    saveSelectionToStorage();
-                    customStatus.textContent = "Cambios de personalizados aplicados.";
-                    customStatus.style.color = '#238636'; 
-                    loadMenuData(true); // Recargar las listas
-                } else {
-                    customStatus.textContent = "El nombre del ingrediente personalizado no puede estar vacío.";
-                    customStatus.style.color = '#f75555';
-                }
-            });
-
-            div.appendChild(nameInput);
-            div.appendChild(categorySelect);
-            div.appendChild(availabilitySelect);
-            div.appendChild(dishSelect);
-            div.appendChild(applyButton);
-            customIngredientsListContainer.appendChild(div);
+            listContainer.appendChild(item);
+            
+        });
+    }
+    
+    /** Alterna la visibilidad de la lista inicial. */
+    function toggleInitialList(action) {
+        const minimizeBtn = document.getElementById('minimize-button');
+        const maximizeBtn = document.getElementById('maximize-button');
+        
+        if (action === 'minimize') {
+            initialListContainer.classList.add('minimized');
+            minimizeBtn.style.display = 'none';
+            maximizeBtn.style.display = 'block';
+        } else {
+            initialListContainer.classList.remove('minimized');
+            minimizeBtn.style.display = 'block';
+            maximizeBtn.style.display = 'none';
         }
+    }
+    
+    // ===============================================
+    // ANIMACIÓN FINAL Y NAVEGACIÓN
+    // ===============================================
+
+    /** Ejecuta la animación de vórtice y navega a pantalla 4. */
+    async function handleFinalAnimation() {
+        if (selectedItems.size === 0) return;
+        
+        acceptButton.disabled = true;
+
+        // 1. Mostrar el contenedor del vórtice en el centro
+        const vortexContainer = document.getElementById('vortex-container');
+        vortexContainer.style.display = 'flex';
+        
+        const centerVortexX = vortexContainer.offsetWidth / 2;
+        const centerVortexY = vortexContainer.offsetHeight / 2;
+
+        // 2. Aplicar la animación a cada elemento flotante
+        floatingElements.forEach((el, ingName) => {
+            const rect = el.getBoundingClientRect();
+            
+            // Calcular la distancia a la que deben ser arrastrados
+            const translateX = centerVortexX - rect.left - rect.width / 2;
+            const translateY = centerVortexY - rect.top - rect.height / 2;
+            
+            // Establecer el origen de la transformación al centro del vórtice
+            el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
+            
+            // Aplicar el movimiento espiral (combina el translate con la escala y rotación de vortex-pull)
+            el.style.transform = `
+                translate(${translateX}px, ${translateY}px) 
+                scale(0.1) 
+                rotate(720deg)
+            `;
+            el.style.opacity = '0';
+        });
+
+        // 3. Esperar a que la animación termine (1.5 segundos)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // 4. Limpiar y navegar
+        floatingElements.forEach(el => el.remove());
+        floatingElements.clear();
+        vortexContainer.style.display = 'none';
+
+        // Guardamos la selección final antes de navegar
+        saveSelectionToStorage();
+
+        // Navegar a la pantalla de planificación
+        window.loadContent('pantalla4.html'); 
     }
 
     // ===============================================
-    // INICIALIZACIÓN (MODIFICADO para PRIORIZAR localStorage)
+    // INICIALIZACIÓN PRINCIPAL
     // ===============================================
-    async function loadMenuData(reloadListsOnly = false) {
-        if (!reloadListsOnly) {
-             loadingMessage.textContent = 'Cargando datos...';
-             // Inicializar los contadores al cargar la data
-             ingredientDishCount.clear(); 
-        }
 
+    async function loadMenuData() {
         try {
-            // 1. Cargar datos desde localStorage (PRIORITARIO) o desde GitHub (Fallback)
+            loadingMessage.textContent = 'Cargando inventario mágico desde el grimorio...';
             
-            // --- Cargar Inventario ---
-            const localInventario = localStorage.getItem('inventarioData');
-            if (localInventario) {
-                // main.js guarda SOLO el array de ítems, pantalla5 espera el objeto {inventario: [...]}
-                inventoryData = { inventario: JSON.parse(localInventario) }; 
-                console.log("Inventario cargado desde LocalStorage (con datos de logros).");
-            } else if (!inventoryData) {
-                const inventoryResponse = await fetch(INVENTORY_DATA_URL);
-                if (!inventoryResponse.ok) throw new Error(`HTTP error! status: ${inventoryResponse.status} al cargar inventario`);
-                inventoryData = await inventoryResponse.json(); // Carga el objeto completo {inventario: [...]}
-                console.log("Inventario cargado desde GitHub.");
+            // 1. Cargar inventario del contexto padre (main.js)
+            await window.cargarInventario();
+            if (window.inventarioData) {
+                inventoryData = { inventario: window.inventarioData };
+            } else {
+                throw new Error("El inventarioData del grimorio no se pudo cargar.");
             }
-            
-            // --- Cargar Menú ---
-            const localMenu = localStorage.getItem('menuData');
-            if (localMenu) {
-                // main.js guarda el objeto completo {platos_principales: [...]}
-                menuData = JSON.parse(localMenu); 
-                console.log("Menú cargado desde LocalStorage (con platos de logros).");
-            } else if (!menuData) {
-                const menuResponse = await fetch(DATA_URL);
-                if (!menuResponse.ok) throw new Error(`HTTP error! status: ${menuResponse.status} al cargar menú`);
-                menuData = await menuResponse.json(); // Carga el objeto completo
-                console.log("Menú cargado desde GitHub.");
-            }
-            
-            // 2. Poblar mapa de Emojis, detalles y nombres originales
-            originalDishNames = new Set(menuData.platos_principales.map(dish => dish.nombre)); 
-            
-            inventoryDetailsMap.clear();
-            INGREDIENT_EMOJI_MAP = {};
-            if (inventoryData && inventoryData.inventario) {
-                inventoryData.inventario.forEach(item => {
-                    if (item.nombre && item.emoji) {
-                        INGREDIENT_EMOJI_MAP[item.nombre] = item.emoji;
-                    }
-                    // ⭐️ CORRECCIÓN: Usar la propiedad 'categoria' del JSON del inventario para determinar
-                    // el label de la categoría en mayúscula inicial para el renderizado.
-                    let category = 'No Asignado';
-                    if (item.categoria === 'principal') category = 'Principal';
-                    else if (item.categoria === 'carbohidrato') category = 'Carbohidrato';
-                    else if (item.categoria === 'verdura') category = 'Verdura';
 
-                    inventoryDetailsMap.set(item.nombre, { 
-                        category: category, 
-                        vegetariano: item.vegetariano, 
-                        vegano: item.vegano, 
-                        gourmet: item.gourmet,
-                        availability: item.cantidad_disponible || 1
-                    });
-                });
-            }
+            // 2. Aplicar un filtrado básico (asumimos que la Configuración Rápida ya lo hizo, aquí solo usamos los disponibles)
+            // Para esta versión simple, usamos todo el inventario cargado.
+            filteredInventory = inventoryData.inventario || [];
             
-
-            // 3. Cargar configuración de filtros
-            const storedWizardConfig = localStorage.getItem(WIZARD_CONFIG_STORAGE_KEY);
-            activeWizardConfig = storedWizardConfig ? JSON.parse(storedWizardConfig) : {
-                tipoDieta: 'normal',
-                estiloGourmet: 'cualquiera',
-                carbohidratos: 'normal',
-                restricciones: ['ninguna']
-            };
-
-            // 4. Aplicar filtros a una copia de los datos
-            const filteredMenuData = JSON.parse(JSON.stringify(menuData));
-            const filteredInventoryData = JSON.parse(JSON.stringify(inventoryData));
-            const tempMenuData = { platos_principales: filteredMenuData.platos_principales };
-            const tempInventoryData = { inventario: filteredInventoryData.inventario };
-            
-            // Aplicar filtros a los datos temporales
-            processDataWithDietFilters(activeWizardConfig, tempMenuData, tempInventoryData);
-            menuData.platos_principales = tempMenuData.platos_principales;
-            inventoryData.inventario = tempInventoryData.inventario;
-
-
-            // 5. Cargar selección y configs
-            const storedSelection = localStorage.getItem(SELECTION_STORAGE_KEY);
-            // La selección debe ser la de los ítems que el usuario ha querido mantener
-            selectedItems = new Set(storedSelection ? JSON.parse(storedSelection) : []); 
-            
-            const storedCustomConfig = localStorage.getItem(CUSTOM_ING_STORAGE_KEY);
-            customIngredients = storedCustomConfig ? JSON.parse(storedCustomConfig) : {};
-            
-            const storedStandardConfig = localStorage.getItem(STANDARD_ING_STORAGE_KEY);
-            standardIngredientsConfig = storedStandardConfig ? JSON.parse(storedStandardConfig) : {};
-
-
-            // Forzar la re-inclusión de custom ingredients si tienen nombre.
-            Object.keys(customIngredients).forEach(key => {
-                const customItem = customIngredients[key];
-                if (customItem.selected && customItem.nombre) {
-                    selectedItems.add(customItem.nombre);
-                } else if (!customItem.availability) {
-                    customItem.availability = 2; // Asegurar valor por defecto
-                }
+            // 3. Crear el mapa de detalles
+            filteredInventory.forEach(item => {
+                inventoryDetailsMap.set(item.nombre, item);
             });
 
-            // ⭐️ 6. Inicializar Mapa Plato-Ingrediente y Contador de Platos por Ingrediente
-            buildDishIngredientMap();
-            ingredientDishCount.clear(); // Limpiar antes de re-contar
-            
-            // Contar cuántos platos seleccionados hay para cada ingrediente
-            selectedItems.forEach(itemName => {
-                // Si el ítem es un plato (está en el mapa de platos/ingredientes), actualizamos el contador.
-                // Es importante comprobar si el plato aún existe en los datos filtrados.
-                if (dishIngredientMap.has(itemName)) { 
-                    updateIngredientDishCount(itemName, true);
-                } else if (originalDishNames.has(itemName)) {
-                    // Si el plato estaba seleccionado pero fue filtrado, lo removemos
-                    selectedItems.delete(itemName);
-                }
-            });
-            
-            // Forzar la selección de ingredientes necesarios por los platos seleccionados.
-            ingredientDishCount.forEach((count, ingName) => {
-                if (count > 0) {
-                    selectedItems.add(ingName);
-                } 
-                // Si el contador es 0, syncIngredientSelection ya se encargó de desmarcarlo si era requerido
-                // por un plato que fue desmarcado o filtrado.
-            });
+            // 4. Cargar la selección previa y sincronizar
+            loadSelectionFromStorage();
 
-
-            // ⭐️ 7. Limpieza final de configuración de ingredientes estándar (mantenida)
-            const validIngredientNames = new Set(inventoryData.inventario.map(item => item.nombre));
+            // 5. Renderizar las dos vistas
+            renderInitialList();
+            renderMagicBoxes();
             
-            Object.keys(standardIngredientsConfig).forEach(ing => {
-                 if (!validIngredientNames.has(ing)) {
-                     delete standardIngredientsConfig[ing];
-                 }
-            });
-            
-            saveSelectionToStorage(); // Guardar el nuevo estado de selección forzada
-            
-            // 8. Renderizar
-            setupCustomIngredients();
-            loadingMessage.textContent = '';	
-            renderDishesList();
-            renderIngredientsList(); 
+            // 6. Configuración final
+            toggleInitialList('minimize'); // Empezamos minimizado
+            loadingMessage.textContent = '¡Inventario cargado! Haz magia con tus ingredientes.';
+            updateAcceptButton();
 
         } catch (error) {
             loadingMessage.style.color = '#f75555';
-            loadingMessage.textContent = `ERROR: ${error.message}`;
-            console.error("Fallo la carga de datos:", error);
+            loadingMessage.textContent = `ERROR MÁGICO: ${error.message}`;
+            console.error("Fallo la carga de datos mágicos:", error);
         }
     }
     
-    // Llamada de inicialización
-    loadMenuData();
+    // Retrasar la carga para asegurar que las funciones del padre (main.js) están cargadas
+    setTimeout(loadMenuData, 100); 
 </script>
 </body>
 </html>
