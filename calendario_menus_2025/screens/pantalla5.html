@@ -38,17 +38,36 @@
         }
 
         /* ------------------------------------------------------------------- */
-        /* CONTENEDOR DE LISTA INICIAL (Checklist de Ingredientes) */
+        /* CONTENEDOR DE LISTA INICIAL (Overlay Flotante) */
         /* ------------------------------------------------------------------- */
         #initial-selection-container {
             background-color: #1f242b;
             border: 1px solid var(--box-border-color);
             border-radius: 8px;
-            margin-bottom: 20px;
             padding: 15px;
-            transition: max-height 0.5s ease-in-out, opacity 0.3s;
+            /* CAMBIO CLAVE: Posicionamiento Fixed para Overlay */
+            position: fixed; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8); /* Empieza un poco más pequeño */
+            z-index: 1000; 
+            max-width: 90%; 
+            max-height: 90vh;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            
+            /* Estado inicial Oculto */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
         }
-        
+
+        /* Estado Visible (Maximizado) */
+        #initial-selection-container:not(.minimized) {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
         #initial-selection-list {
             max-height: 400px;
             overflow-y: auto;
@@ -83,6 +102,7 @@
             max-height: 0;
             opacity: 0;
             padding: 0;
+            transition: max-height 0.5s ease-in-out, opacity 0.3s;
         }
 
         /* ------------------------------------------------------------------- */
@@ -188,21 +208,44 @@
         }
 
         /* ------------------------------------------------------------------- */
-        /* EFECTO FLOTANTE MÁGICO */
+        /* EFECTO FLOTANTE MÁGICO (BURBUJA/VORTEX) */
         /* ------------------------------------------------------------------- */
         .floating-ingredient {
             position: absolute; 
             z-index: 100;
             cursor: pointer;
             text-align: center;
-            opacity: 1;
-            transition: transform 0.5s ease-in-out, opacity 0.5s;
+            opacity: 0; /* Empieza invisible, JS lo anima */
+            /* La transición se usa para la reubicación y el efecto final de absorción */
+            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.05s, top 0.05s;
             animation: subtle-float 2s ease-in-out infinite alternate;
         }
-        
+
+        .ing-bubble-wrapper {
+            position: relative;
+            padding: 5px; 
+            display: inline-block;
+        }
+
+        .ing-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(88, 166, 255, 0.1); 
+            border: 1px solid rgba(88, 166, 255, 0.6);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* Para el efecto de reventón */
+            transition: all 0.5s ease-in-out; 
+        }
+
         .floating-ingredient .ing-emoji {
             font-size: 2.5em;
             line-height: 1;
+            position: relative; 
+            z-index: 2;
         }
         
         .floating-ingredient .ing-name {
@@ -210,16 +253,39 @@
             font-weight: 600;
             color: var(--text-color);
             text-shadow: 0 0 5px var(--accent-color);
+            position: absolute;
+            bottom: -15px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            white-space: nowrap;
         }
 
         @keyframes subtle-float {
-            from { transform: translateY(calc(var(--ingredient-lift) * -1)) scale(1.1); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
-            to { transform: translateY(calc(var(--ingredient-lift) * -1.1)) scale(1.05); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
+            0% { transform: translateY(calc(var(--ingredient-lift) * -1)) scale(1.0); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
+            100% { transform: translateY(calc(var(--ingredient-lift) * -1.1)) scale(1.05); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
         }
         
+        /* Efecto de Caída / Burbuja Reventada */
+        .floating-ingredient.falling {
+            animation: none; /* Detener el flote sutil */
+            opacity: 0;
+            /* La cúbica proporciona un efecto de caída con "rebote" */
+            transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s; 
+            transform: translateY(0) scale(0.2) !important; /* Vuelve a la posición del slot */
+        }
+        .floating-ingredient.falling .ing-bubble {
+            background: transparent;
+            box-shadow: none;
+            border: 0;
+            transform: scale(3); /* Simula expansión rápida (reventón) */
+            opacity: 0;
+        }
+
         /* ------------------------------------------------------------------- */
         /* BOTÓN DE ACCIÓN Y VÓRTICE FINAL */
         /* ------------------------------------------------------------------- */
+        /* ... (Estilos de accept-button y vortex-container sin cambios) */
         #accept-button {
             position: fixed;
             bottom: 20px;
@@ -242,7 +308,6 @@
             cursor: not-allowed;
         }
 
-        /* Contenedor de la animación del vórtice */
         #vortex-container {
             position: fixed;
             top: 0;
@@ -276,7 +341,7 @@
     <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
     <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
 
-    <div id="initial-selection-container">
+    <div id="initial-selection-container" class="minimized">
         <div id="initial-selection-list"> 
             </div>
         <button id="minimize-button" onclick="toggleInitialList('minimize')">Minimizar Lista</button>
@@ -369,53 +434,73 @@
         
         if (!ingData) return;
 
+        // Se usa el slot de la caja como elemento visual de referencia.
         const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
         
         if (isSelected) {
-            // DESELECCIONAR
+            // DESELECCIONAR: Aplicar animación de caída/reventón
             selectedItems.delete(ingName);
             removeFloatingElement(ingName);
             if (boxSlot) boxSlot.style.visibility = 'visible';
         } else {
-            // SELECCIONAR
+            // SELECCIONAR: Aplicar animación de flotar (creación de burbuja)
             selectedItems.add(ingName);
             
             if (boxSlot) {
                 boxSlot.style.visibility = 'hidden';
-                createFloatingElement(ingData, boxSlot);
+                // Creamos el elemento flotante, la función lo posiciona automáticamente sobre el slot de la caja.
+                createFloatingElement(ingData, boxSlot); 
             }
         }
         
         saveSelectionToStorage();
         // Sincronizar el checkbox
-        const checklistCheckbox = document.querySelector(`#checklist-${ingName.nombre.replace(/\s/g, '_')}`);
+        const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
     }
     
+    /**
+     * Crea un ingrediente flotante con efecto de burbuja, posicionado sobre su slot de caja.
+     */
     function createFloatingElement(ingData, sourceElement) {
         if (floatingElements.has(ingData.nombre)) return;
 
-        const rect = sourceElement.getBoundingClientRect();
+        // Siempre obtener la posición del slot de la caja para la flotación consistente.
+        const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingData.nombre}"]`);
+        if (!targetSlot) return; 
+
+        const rect = targetSlot.getBoundingClientRect();
         
         const floatingEl = document.createElement('div');
         floatingEl.classList.add('floating-ingredient');
         floatingEl.setAttribute('data-name', ingData.nombre);
         
+        // Estructura con el wrapper de burbuja (ing-bubble)
         floatingEl.innerHTML = `
-            <div class="ing-emoji">${ingData.emoji}</div>
+            <div class="ing-bubble-wrapper">
+                <div class="ing-bubble">
+                    <div class="ing-emoji">${ingData.emoji}</div>
+                </div>
+            </div>
             <div class="ing-name">${ingData.nombre}</div>
         `;
 
         document.body.appendChild(floatingEl);
         
-        const initialLeft = rect.left + rect.width / 2 - floatingEl.offsetWidth / 2;
-        const initialTop = rect.top + window.scrollY;
+        // Posicionamiento inicial: justo encima del slot de la caja.
+        // Aproximadamente la mitad de la burbuja (60px/2 = 30px)
+        const bubbleSizeOffset = 30; 
+        const initialLeft = rect.left + rect.width / 2 - bubbleSizeOffset; 
+        const initialTop = rect.top + window.scrollY - bubbleSizeOffset;
         
+        // 1. Establecer la posición (sin animación)
         floatingEl.style.left = `${initialLeft}px`;
         floatingEl.style.top = `${initialTop}px`; 
 
+        // 2. Iniciar la animación de levitación (que también maneja la opacidad de 0 a 1)
         requestAnimationFrame(() => {
-            floatingEl.style.transform = `translateY(calc(var(--ingredient-lift) * -1)) scale(1.1)`;
+            floatingEl.style.opacity = '1';
+            // La animación subtle-float se encarga del resto del transform
         });
 
         floatingEl.addEventListener('click', () => {
@@ -425,16 +510,33 @@
         floatingElements.set(ingData.nombre, floatingEl);
     }
     
+    /**
+     * Devuelve el ingrediente al slot con animación de caída/reventón de burbuja.
+     */
     function removeFloatingElement(ingName) {
         const el = floatingElements.get(ingName);
         if (el) {
-            el.style.transform = `translateY(0) scale(1)`;
-            el.style.opacity = '0';
+            // Aplicar el estado de animación de caída (CSS falling)
+            el.classList.add('falling');
             
+            // Encontrar el slot de destino (posición final de la caída)
+            const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingName}"]`);
+            if (targetSlot) {
+                const rect = targetSlot.getBoundingClientRect();
+                const bubbleSizeOffset = 30; 
+                const finalLeft = rect.left + rect.width / 2 - bubbleSizeOffset;
+                const finalTop = rect.top + window.scrollY - bubbleSizeOffset;
+
+                // Forzar la posición final para que el CSS 'falling' haga la transición.
+                el.style.left = `${finalLeft}px`;
+                el.style.top = `${finalTop}px`;
+            }
+
+            // Eliminar después de que la animación termine (500ms)
             setTimeout(() => {
                 el.remove();
                 floatingElements.delete(ingName);
-            }, 500);
+            }, 500); 
         }
     }
 
@@ -454,6 +556,7 @@
     function renderMagicBoxes() {
         magicBoxesGallery.innerHTML = '';
         
+        // Limpiar elementos flotantes pre-existentes
         floatingElements.forEach(el => el.remove());
         floatingElements.clear();
 
@@ -486,12 +589,13 @@
             magicBoxesGallery.appendChild(box);
         });
         
-        // Post-renderizado: Crear elementos flotantes
+        // Post-renderizado: Crear elementos flotantes que ya estaban seleccionados
         filteredInventory.forEach(ingData => {
             if (selectedItems.has(ingData.nombre)) {
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 if (sourceSlot) {
-                    setTimeout(() => createFloatingElement(ingData, sourceSlot), 10);
+                    // Esperamos un poco para asegurar que el DOM esté listo para calcular la posición
+                    setTimeout(() => createFloatingElement(ingData, sourceSlot), 10); 
                 }
             }
         });
@@ -506,7 +610,6 @@
             const item = document.createElement('div');
             item.classList.add('initial-item');
             
-            // Usar ingData.cantidad_disponible para la cuenta
             item.innerHTML = `
                 <input type="checkbox" id="checklist-${ingData.nombre.replace(/\s/g, '_')}" ${isSelected ? 'checked' : ''} data-name="${ingData.nombre}">
                 <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.cantidad_disponible || 'N/A'})</label>
@@ -516,14 +619,13 @@
             checkbox.addEventListener('change', () => {
                 handleSelection(ingData.nombre); 
                 
-                // Sincronización visual entre el checkbox y el flotante:
                 const isNowSelected = selectedItems.has(ingData.nombre);
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 
                 if (isNowSelected) {
                     if (sourceSlot) {
                          sourceSlot.style.visibility = 'hidden';
-                         if (!floatingElements.has(ingData.nombre)) setTimeout(() => createFloatingElement(ingData, sourceSlot), 10);
+                         if (!floatingElements.has(ingData.nombre)) createFloatingElement(ingData, sourceSlot);
                     }
                 } else {
                     if (sourceSlot) sourceSlot.style.visibility = 'visible';
@@ -562,21 +664,28 @@
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
         
+        // Obtener la posición del vórtice para el destino
+        const vortexRect = vortexContainer.getBoundingClientRect();
+        const centerVortexX = vortexRect.left + vortexRect.width / 2;
+        const centerVortexY = vortexRect.top + vortexRect.height / 2;
+
+
         floatingElements.forEach((el) => {
             const rect = el.getBoundingClientRect();
-            const centerVortexX = vortexContainer.offsetWidth / 2;
-            const centerVortexY = vortexContainer.offsetHeight / 2;
             
+            // Calcular la traslación al centro del vórtice
             const translateX = centerVortexX - (rect.left + rect.width / 2);
             const translateY = centerVortexY - (rect.top + rect.height / 2);
             
+            // ⭐️ Aplicar la animación de espiral (giro y reducción)
             el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
             el.style.transform = `
                 translate(${translateX}px, ${translateY}px) 
-                scale(0.1) 
-                rotate(720deg)
+                scale(0.01) 
+                rotate(720deg) /* Giro dramático de 2 vueltas */
             `;
             el.style.opacity = '0';
+            el.style.animation = 'none'; // Detener el flote sutil
         });
 
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -586,11 +695,15 @@
 
         saveSelectionToStorage();
 
-        window.loadContent('pantalla4.html'); 
+        if (window.parent && typeof window.parent.loadContent === 'function') {
+            window.parent.loadContent('pantalla4.html');
+        } else {
+            window.loadContent('pantalla4.html');
+        } 
     }
 
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL (CORREGIDA PARA IFRAME)
+    // INICIALIZACIÓN PRINCIPAL (FIX: Acceso al Padre o LocalStorage)
     // ===============================================
 
     async function loadMenuData() {
@@ -621,10 +734,8 @@
             
             // 3. Verificar si los datos fueron cargados
             if (dataLoaded && Array.isArray(dataLoaded)) {
-                // Filtrar por activo: true
                 filteredInventory = dataLoaded.filter(item => item.activo === true);
             } else {
-                // Si la data sigue siendo nula/inválida, lanzar el error
                 throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible.");
             }
             
