@@ -388,7 +388,7 @@
         
         saveSelectionToStorage();
         // Sincronizar el checkbox
-        const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
+        const checklistCheckbox = document.querySelector(`#checklist-${ingName.nombre.replace(/\s/g, '_')}`);
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
     }
     
@@ -590,7 +590,7 @@
     }
 
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL (CORREGIDA CON RESPALDO)
+    // INICIALIZACIÓN PRINCIPAL (CORREGIDA PARA IFRAME)
     // ===============================================
 
     async function loadMenuData() {
@@ -599,36 +599,32 @@
             
             let dataLoaded = null;
 
-            // 1. INTENTO 1: Esperar por la variable global del contexto padre (ruta rápida)
-            let attempts = 0;
-            const maxAttempts = 20; // 2 segundos
-            const delay = 100; 
-            
-            while (!window.inventarioData && attempts < maxAttempts) {
-                await new Promise(resolve => setTimeout(resolve, delay));
-                attempts++;
+            // 1. Intento principal: Acceder a la variable global del contexto padre (window.parent)
+            if (window.parent && window.parent.inventarioData) {
+                dataLoaded = window.parent.inventarioData;
+                loadingMessage.textContent = 'Éxito: Datos cargados directamente del padre.';
             }
-            
-            dataLoaded = window.inventarioData;
 
-            // 2. INTENTO 2: Si el global falló, cargar desde localStorage (el respaldo)
+            // 2. Respaldo: Si falló el parent, intentar cargar desde localStorage
             if (!dataLoaded) {
-                 loadingMessage.textContent = 'El grimorio no se abrió, intentando leer la copia local de ingredientes...';
+                 loadingMessage.textContent = 'El grimorio del padre no respondió, intentando leer la copia local...';
                  const localData = localStorage.getItem('inventarioData');
                  if (localData) {
                     try {
                         dataLoaded = JSON.parse(localData);
+                        loadingMessage.textContent = 'Éxito: Datos cargados desde localStorage.';
                     } catch (e) {
                         console.error("Error al parsear inventarioData de localStorage:", e);
                     }
                  }
             }
             
-            // 3. Usar los datos cargados (ya sean del global o del local)
+            // 3. Verificar si los datos fueron cargados
             if (dataLoaded && Array.isArray(dataLoaded)) {
                 // Filtrar por activo: true
                 filteredInventory = dataLoaded.filter(item => item.activo === true);
             } else {
+                // Si la data sigue siendo nula/inválida, lanzar el error
                 throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible.");
             }
             
