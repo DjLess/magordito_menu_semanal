@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Taller del Mago: Selección de Ingredientes</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKx3G3z3lE7B9f7K54z6W3CFA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <style>
         /* ======================================================================= */
         /* VARIABLES Y ESTILOS BASE (Tema Oscuro Mágico) */
@@ -19,9 +22,15 @@
             --vortex-color: rgba(88, 166, 255, 0.8);
             --ingredient-lift: 50px; /* Distancia de levitación */
             
-            /* NUEVA ZONA DE FLOTACIÓN: Offset vertical */
-            --floating-area-top: 300px; /* <--- EDICIÓN: Movido 30px más abajo (70px -> 100px) */
+            /* ZONA DE FLOTACIÓN (Mantenida) */
+            --floating-area-top: 300px; 
             --floating-area-height: 120px; 
+            
+            /* Variables para el recetario (DE PANTALLA 7) */
+            --card-bg-color: #2b313a;
+            --card-border-color: #484f58;
+            --selection-color: #58a6ff;
+            --failure-color: #a00000;
         }
         
         body {
@@ -109,7 +118,7 @@
             width: 100%;
             margin: 0 auto;
             position: relative;
-            margin-top: 60px; /* <--- EDICIÓN: Movido 40px más arriba (130px -> 90px) */
+            margin-top: 60px;
         }
         
         #magic-boxes-gallery {
@@ -206,7 +215,6 @@
             cursor: pointer;
             text-align: center;
             opacity: 0; 
-            /* Se usa left/top para la posición dinámica de la distribución, y transform para la levitación/caída/espiral */
             transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.5s ease-out, top 0.5s ease-out; 
             animation: subtle-float 2s ease-in-out infinite alternate;
         }
@@ -270,6 +278,84 @@
         }
 
         /* ------------------------------------------------------------------- */
+        /* ESTILOS DE RECETARIO (DE PANTALLA 7 - NO ELIMINADO) */
+        /* ------------------------------------------------------------------- */
+        
+        .popup {
+            position: fixed;
+            z-index: 2000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* INICIALMENTE OCULTO */
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        .popup-content {
+            background-color: var(--card-bg-color);
+            margin: 0;
+            padding: 20px;
+            border: 1px solid var(--card-border-color);
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            max-height: 90vh;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #available-recipes-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+        }
+        .recipe-item {
+            padding: 15px;
+            border-bottom: 1px dashed #30363d;
+            margin-bottom: 10px;
+            background-color: #1a1f25;
+            border-radius: 6px;
+        }
+        .recipe-item h4 {
+            color: var(--selection-color);
+            margin: 0 0 5px 0;
+        }
+        .recipe-ingredients {
+            font-size: 0.9em;
+            color: #b0b8c5;
+        }
+        .recipe-ingredients strong {
+            color: var(--text-color);
+        }
+        
+        .close-button {
+            position: absolute; 
+            top: 10px; 
+            right: 20px; 
+            font-size: 2.5em; 
+            color: var(--text-color); 
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .close-button:hover {
+            color: var(--selection-color);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* ------------------------------------------------------------------- */
         /* BOTONES FIJOS DE ACCIÓN */
         /* ------------------------------------------------------------------- */
         #fixed-actions {
@@ -282,7 +368,7 @@
             gap: 15px;
         }
 
-        #accept-button, #toggle-list-button, #show-recipes-button { /* Añado el nuevo botón aquí */
+        #accept-button, #toggle-list-button, #show-recipes-button {
             padding: 15px 25px;
             color: white;
             border: none;
@@ -294,52 +380,26 @@
             transition: background-color 0.3s;
         }
 
-        #accept-button {
-            background-color: var(--success-color);
-        }
-        
-        #accept-button:disabled {
-            background-color: #30363d;
-            cursor: not-allowed;
-        }
-
-        #toggle-list-button {
-            background-color: var(--accent-color);
-        }
-
-        /* ESTILO NUEVO: Color para el botón de recetas */
-        #show-recipes-button {
-            background-color: #ffa500; /* Naranja/Dorado, similar al botón de cerrar lista */
-        }
-        /* FIN ESTILO NUEVO */
+        #accept-button { background-color: var(--success-color); }
+        #accept-button:disabled { background-color: #30363d; cursor: not-allowed; }
+        #toggle-list-button { background-color: var(--accent-color); }
+        #show-recipes-button { background-color: #ffa500; } /* Estilo del nuevo botón */
 
         /* Contenedor del Vórtice de Animación */
         #vortex-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 150;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            transform: translateY(-120px); /* <--- EDICIÓN: Movido 40px más arriba (-40px -> -80px) */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 150; display: none;
+            align-items: center; justify-content: center;
+            transform: translateY(-120px);
         }
         
         .vortex {
-            width: 150px;
-            height: 150px;
+            width: 150px; height: 150px;
             background: radial-gradient(circle, rgba(0,0,0,0) 0%, var(--vortex-color) 70%, rgba(0,0,0,0) 100%);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border-radius: 50%; animation: spin 1s linear infinite;
         }
         
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
     </style>
 </head>
@@ -352,18 +412,19 @@
     <div id="floating-zone-visual-indicator" style="height: 120px; border: 1px dashed #30363d; margin: 0; display: flex; justify-content: center; align-items: center; color: #30363d; background-color: #0d0f13; position: relative; top: -10px;">
         <span id="floating-area-message">Selecciona ingredientes de las cajas de abajo.</span>
     </div>
+    
     <div id="initial-selection-container" class="minimized">
         <h3>Lista de Compras 🛒</h3>
         <p>Marca o desmarca los ingredientes para enviarlos a la cocina.</p>
         <div id="initial-selection-list"> 
-            </div>
+        </div>
         <button class="list-close-button" onclick="toggleInitialList('minimize')">Cerrar Lista</button>
     </div>
     
     <div id="gallery-wrapper">
         <button id="scroll-left" class="scroll-button" onclick="scrollGallery(-1)">←</button>
         <div id="magic-boxes-gallery">
-            </div>
+        </div>
         <button id="scroll-right" class="scroll-button" onclick="scrollGallery(1)">→</button>
     </div>
     
@@ -371,6 +432,15 @@
         <div class="vortex"></div>
     </div>
     
+    <div id="recipe-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-button" id="close-recipes-popup" title="Cerrar Recetario">&times;</span>
+            <h3>Recetario de Platos Disponibles 📜</h3>
+            <div id="available-recipes-container">
+                <p>Cargando recetas...</p>
+            </div>
+        </div>
+    </div>
     <div id="fixed-actions">
         <button id="toggle-list-button" onclick="toggleInitialList('maximize')">🛒 Ver Lista de Compras</button>
         <button id="show-recipes-button" onclick="handleShowRecipes()">📜 Ver Recetario</button> 
@@ -380,10 +450,10 @@
 
 <script>
     // ===============================================
-    // LÓGICA DE LA APLICACIÓN (Embedded JS)
+    // LÓGICA DE LA APLICACIÓN (EXISTENTE Y COMPLETA)
     // ===============================================
 
-    // CONSTANTES Y VARIABLES GLOBALES
+    // CONSTANTES Y VARIABLES GLOBALES (EXISTENTES)
     const loadingMessage = document.getElementById('loading-message');
     const initialListContainer = document.getElementById('initial-selection-container');
     const magicBoxesGallery = document.getElementById('magic-boxes-gallery');
@@ -402,7 +472,7 @@
     }
     
     // ===============================================
-    // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO
+    // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO (EXISTENTE)
     // ===============================================
 
     function saveSelectionToStorage() {
@@ -411,7 +481,7 @@
         };
         localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
         updateAcceptButton();
-        updateFloatingArea(); // Llamada a la función de layout
+        updateFloatingArea(); 
     }
     
     function loadSelectionFromStorage() {
@@ -428,64 +498,50 @@
     }
 
     // ===============================================
-    // LÓGICA DE DISTRIBUCIÓN DINÁMICA MULTI-COLUMNA (EDICIÓN CLAVE)
+    // LÓGICA DE DISTRIBUCIÓN DINÁMICA MULTI-COLUMNA (EXISTENTE)
     // ===============================================
 
-    /**
-     * Calcula y aplica la nueva posición (top, left) y el escalado (scale)
-     * a todos los ingredientes flotantes seleccionados, permitiendo varias filas.
-     */
     function updateFloatingArea() {
         const viewportWidth = window.innerWidth;
         const floatingElementsArray = Array.from(floatingElements.values());
         const totalItems = floatingElementsArray.length;
         
-        // ZONA DE FLOTACIÓN (Valores consistentes con el nuevo layout)
-        const areaWidth = viewportWidth; // Ahora full width
-        const areaHeight = 120; // Altura del indicador visual
-        const areaTop = 100; // <--- EDICIÓN: Movido 30px más abajo (70 -> 100). Coincide con --floating-area-top
+        // ZONA DE FLOTACIÓN (Valores consistentes con el layout)
+        const areaWidth = viewportWidth; 
+        const areaHeight = 120; 
+        const areaTop = 100; 
         
-        const baseItemWidth = 80; // Ancho visual estimado del elemento
-        const baseItemHeight = 90; // Alto visual estimado del elemento (burbuja + nombre)
+        const baseItemWidth = 80; 
+        const baseItemHeight = 90; 
         
-        // 1. Calcular cuántos ítems caben por fila (máx columnas)
         const maxColumns = Math.floor(areaWidth / baseItemWidth);
         const columns = Math.max(1, maxColumns); 
         
-        // 2. Calcular cuántas filas se necesitan
         const rows = Math.ceil(totalItems / columns);
         
-        // 3. Calcular el escalado global si el número de filas excede la altura disponible
         let scale = 1.0;
         const requiredHeight = rows * baseItemHeight;
         const maxHeight = areaHeight; 
         
         if (requiredHeight > maxHeight) {
-            // Calculamos el escalado necesario para que quepa en la altura máxima
             scale = Math.max(0.5, maxHeight / requiredHeight); 
         }
         
         const effectiveItemWidth = baseItemWidth * scale;
         const effectiveItemHeight = baseItemHeight * scale;
 
-        // 4. Calcular el espaciado horizontal y el inicio X para centrar la matriz (fila más larga)
         const itemsInLongestRow = Math.min(totalItems, columns);
         const totalWidthUsed = itemsInLongestRow * effectiveItemWidth;
         const offsetX = (areaWidth - totalWidthUsed) / 2 + (effectiveItemWidth / 2) - (30 * scale); 
         
-        // 5. Calcular el espaciado vertical y el inicio Y para centrar la matriz
         const totalHeightUsed = rows * effectiveItemHeight;
         const offsetY = (areaHeight - totalHeightUsed) / 2;
         
-        // 6. Aplicar posiciones a cada elemento
         floatingElementsArray.forEach((el, index) => {
             const row = Math.floor(index / columns);
             const col = index % columns;
             
-            // Posición en X: Offset + (Columna * Ancho_Efectivo)
             const targetLeft = offsetX + (col * effectiveItemWidth);
-
-            // Posición en Y: Posición_Inicial_Zona_Top + Offset_Vertical_Centrado + (Fila * Alto_Efectivo) + Jitter
             const targetTop = areaTop + offsetY + (row * effectiveItemHeight) + (Math.random() * 10 - 5); 
             
             el.style.left = `${targetLeft}px`;
@@ -498,13 +554,12 @@
             }
         });
         
-        // Mensaje de la zona de flotación
         floatingAreaMessage.style.display = totalItems > 0 ? 'none' : 'block';
     }
 
 
     // ===============================================
-    // LÓGICA DE SELECCIÓN MÁGICA
+    // LÓGICA DE SELECCIÓN MÁGICA (EXISTENTE)
     // ===============================================
 
     function handleSelection(ingName) {
@@ -545,7 +600,7 @@
         const floatingEl = document.createElement('div');
         floatingEl.classList.add('floating-ingredient');
         floatingEl.setAttribute('data-name', ingData.nombre);
-        floatingEl.dataset.state = 'initial'; // Estado inicial
+        floatingEl.dataset.state = 'initial';
 
         floatingEl.innerHTML = `
             <div class="ing-bubble-wrapper">
@@ -558,7 +613,7 @@
 
         document.body.appendChild(floatingEl);
         
-        const bubbleSizeOffset = 30; // La burbuja mide 60px. Offset = 30px.
+        const bubbleSizeOffset = 30;
 
         const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
         const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset; 
@@ -595,7 +650,7 @@
     }
 
     // ===============================================
-    // LÓGICA DE NAVEGACIÓN HORIZONTAL (Scroll)
+    // LÓGICA DE NAVEGACIÓN HORIZONTAL (Scroll) (EXISTENTE)
     // ===============================================
     
     function scrollGallery(direction) {
@@ -610,20 +665,8 @@
 
 
     // ===============================================
-    // ANIMACIÓN FINAL Y NAVEGACIÓN
+    // ANIMACIÓN FINAL Y NAVEGACIÓN (EXISTENTE)
     // ===============================================
-
-    // INICIO DE EDICIÓN MÍNIMA: Nueva función de navegación
-    function handleShowRecipes() {
-        if (window.parent && typeof window.parent.loadContent === 'function') {
-            // Se asume que 'pantalla7.html' es la pantalla de recetas.
-            window.parent.loadContent('pantalla7.html'); 
-        } else {
-            // Fallback si no está en un iframe o si usa una función global diferente
-            window.loadContent('pantalla7.html'); 
-        }
-    }
-    // FIN DE EDICIÓN MÍNIMA
     
     async function handleFinalAnimation() {
         if (selectedItems.size === 0) return;
@@ -631,8 +674,6 @@
         acceptButton.disabled = true;
         const toggleListButton = document.getElementById('toggle-list-button');
         toggleListButton.disabled = true;
-        
-        // Deshabilitar el nuevo botón de recetas
         document.getElementById('show-recipes-button').disabled = true; 
 
         const vortexContainer = document.getElementById('vortex-container');
@@ -663,7 +704,6 @@
             el.style.animation = 'none'; 
             
             setTimeout(() => {
-                // Aplicar transición de espiral
                 el.style.transition = `transform ${vortexDuration}ms cubic-bezier(0.6, 0.0, 0.4, 1.0), opacity ${vortexDuration}ms`; 
                 
                 el.style.transform = `
@@ -692,12 +732,127 @@
         } 
     }
     
-    // Escuchar el evento de redimensionamiento de la ventana para recalcular la posición de los flotantes
-    window.addEventListener('resize', updateFloatingArea);
-
-
     // ===============================================
-    // RENDERIZADO Y UTILIDADES 
+    // LÓGICA DEL RECETARIO (DE PANTALLA 7 - NO ELIMINADO)
+    // ===============================================
+    
+    const BASE_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/';
+    const MENU_DB_PATH = BASE_DATA_URL + 'menu_db.json';
+    
+    // Mapeo de Emojis de Platos (Mantenido de pantalla7.html)
+    const DISH_EMOJI_MAP = {
+        "Pasta Clásica con Salsa (a elección)": "🍝", "Bowl de Arroz, Proteína y Vegetales": "🍚",
+        "Proteína con Papa y Ensalada/Guiso": "🥔", "Garbanzos y Proteína con Acompañamiento": "🫘",
+        "Porotos Negros con Proteína y Vegetales": "🥫", "Hamburguesa Completa (Carne o Vegana)": "🍔",
+        "Sándwich de Proteína (Carne o Vegana)": "🥪", "Plato de Sopa (con Legumbres o Proteína)": "🥣",
+        "Salteado Vegano Completo": "🍜", "Pizza Casera con Ensalada": "🍕",
+        "Tallarines en Salsa Alfredo con Proteína": "🍝", "Charquicán Chileno Tradicional": "🍲",
+        "Empanada (Pino o Queso) con Ensalada": "🥟", "Hummus con Verduras y Pan Pita": "🥙",
+        "Ensalada Completa": "🥗",
+    };
+    
+    let ALL_DISH_RECIPES = [];
+    const recipePopup = document.getElementById('recipe-popup');
+    const availableRecipesContainer = document.getElementById('available-recipes-container');
+    const closeRecipesButton = document.getElementById('close-recipes-popup');
+
+
+    function setupDishRecipes(menuDb) {
+        if (!menuDb || !menuDb.platos_principales) {
+            console.error("Base de datos de menús no válida o incompleta.");
+            availableRecipesContainer.innerHTML = `<p style="color:var(--failure-color);">ERROR: La base de datos de platos está vacía o es incorrecta.</p>`;
+            return;
+        }
+        ALL_DISH_RECIPES = menuDb.platos_principales.map(dish => {
+            return {
+                name: dish.nombre,
+                emoji: DISH_EMOJI_MAP[dish.nombre] || "",
+                carbohidratos: dish.carbohidratos || [],
+                principales: dish.principales || [],
+                verduras: dish.verduras || [],
+                points: dish.puntaje || 1 
+            };
+        });
+        renderAllRecipes();
+    }
+
+    function renderAllRecipes() { 
+        availableRecipesContainer.innerHTML = '';
+        if (ALL_DISH_RECIPES.length === 0) {
+            availableRecipesContainer.innerHTML = `<p style="color:var(--failure-color);">No se pudo cargar el recetario.</p>`;
+            return;
+        }
+
+        ALL_DISH_RECIPES.forEach(dish => {
+            const item = document.createElement('div');
+            item.className = 'recipe-item';
+            
+            const requiredCategories = [];
+            if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) requiredCategories.push('Carbohidrato');
+            if (dish.principales.length > 0 && !dish.principales.includes('-')) requiredCategories.push('Principal');
+            if (dish.verduras.length > 0 && !dish.verduras.includes('-')) requiredCategories.push('Verdura');
+
+            const requiredText = requiredCategories.length > 0
+                ? `Requiere: ${requiredCategories.join(', ')}`
+                : 'No requiere categorías específicas.';
+
+            let ingredientsHTML = '<div class="recipe-ingredients">';
+            
+            const createIngredientList = (label, ingredients) => {
+                let html = `<strong>${label}:</strong> `;
+                html += ingredients.join(', ');
+                return html + '<br>';
+            };
+
+            if (dish.principales.length > 0 && !dish.principales.includes('-')) ingredientsHTML += createIngredientList('Principales', dish.principales);
+            if (dish.carbohidratos.length > 0 && !dish.carbohidratos.includes('-')) ingredientsHTML += createIngredientList('Carbohidratos', dish.carbohidratos);
+            if (dish.verduras.length > 0 && !dish.verduras.includes('-')) ingredientsHTML += createIngredientList('Verduras/Extras', dish.verduras);
+
+            ingredientsHTML += '</div>';
+
+            item.innerHTML = `
+                <h4>${dish.emoji} ${dish.name} (Valor: ${dish.points || 1} 💰)</h4>
+                <p style="font-size:0.9em; font-style:italic; color:#b0b8c5; margin-bottom: 0;">${requiredText}</p>
+                ${ingredientsHTML}
+            `;
+            availableRecipesContainer.appendChild(item);
+        });
+    }
+
+    function initRecipeModule() {
+        if (ALL_DISH_RECIPES.length > 0) return; 
+        
+        // Uso de fetch para cargar de forma remota, ya que no estamos en pantalla7
+        fetch(MENU_DB_PATH)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
+                return response.json();
+            })
+            .then(menuDatabase => {
+                setupDishRecipes(menuDatabase);
+            })
+            .catch(e => {
+                console.error("ERROR CRÍTICO: No se puede cargar la librería de Platos (menu_db).", e);
+                availableRecipesContainer.innerHTML = `<p style="color:var(--failure-color);">ERROR: No se puede cargar la librería de Platos.</p>`;
+            });
+    }
+
+    function showRecipesPopup() {
+        recipePopup.style.display = 'flex';
+        initRecipeModule(); 
+    }
+
+    function hideRecipesPopup() {
+        recipePopup.style.display = 'none';
+    }
+    
+    // Función de Recetario conectada al botón
+    function handleShowRecipes() {
+        showRecipesPopup();
+    }
+    
+    // ===============================================
+    // RENDERIZADO Y UTILIDADES (EXISTENTE)
     // ===============================================
 
     function groupIngredients(ingredients) {
@@ -787,7 +942,7 @@
     }
     
     // ===============================================
-    // INICIALIZACIÓN PRINCIPAL
+    // INICIALIZACIÓN PRINCIPAL (EXISTENTE)
     // ===============================================
 
     async function loadMenuData() {
@@ -843,7 +998,18 @@
         }
     }
     
-    loadMenuData(); 
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMenuData(); 
+        initRecipeModule(); 
+        
+        closeRecipesButton.addEventListener('click', hideRecipesPopup);
+        window.addEventListener('click', (event) => {
+            if (event.target === recipePopup) { hideRecipesPopup(); }
+        });
+        
+        window.addEventListener('resize', updateFloatingArea);
+    });
 </script>
 </body>
 </html>
