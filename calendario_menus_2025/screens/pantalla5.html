@@ -282,7 +282,7 @@
             gap: 15px;
         }
 
-        #accept-button, #toggle-list-button {
+        #accept-button, #toggle-list-button, #show-recipes-button { /* Añado el nuevo botón aquí */
             padding: 15px 25px;
             color: white;
             border: none;
@@ -306,6 +306,12 @@
         #toggle-list-button {
             background-color: var(--accent-color);
         }
+
+        /* ESTILO NUEVO: Color para el botón de recetas */
+        #show-recipes-button {
+            background-color: #ffa500; /* Naranja/Dorado, similar al botón de cerrar lista */
+        }
+        /* FIN ESTILO NUEVO */
 
         /* Contenedor del Vórtice de Animación */
         #vortex-container {
@@ -367,6 +373,7 @@
     
     <div id="fixed-actions">
         <button id="toggle-list-button" onclick="toggleInitialList('maximize')">🛒 Ver Lista de Compras</button>
+        <button id="show-recipes-button" onclick="handleShowRecipes()">📜 Ver Recetario</button> 
         <button id="accept-button" onclick="handleFinalAnimation()" disabled>Aceptar (0 ingredientes)</button>
     </div>
 
@@ -606,12 +613,27 @@
     // ANIMACIÓN FINAL Y NAVEGACIÓN
     // ===============================================
 
+    // INICIO DE EDICIÓN MÍNIMA: Nueva función de navegación
+    function handleShowRecipes() {
+        if (window.parent && typeof window.parent.loadContent === 'function') {
+            // Se asume que 'pantalla7.html' es la pantalla de recetas.
+            window.parent.loadContent('pantalla7.html'); 
+        } else {
+            // Fallback si no está en un iframe o si usa una función global diferente
+            window.loadContent('pantalla7.html'); 
+        }
+    }
+    // FIN DE EDICIÓN MÍNIMA
+    
     async function handleFinalAnimation() {
         if (selectedItems.size === 0) return;
         
         acceptButton.disabled = true;
         const toggleListButton = document.getElementById('toggle-list-button');
         toggleListButton.disabled = true;
+        
+        // Deshabilitar el nuevo botón de recetas
+        document.getElementById('show-recipes-button').disabled = true; 
 
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
