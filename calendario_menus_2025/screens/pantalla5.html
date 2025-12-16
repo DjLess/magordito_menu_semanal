@@ -20,8 +20,8 @@
             --ingredient-lift: 50px; /* Distancia de levitación */
             
             /* NUEVA ZONA DE FLOTACIÓN: Offset vertical */
-            --floating-area-top: 70px; /* <--- EDICIÓN: Movido 20px más abajo (70px) */
-            --floating-area-height: 120px; /* Altura ajustada para permitir múltiples filas */
+            --floating-area-top: 100px; /* <--- EDICIÓN: Movido 30px más abajo (70px -> 100px) */
+            --floating-area-height: 120px; 
         }
         
         body {
@@ -109,7 +109,7 @@
             width: 100%;
             margin: 0 auto;
             position: relative;
-            margin-top: 80px; /* <--- EDICIÓN: Cambiado a 130px */
+            margin-top: 90px; /* <--- EDICIÓN: Movido 40px más arriba (130px -> 90px) */
         }
         
         #magic-boxes-gallery {
@@ -310,7 +310,7 @@
         /* Contenedor del Vórtice de Animación */
         #vortex-container {
             position: fixed;
-            top: -300;
+            top: 0;
             left: 0;
             width: 100%;
             height: 100%;
@@ -319,7 +319,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            transform: translateY(-40px); /* <--- EDICIÓN: Subir el vórtice 40px */
+            transform: translateY(-80px); /* <--- EDICIÓN: Movido 40px más arriba (-40px -> -80px) */
         }
         
         .vortex {
@@ -436,8 +436,8 @@
         // ZONA DE FLOTACIÓN (Valores consistentes con el nuevo layout)
         const areaWidth = viewportWidth; // Ahora full width
         const areaHeight = 120; // Altura del indicador visual
-        const areaTop = 70; // Posición TOP (variable CSS --floating-area-top)
-
+        const areaTop = 100; // <--- EDICIÓN: Movido 30px más abajo (70 -> 100). Coincide con --floating-area-top
+        
         const baseItemWidth = 80; // Ancho visual estimado del elemento
         const baseItemHeight = 90; // Alto visual estimado del elemento (burbuja + nombre)
         
@@ -464,7 +464,6 @@
         // 4. Calcular el espaciado horizontal y el inicio X para centrar la matriz (fila más larga)
         const itemsInLongestRow = Math.min(totalItems, columns);
         const totalWidthUsed = itemsInLongestRow * effectiveItemWidth;
-        // Ajuste: 30px es la mitad de la burbuja (60px). Queremos centrar la burbuja.
         const offsetX = (areaWidth - totalWidthUsed) / 2 + (effectiveItemWidth / 2) - (30 * scale); 
         
         // 5. Calcular el espaciado vertical y el inicio Y para centrar la matriz
@@ -618,7 +617,6 @@
         vortexContainer.style.display = 'flex';
         
         const vortexRect = vortexContainer.getBoundingClientRect();
-        // El vórtice ya está centrado y movido 40px arriba por CSS, usamos su centro de caja
         const centerVortexX = vortexRect.left + vortexRect.width / 2;
         const centerVortexY = vortexRect.top + vortexRect.height / 2;
 
