@@ -170,21 +170,37 @@
             font-weight: bold;
         }
 
+        /* INICIO CAMBIO 3: Estilos para el slot con nombre */
         .ing-slot {
-            width: 40px;
-            height: 40px;
+            width: 60px; /* Aumentar el tamaño para el nombre */
+            height: 60px; /* Aumentar el tamaño para el nombre */
             display: flex;
+            flex-direction: column; /* Para apilar emoji y nombre */
             justify-content: center;
             align-items: center;
             font-size: 1.5em;
             cursor: pointer;
             border-radius: 4px;
             transition: background-color 0.2s;
+            text-align: center;
         }
-        
         .ing-slot:hover {
             background-color: #30363d;
         }
+        .ing-slot .slot-emoji {
+            font-size: 1.2em; /* Emoji un poco más pequeño */
+        }
+        .ing-slot .slot-name {
+            font-size: 0.4em; /* Nombre pequeño */
+            line-height: 1;
+            margin-top: 2px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        /* FIN CAMBIO 3 */
         
         .scroll-button {
             position: absolute;
@@ -278,7 +294,7 @@
         }
 
         /* ------------------------------------------------------------------- */
-        /* ESTILOS DE RECETARIO (DE PANTALLA 7 - NO ELIMINADO) */
+        /* ESTILOS DE RECETARIO */
         /* ------------------------------------------------------------------- */
         
         .popup {
@@ -290,7 +306,7 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.8);
-            display: none; /* INICIALMENTE OCULTO */
+            display: none; 
             justify-content: center;
             align-items: center;
             animation: fadeIn 0.3s;
@@ -338,6 +354,14 @@
             color: var(--text-color);
         }
         
+        /* INICIO CAMBIO 4: Estilo para ingredientes seleccionados en el recetario */
+        .selected-ingredient-recipe {
+            color: #ffd700; /* Gold/Yellow highlight */
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        /* FIN CAMBIO 4 */
+
         .close-button {
             position: absolute; 
             top: 10px; 
@@ -383,7 +407,7 @@
         #accept-button { background-color: var(--success-color); }
         #accept-button:disabled { background-color: #30363d; cursor: not-allowed; }
         #toggle-list-button { background-color: var(--accent-color); }
-        #show-recipes-button { background-color: #ffa500; } /* Estilo del nuevo botón */
+        #show-recipes-button { background-color: #ffa500; } 
 
         /* Contenedor del Vórtice de Animación */
         #vortex-container {
@@ -494,7 +518,10 @@
     
     function updateAcceptButton() {
         acceptButton.textContent = `Aceptar (${selectedItems.size} ingredientes)`;
-        acceptButton.disabled = selectedItems.size === 0;
+        // Solo deshabilita si no hay ítems Y el popup de recetas no está activo
+        if (recipePopup.style.display !== 'flex') {
+            acceptButton.disabled = selectedItems.size === 0;
+        }
     }
 
     // ===============================================
@@ -506,7 +533,6 @@
         const floatingElementsArray = Array.from(floatingElements.values());
         const totalItems = floatingElementsArray.length;
         
-        // ZONA DE FLOTACIÓN (Valores consistentes con el layout)
         const areaWidth = viewportWidth; 
         const areaHeight = 120; 
         const areaTop = 100; 
@@ -586,6 +612,11 @@
         saveSelectionToStorage();
         const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
+
+        // Si el recetario está abierto, actualiza los colores de las recetas.
+        if (recipePopup.style.display === 'flex') {
+            renderAllRecipes();
+        }
     }
     
     function createFloatingElement(ingData, sourceElement) {
@@ -671,9 +702,9 @@
     async function handleFinalAnimation() {
         if (selectedItems.size === 0) return;
         
-        acceptButton.disabled = true;
-        const toggleListButton = document.getElementById('toggle-list-button');
-        toggleListButton.disabled = true;
+        // Deshabilita todos los botones para la animación
+        document.getElementById('accept-button').disabled = true;
+        document.getElementById('toggle-list-button').disabled = true;
         document.getElementById('show-recipes-button').disabled = true; 
 
         const vortexContainer = document.getElementById('vortex-container');
@@ -733,13 +764,12 @@
     }
     
     // ===============================================
-    // LÓGICA DEL RECETARIO (DE PANTALLA 7 - NO ELIMINADO)
+    // LÓGICA DEL RECETARIO (MODIFICADA: Resaltado y Control de Popup)
     // ===============================================
     
     const BASE_DATA_URL = 'https://djless.github.io/magordito_menu_semanal/calendario_menus_2025/data/';
     const MENU_DB_PATH = BASE_DATA_URL + 'menu_db.json';
     
-    // Mapeo de Emojis de Platos (Mantenido de pantalla7.html)
     const DISH_EMOJI_MAP = {
         "Pasta Clásica con Salsa (a elección)": "🍝", "Bowl de Arroz, Proteína y Vegetales": "🍚",
         "Proteína con Papa y Ensalada/Guiso": "🥔", "Garbanzos y Proteína con Acompañamiento": "🫘",
@@ -776,12 +806,17 @@
         renderAllRecipes();
     }
 
+    /**
+     * CAMBIO 4: Modificada para resaltar los ingredientes seleccionados.
+     */
     function renderAllRecipes() { 
         availableRecipesContainer.innerHTML = '';
         if (ALL_DISH_RECIPES.length === 0) {
             availableRecipesContainer.innerHTML = `<p style="color:var(--failure-color);">No se pudo cargar el recetario.</p>`;
             return;
         }
+
+        const selectedIngs = selectedItems; // El conjunto de ítems seleccionados
 
         ALL_DISH_RECIPES.forEach(dish => {
             const item = document.createElement('div');
@@ -800,7 +835,17 @@
             
             const createIngredientList = (label, ingredients) => {
                 let html = `<strong>${label}:</strong> `;
-                html += ingredients.join(', ');
+                
+                // Formateo y resaltado
+                const formattedIngredients = ingredients.map(ing => {
+                    const ingName = ing.trim();
+                    if (ingName !== '-' && selectedIngs.has(ingName)) {
+                        return `<span class="selected-ingredient-recipe">${ingName}</span>`;
+                    }
+                    return ingName;
+                });
+                
+                html += formattedIngredients.join(', ');
                 return html + '<br>';
             };
 
@@ -820,9 +865,11 @@
     }
 
     function initRecipeModule() {
-        if (ALL_DISH_RECIPES.length > 0) return; 
+        if (ALL_DISH_RECIPES.length > 0) {
+            renderAllRecipes(); // Si ya está cargado, solo se renderiza para actualizar el resaltado.
+            return;
+        }
         
-        // Uso de fetch para cargar de forma remota, ya que no estamos en pantalla7
         fetch(MENU_DB_PATH)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
@@ -837,22 +884,33 @@
             });
     }
 
+    /**
+     * CAMBIO 1: Deshabilita los botones de acción principales.
+     */
     function showRecipesPopup() {
         recipePopup.style.display = 'flex';
         initRecipeModule(); 
+        
+        document.getElementById('accept-button').disabled = true;
+        document.getElementById('toggle-list-button').disabled = true;
     }
 
+    /**
+     * CAMBIO 1: Habilita los botones de acción principales (sujeto a la lógica de selección).
+     */
     function hideRecipesPopup() {
         recipePopup.style.display = 'none';
+        
+        updateAcceptButton(); // Habilita/deshabilita el botón de Aceptar según la selección.
+        document.getElementById('toggle-list-button').disabled = false;
     }
     
-    // Función de Recetario conectada al botón
     function handleShowRecipes() {
         showRecipesPopup();
     }
     
     // ===============================================
-    // RENDERIZADO Y UTILIDADES (EXISTENTE)
+    // RENDERIZADO Y UTILIDADES (MODIFICADA: Nombre de Cajas y Contenido de Slots)
     // ===============================================
 
     function groupIngredients(ingredients) {
@@ -863,6 +921,9 @@
         return groups;
     }
 
+    /**
+     * CAMBIOS 2 y 3: Modificada para cambiar el nombre de la caja y agregar nombre al ingrediente.
+     */
     function renderMagicBoxes() {
         magicBoxesGallery.innerHTML = '';
         
@@ -874,7 +935,8 @@
         ingredientGroups.forEach((group, index) => {
             const box = document.createElement('div');
             box.classList.add('magic-box');
-            box.innerHTML = `<div class="box-title">Caja Mágica ${index + 1}</div>`;
+            // CAMBIO 2: Cambiar "Caja Mágica" a "Ingredientes"
+            box.innerHTML = `<div class="box-title">Ingredientes ${index + 1}</div>`; 
             
             group.forEach(ingData => {
                 const isSelected = selectedItems.has(ingData.nombre);
@@ -882,7 +944,12 @@
                 const slot = document.createElement('div');
                 slot.classList.add('ing-slot');
                 slot.setAttribute('data-name', ingData.nombre);
-                slot.innerHTML = ingData.emoji;
+                
+                // CAMBIO 3: Agregar etiqueta de nombre
+                slot.innerHTML = `
+                    <span class="slot-emoji">${ingData.emoji}</span>
+                    <span class="slot-name">${ingData.nombre}</span>
+                `;
                 
                 if (isSelected) {
                     slot.style.visibility = 'hidden';
@@ -1001,7 +1068,7 @@
     
     document.addEventListener('DOMContentLoaded', () => {
         loadMenuData(); 
-        initRecipeModule(); 
+        // No llamamos initRecipeModule aquí, se llama solo al abrir el popup.
         
         closeRecipesButton.addEventListener('click', hideRecipesPopup);
         window.addEventListener('click', (event) => {
