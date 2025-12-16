@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>El Taller del Mago: Selección de Ingredientes</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKx3G3z3lE7B9f7K54z6W3CFA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
     <style>
         /* ======================================================================= */
         /* VARIABLES Y ESTILOS BASE (Tema Oscuro Mágico) */
@@ -15,12 +13,9 @@
             --bg-color: #0d1117;
             --text-color: #c9d1d9;
             --accent-color: #58a6ff; /* Azul mágico */
-            --selection-color: #58a6ff; /* Mantengo esta variable para el modal */
             --success-color: #238636;
             --box-bg-color: #161b22; /* Fondo de las cajas mágicas */
             --box-border-color: #30363d;
-            --card-bg-color: #2b313a; /* Variable para el modal */
-            --card-border-color: #484f58; /* Variable para el modal */
             --vortex-color: rgba(88, 166, 255, 0.8);
             --ingredient-lift: 50px; /* Distancia de levitación */
             
@@ -32,849 +27,761 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DE LA BARRA DE ACCIÓN SUPERIOR */
-        /* ======================================================================= */
-        #action-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(13, 17, 23, 0.95);
-            padding: 10px 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            z-index: 10; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .action-button {
-            background-color: var(--box-border-color);
-            color: var(--text-color);
-            border: 1px solid var(--accent-color);
-            padding: 10px 15px;
-            margin-right: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .action-button:hover {
-            background-color: var(--box-bg-color);
-            transform: translateY(-1px);
-        }
-
-        .action-button:active {
-            transform: translateY(0);
-        }
-        
-        .action-button.success-action {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-        }
-
-        .action-button.success-action:hover {
-            background-color: #2ea44f;
-        }
-
-        /* Contenedor de botones a la izquierda */
-        #left-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DEL CUERPO PRINCIPAL */
-        /* ======================================================================= */
-        #main-content {
-            flex-grow: 1;
-            padding-top: 60px; /* Espacio para la barra superior */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        h1 {
-            color: var(--accent-color);
-            font-size: 1.8em;
-            margin-top: 20px;
-            margin-bottom: 5px;
-        }
-        
-        #message-area {
-            color: var(--text-color);
-            margin-bottom: 20px;
-            min-height: 20px;
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DE LA ZONA DE SELECCIÓN (LEVISTACIÓN) */
-        /* ======================================================================= */
-        #selection-area {
-            width: 90%;
-            max-width: 900px;
-            min-height: var(--floating-area-height);
-            margin: 20px auto 10px auto;
-            border: 3px dashed var(--vortex-color);
-            border-radius: 15px;
-            position: relative;
-            background-color: rgba(22, 27, 34, 0.4); /* Un poco de fondo */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 10px;
-        }
-
-        #selection-area:before {
-            content: "Zona de Levistación: Arrastra aquí tus ingredientes seleccionados (Máximo 5)";
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--vortex-color);
-            font-size: 0.8em;
-            font-style: italic;
-        }
-
-        .selected-item {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 5px;
-            padding: 5px 10px;
-            background-color: var(--box-bg-color);
-            border: 1px solid var(--accent-color);
-            border-radius: 8px;
-            cursor: move; /* Indica que es arrastrable */
-            box-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
-            transition: transform 0.2s;
-        }
-
-        .selected-item span {
+            text-align: center;
             font-size: 0.9em;
+            overflow-x: hidden;
+            position: relative;
         }
         
-        .selected-item .quantity {
-            font-weight: bold;
-            color: var(--success-color);
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DE INVENTARIO (Listado de Ingredientes) */
-        /* ======================================================================= */
-        #inventory-container {
-            width: 90%;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 15px;
-            background-color: var(--box-bg-color);
-            border: 1px solid var(--box-border-color);
-            border-radius: 10px;
-        }
-        
-        #inventory-container h2 {
-            color: var(--text-color);
-            margin-top: 0;
-            border-bottom: 1px solid var(--box-border-color);
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #toggle-list-button {
-            background: none;
-            border: none;
+        h2 {
+            font-size: 1.6em;
             color: var(--accent-color);
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: transform 0.2s;
+            margin-bottom: 20px;
         }
 
-        #inventory-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px 0;
-            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 500px; /* Altura máxima por defecto */
-            overflow: hidden;
+        /* ------------------------------------------------------------------- */
+        /* CONTENEDOR DE LISTA INICIAL (Overlay Flotante/Lista de Compras) */
+        /* ------------------------------------------------------------------- */
+        #initial-selection-container {
+            background-color: #1f242b;
+            border: 1px solid var(--box-border-color);
+            border-radius: 8px;
+            padding: 15px;
+            position: fixed; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8); 
+            z-index: 1000; 
+            max-width: 90%; 
+            max-height: 90vh;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        }
+
+        #initial-selection-container:not(.minimized) {
             opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #initial-selection-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding-top: 10px;
+            text-align: left;
         }
         
-        .inventory-item {
-            background-color: #2b313a;
-            border: 1px solid var(--box-border-color);
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: grab;
-            transition: background-color 0.1s, transform 0.1s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            font-size: 0.9em;
+        .initial-item {
             display: flex;
             align-items: center;
             gap: 5px;
+            padding: 5px;
+            border-bottom: 1px dashed #30363d;
         }
         
-        .inventory-item:hover {
-            background-color: #363c46;
-            border-color: var(--accent-color);
+        .list-close-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            background-color: #ffa500; 
+            color: #161b22;
         }
 
-        .inventory-item:active {
-            cursor: grabbing;
-        }
+        /* ------------------------------------------------------------------- */
+        /* GALERÍA DE CAJAS MÁGICAS (Simulando el Supermercado) */
+        /* ------------------------------------------------------------------- */
 
-        /* Estado minimizado */
-        #inventory-list.minimized {
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            pointer-events: none;
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DE LAS CAJAS MÁGICAS (Vistas alternativas del inventario) */
-        /* ======================================================================= */
-        #magic-boxes-container {
+        #gallery-wrapper {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            align-items: center;
             justify-content: center;
-            width: 90%;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 15px;
-            min-height: 300px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            margin-top: 60px; /* <--- EDICIÓN: Movido 40px más arriba (130px -> 90px) */
         }
-
+        
+        #magic-boxes-gallery {
+            display: flex;
+            flex-wrap: nowrap; 
+            overflow-x: scroll; 
+            overflow-y: hidden;
+            scroll-behavior: smooth; 
+            gap: 20px;
+            padding: 20px 0;
+            width: 90%; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        #magic-boxes-gallery::-webkit-scrollbar {
+            display: none;
+        }
+        #magic-boxes-gallery {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        
         .magic-box {
             width: 150px;
+            min-width: 150px; 
             height: 150px;
             background-color: var(--box-bg-color);
-            border: 2px solid var(--box-border-color);
+            border: 3px solid var(--box-border-color);
             border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
             position: relative;
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        .magic-box.selected {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 25px var(--accent-color);
-        }
-        
-        .magic-box-icon {
-            font-size: 3em;
-            color: var(--text-color);
-            margin-bottom: 5px;
-            pointer-events: none; /* Ignorar clicks para que solo el box responda */
-        }
-        
-        .magic-box-name {
-            font-weight: bold;
-            font-size: 0.9em;
-            color: var(--accent-color);
-            pointer-events: none;
-        }
-
-        .magic-box-quantity {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: var(--success-color);
-            color: white;
-            border-radius: 50%;
-            padding: 2px 7px;
-            font-size: 0.7em;
-            pointer-events: none;
-        }
-
-        /* ======================================================================= */
-        /* ESTILOS DEL POPUP DE RECETAS (Copiado de pantalla7.html) */
-        /* ======================================================================= */
-
-        /* --- POPUP (MODAL) BASE STYLE --- */
-        #recipe-popup {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.9); /* Oscurece el fondo */
-            backdrop-filter: blur(5px);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
             justify-content: center;
             align-items: center;
+            gap: 5px;
+            transition: border-color 0.3s;
         }
 
-        .modal-content {
-            background-color: var(--box-bg-color);
-            margin: 5% auto; /* 5% desde arriba y centrado */
-            padding: 20px;
-            border: 2px solid var(--accent-color);
-            width: 80%; /* Ancho apropiado */
-            max-width: 700px;
-            border-radius: 10px;
-            box-shadow: 0 0 30px var(--accent-color);
-            text-align: center;
-            transform: scale(0.95);
-            transition: transform 0.3s ease-out;
-        }
-
-        #recipe-popup.visible .modal-content {
-            transform: scale(1);
-        }
-
-        .modal-content h2 {
-            color: var(--selection-color);
-            border-bottom: 2px solid var(--card-border-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        #recipes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        /* --- ESTILO DE TARJETA DE RECETA --- */
-        .recipe-card {
-            background-color: var(--card-bg-color);
-            border: 1px solid var(--card-border-color);
-            border-radius: 8px;
-            padding: 15px;
-            text-align: left;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-        }
-
-        .recipe-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--selection-color);
-        }
-
-        .recipe-card h3 {
-            margin-top: 0;
-            color: var(--accent-color);
-            font-size: 1.2em;
-            border-bottom: 1px dashed var(--card-border-color);
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-        }
-
-        .recipe-ingredients {
-            margin-bottom: 15px;
-        }
-
-        .recipe-ingredients p {
-            margin: 5px 0;
-            font-size: 0.9em;
-        }
-
-        .ingredient-name {
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .ingredient-quantity {
-            color: var(--success-color);
-            font-style: italic;
-        }
-
-        .recipe-action-button {
-            background-color: var(--success-color);
-            color: white;
-            border: none;
-            padding: 8px 15px;
+        .box-title {
+            position: absolute;
+            top: -15px;
+            background: var(--bg-color);
+            padding: 0 8px;
             border-radius: 5px;
+            font-size: 0.8em;
+            color: #ffa500;
+            font-weight: bold;
+        }
+
+        .ing-slot {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
             cursor: pointer;
+            border-radius: 4px;
             transition: background-color 0.2s;
         }
-
-        .recipe-action-button:hover {
-            background-color: #38a848;
+        
+        .ing-slot:hover {
+            background-color: #30363d;
+        }
+        
+        .scroll-button {
+            position: absolute;
+            padding: 10px 15px;
+            background-color: rgba(22, 27, 34, 0.8);
+            color: var(--accent-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.2s, opacity 0.2s;
         }
 
-        /* ======================================================================= */
-        /* MEDIA QUERIES */
-        /* ======================================================================= */
-        @media (max-width: 600px) {
-            #action-bar {
-                flex-direction: column;
-                padding: 10px;
-            }
+        #scroll-left { left: 0; }
+        #scroll-right { right: 0; }
 
-            #left-actions {
-                margin-top: 10px;
-            }
-            
-            .action-button {
-                margin-right: 0;
-                width: 100%;
-                justify-content: center;
-            }
-            
-            #main-content {
-                padding-top: 120px; /* Ajuste para la barra vertical */
-            }
-
-            .modal-content {
-                width: 95%;
-                margin: 10% auto;
-            }
+        .scroll-button:hover {
+            background-color: var(--box-bg-color);
         }
+
+        /* ------------------------------------------------------------------- */
+        /* EFECTO FLOTANTE MÁGICO (BURBUJA/VORTEX) */
+        /* ------------------------------------------------------------------- */
+        .floating-ingredient {
+            position: absolute; 
+            z-index: 100;
+            cursor: pointer;
+            text-align: center;
+            opacity: 0; 
+            /* Se usa left/top para la posición dinámica de la distribución, y transform para la levitación/caída/espiral */
+            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.5s ease-out, top 0.5s ease-out; 
+            animation: subtle-float 2s ease-in-out infinite alternate;
+        }
+
+        .ing-bubble-wrapper {
+            position: relative;
+            padding: 5px; 
+            display: inline-block;
+        }
+
+        .ing-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(88, 166, 255, 0.1); 
+            border: 1px solid rgba(88, 166, 255, 0.6);
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease-in-out; 
+        }
+
+        .floating-ingredient .ing-emoji {
+            font-size: 2.5em;
+            line-height: 1;
+            position: relative; 
+            z-index: 2;
+        }
+        
+        .floating-ingredient .ing-name {
+            font-size: 0.7em;
+            font-weight: 600;
+            color: var(--text-color);
+            text-shadow: 0 0 5px var(--accent-color);
+            position: absolute;
+            bottom: -15px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            white-space: nowrap;
+        }
+
+        @keyframes subtle-float {
+            0% { transform: translateY(0) scale(1.0); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
+            100% { transform: translateY(-5px) scale(1.0); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
+        }
+        
+        .floating-ingredient.falling {
+            animation: none; 
+            opacity: 0;
+            transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s, left 0.05s, top 0.05s; 
+            transform: translateY(20px) scale(0.2) !important; 
+        }
+        .floating-ingredient.falling .ing-bubble {
+            background: transparent;
+            box-shadow: none;
+            border: 0;
+            transform: scale(3); 
+            opacity: 0;
+        }
+
+        /* ------------------------------------------------------------------- */
+        /* BOTONES FIJOS DE ACCIÓN */
+        /* ------------------------------------------------------------------- */
+        #fixed-actions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            gap: 15px;
+        }
+
+        #accept-button, #toggle-list-button {
+            padding: 15px 25px;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s;
+        }
+
+        #accept-button {
+            background-color: var(--success-color);
+        }
+        
+        #accept-button:disabled {
+            background-color: #30363d;
+            cursor: not-allowed;
+        }
+
+        #toggle-list-button {
+            background-color: var(--accent-color);
+        }
+
+        /* Contenedor del Vórtice de Animación */
+        #vortex-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 150;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-120px); /* <--- EDICIÓN: Movido 40px más arriba (-40px -> -80px) */
+        }
+        
+        .vortex {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(0,0,0,0) 0%, var(--vortex-color) 70%, rgba(0,0,0,0) 100%);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
     </style>
 </head>
 <body>
-    
-    <div id="action-bar">
-        <div id="left-actions">
-            <button id="go-to-pantalla2-button" class="action-button">
-                <i class="fas fa-arrow-left"></i> Volver a Grimorio
-            </button>
-            
-            <button id="show-recipes-button" class="action-button">
-                <i class="fas fa-scroll"></i> Receta
-            </button>
-            </div>
-        
-        <button id="accept-selection-button" class="action-button success-action" disabled>
-            <i class="fas fa-arrow-right"></i> Aceptar Selección (0/5)
-        </button>
-    </div>
 
-    <div id="main-content">
-        <h1>Selección de Ingredientes para la Pócima</h1>
-        <p id="message-area">Cargando datos mágicos...</p>
-        
-        <div id="selection-area">
+    <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
+    <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
+
+    <div style="margin-bottom: 10px; font-size: 1.1em; color: var(--accent-color);">Ingredientes Seleccionados (Flotando)</div>
+    <div id="floating-zone-visual-indicator" style="height: 120px; border: 1px dashed #30363d; margin: 0; display: flex; justify-content: center; align-items: center; color: #30363d; background-color: #0d0f13; position: relative; top: -10px;">
+        <span id="floating-area-message">Selecciona ingredientes de las cajas de abajo.</span>
+    </div>
+    <div id="initial-selection-container" class="minimized">
+        <h3>Lista de Compras 🛒</h3>
+        <p>Marca o desmarca los ingredientes para enviarlos a la cocina.</p>
+        <div id="initial-selection-list"> 
             </div>
-        
-        <div id="inventory-container">
-            <h2>
-                Inventario de Ingredientes 
-                <button id="toggle-list-button" title="Alternar Vista">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </h2>
-            
-            <div id="inventory-list">
-                </div>
-            
-            <div id="magic-boxes-container">
-                </div>
-        </div>
+        <button class="list-close-button" onclick="toggleInitialList('minimize')">Cerrar Lista</button>
     </div>
     
-    <div id="recipe-popup" class="modal-backdrop">
-        <div class="modal-content">
-            <h2><i class="fas fa-scroll"></i> Grimorio de Recetas</h2>
-            <div id="recipes-list">
-                </div>
-            <button id="close-recipes-button" class="action-button">Cerrar</button>
-        </div>
+    <div id="gallery-wrapper">
+        <button id="scroll-left" class="scroll-button" onclick="scrollGallery(-1)">←</button>
+        <div id="magic-boxes-gallery">
+            </div>
+        <button id="scroll-right" class="scroll-button" onclick="scrollGallery(1)">→</button>
     </div>
-    <script>
+    
+    <div id="vortex-container">
+        <div class="vortex"></div>
+    </div>
+    
+    <div id="fixed-actions">
+        <button id="toggle-list-button" onclick="toggleInitialList('maximize')">🛒 Ver Lista de Compras</button>
+        <button id="accept-button" onclick="handleFinalAnimation()" disabled>Aceptar (0 ingredientes)</button>
+    </div>
+
+
+<script>
+    // ===============================================
+    // LÓGICA DE LA APLICACIÓN (Embedded JS)
+    // ===============================================
+
+    // CONSTANTES Y VARIABLES GLOBALES
+    const loadingMessage = document.getElementById('loading-message');
+    const initialListContainer = document.getElementById('initial-selection-container');
+    const magicBoxesGallery = document.getElementById('magic-boxes-gallery');
+    const acceptButton = document.getElementById('accept-button');
+    const floatingAreaMessage = document.getElementById('floating-area-message');
+
+    // DATOS GLOBALES
+    let filteredInventory = []; 
+    let selectedItems = new Set();
+    let floatingElements = new Map();
+    let inventoryDetailsMap = new Map();
+
+    // En caso de que se cargue fuera del iframe, usamos una función placeholder
+    if (typeof window.loadContent !== 'function') {
+         window.loadContent = (url) => console.log(`DEBUG: Navegando a ${url}`);
+    }
+    
+    // ===============================================
+    // PERSISTENCIA LOCAL Y SINCRONIZACIÓN DE ESTADO
+    // ===============================================
+
+    function saveSelectionToStorage() {
+        const selectionData = {
+            selectedItems: Array.from(selectedItems),
+        };
+        localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
+        updateAcceptButton();
+        updateFloatingArea(); // Llamada a la función de layout
+    }
+    
+    function loadSelectionFromStorage() {
+        const localSelection = localStorage.getItem('magicIngredientSelection');
+        if (localSelection) {
+            const selection = JSON.parse(localSelection);
+            selectedItems = new Set(selection.selectedItems);
+        }
+    }
+    
+    function updateAcceptButton() {
+        acceptButton.textContent = `Aceptar (${selectedItems.size} ingredientes)`;
+        acceptButton.disabled = selectedItems.size === 0;
+    }
+
+    // ===============================================
+    // LÓGICA DE DISTRIBUCIÓN DINÁMICA MULTI-COLUMNA (EDICIÓN CLAVE)
+    // ===============================================
+
+    /**
+     * Calcula y aplica la nueva posición (top, left) y el escalado (scale)
+     * a todos los ingredientes flotantes seleccionados, permitiendo varias filas.
+     */
+    function updateFloatingArea() {
+        const viewportWidth = window.innerWidth;
+        const floatingElementsArray = Array.from(floatingElements.values());
+        const totalItems = floatingElementsArray.length;
         
-        // =======================================================================
-        // DATA Y CONFIGURACIÓN
-        // =======================================================================
-        const MAX_INGREDIENTS = 5;
-        let filteredInventory = [];
-        const inventoryDetailsMap = new Map();
-        let selectedIngredients = new Map(); // Mapa para {nombre: {count, element}}
-
-        // --- RECETAS (COPIADO DE PANTALLA7) ---
-        const recipes = [
-            { nombre: "Jugo de Manzana Revitalizante", ingredientes: [{ nombre: "Manzana", cantidad: 3 }, { nombre: "Agua de Manantial", cantidad: 1 }] },
-            { nombre: "Elixir de Fuerza Arcana", ingredientes: [{ nombre: "Raíz de Mandrágora", cantidad: 1 }, { nombre: "Savia Lunar", cantidad: 2 }, { nombre: "Esencia de Sol", cantidad: 1 }] },
-            { nombre: "Tónico de Invisibilidad", ingredientes: [{ nombre: "Pelo de Troll", cantidad: 5 }, { nombre: "Ojo de Salamandra", cantidad: 1 }] },
-            { nombre: "Pastel de Luna Llena", ingredientes: [{ nombre: "Harina Élfica", cantidad: 2 }, { nombre: "Miel de Abeja Gigante", cantidad: 3 }, { nombre: "Vapor de Nube", cantidad: 1 }] },
-            { nombre: "Brevemente Aliento de Dragón", ingredientes: [{ nombre: "Polvo de Estrellas", cantidad: 4 }, { nombre: "Piel de Serpiente", cantidad: 1 }, { nombre: "Huevo de Grifo", cantidad: 2 }] }
-        ];
-
-        // =======================================================================
-        // ELEMENTOS DEL DOM
-        // =======================================================================
-        const selectionArea = document.getElementById('selection-area');
-        const inventoryList = document.getElementById('inventory-list');
-        const magicBoxesContainer = document.getElementById('magic-boxes-container');
-        const loadingMessage = document.getElementById('message-area');
-        const acceptButton = document.getElementById('accept-selection-button');
-        const goToPantalla2Button = document.getElementById('go-to-pantalla2-button');
-        const toggleListButton = document.getElementById('toggle-list-button');
+        // ZONA DE FLOTACIÓN (Valores consistentes con el nuevo layout)
+        const areaWidth = viewportWidth; // Ahora full width
+        const areaHeight = 120; // Altura del indicador visual
+        const areaTop = 100; // <--- EDICIÓN: Movido 30px más abajo (70 -> 100). Coincide con --floating-area-top
         
-        // --- ELEMENTOS DE RECETAS (COPIADO DE PANTALLA7) ---
-        const recipePopup = document.getElementById('recipe-popup');
-        const recipesList = document.getElementById('recipes-list');
-        const showRecipesButton = document.getElementById('show-recipes-button');
-        const closeRecipesButton = document.getElementById('close-recipes-button');
-
-
-        // =======================================================================
-        // FUNCIONES DE UTILIDAD Y CORE
-        // =======================================================================
+        const baseItemWidth = 80; // Ancho visual estimado del elemento
+        const baseItemHeight = 90; // Alto visual estimado del elemento (burbuja + nombre)
         
-        function updateAcceptButton() {
-            const currentCount = selectedIngredients.size;
-            acceptButton.textContent = `Aceptar Selección (${currentCount}/${MAX_INGREDIENTS})`;
-            acceptButton.disabled = currentCount === 0;
-            
-            if (currentCount > 0) {
-                acceptButton.classList.add('success-action');
-            } else {
-                acceptButton.classList.remove('success-action');
-            }
-        }
+        // 1. Calcular cuántos ítems caben por fila (máx columnas)
+        const maxColumns = Math.floor(areaWidth / baseItemWidth);
+        const columns = Math.max(1, maxColumns); 
         
-        function showMessage(text, type = 'default') {
-            loadingMessage.textContent = text;
-            loadingMessage.style.color = type === 'error' ? '#f75555' : type === 'success' ? var(--success-color) : var(--text-color);
-        }
-
-        // =======================================================================
-        // LÓGICA DE DRAG AND DROP / SELECCIÓN
-        // =======================================================================
-
-        function handleItemClick(event) {
-            let itemName = event.currentTarget.dataset.name;
-            let detail = inventoryDetailsMap.get(itemName);
-            
-            if (detail.cantidad <= 0) {
-                showMessage(`ERROR: No quedan existencias de ${itemName}.`, 'error');
-                return;
-            }
-
-            if (selectedIngredients.size >= MAX_INGREDIENTS) {
-                if (!selectedIngredients.has(itemName)) {
-                    showMessage(`ERROR: Ya has alcanzado el límite de ${MAX_INGREDIENTS} ingredientes.`, 'error');
-                    return;
-                }
-            }
-
-            if (selectedIngredients.has(itemName)) {
-                // Eliminar el ingrediente (si ya estaba)
-                removeItemFromSelection(itemName);
-            } else {
-                // Añadir el ingrediente
-                addItemToSelection(itemName);
-            }
-
-            // Actualizar la cantidad en el inventario visual
-            detail.cantidad--;
-            
-            // Renderiza ambas vistas para reflejar la cantidad restante y el estado de selección
-            renderMagicBoxes();
-            renderInitialList();
-            
-            updateAcceptButton();
-            saveSelectionToStorage();
-        }
-
-        function addItemToSelection(name) {
-            if (!selectedIngredients.has(name)) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'selected-item';
-                itemDiv.dataset.name = name;
-                
-                const icon = inventoryDetailsMap.get(name).icono;
-                itemDiv.innerHTML = `<i class="${icon}"></i> <span>${name}</span>`;
-                
-                // Agregar event listener para poder eliminar al hacer click
-                itemDiv.addEventListener('click', () => {
-                    removeItemFromSelection(name);
-                    
-                    // Actualizar la cantidad en el inventario visual
-                    let detail = inventoryDetailsMap.get(name);
-                    detail.cantidad++;
-                    renderMagicBoxes();
-                    renderInitialList();
-                    
-                    updateAcceptButton();
-                    saveSelectionToStorage();
-                });
-
-                selectionArea.appendChild(itemDiv);
-                selectedIngredients.set(name, { element: itemDiv });
-                
-                showMessage(`Ingrediente ${name} añadido a la selección.`, 'default');
-            }
-        }
-
-        function removeItemFromSelection(name) {
-            const item = selectedIngredients.get(name);
-            if (item) {
-                selectionArea.removeChild(item.element);
-                selectedIngredients.delete(name);
-                showMessage(`Ingrediente ${name} removido de la selección.`, 'default');
-            }
-        }
-
-        // =======================================================================
-        // LÓGICA DE RENDERIZADO
-        // =======================================================================
-
-        function renderInitialList() {
-            inventoryList.innerHTML = '';
-            filteredInventory.forEach(item => {
-                if (item.activo) {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = `inventory-item ${item.cantidad === 0 ? 'disabled' : ''}`;
-                    itemDiv.dataset.name = item.nombre;
-                    itemDiv.innerHTML = `<i class="${item.icono}"></i> ${item.nombre} <span style="color:var(--accent-color);">(${item.cantidad})</span>`;
-                    itemDiv.addEventListener('click', handleItemClick);
-                    inventoryList.appendChild(itemDiv);
-                }
-            });
+        // 2. Calcular cuántas filas se necesitan
+        const rows = Math.ceil(totalItems / columns);
+        
+        // 3. Calcular el escalado global si el número de filas excede la altura disponible
+        let scale = 1.0;
+        const requiredHeight = rows * baseItemHeight;
+        const maxHeight = areaHeight; 
+        
+        if (requiredHeight > maxHeight) {
+            // Calculamos el escalado necesario para que quepa en la altura máxima
+            scale = Math.max(0.5, maxHeight / requiredHeight); 
         }
         
-        function renderMagicBoxes() {
-            magicBoxesContainer.innerHTML = '';
-            filteredInventory.forEach(item => {
-                if (item.activo) {
-                    const box = document.createElement('div');
-                    box.className = `magic-box ${selectedIngredients.has(item.nombre) ? 'selected' : ''}`;
-                    box.dataset.name = item.nombre;
-                    box.title = item.nombre;
-                    
-                    box.innerHTML = `
-                        <i class="${item.icono} magic-box-icon"></i>
-                        <span class="magic-box-name">${item.nombre}</span>
-                        <span class="magic-box-quantity">${item.cantidad}</span>
-                    `;
-                    
-                    // Agregar event listener a la caja
-                    box.addEventListener('click', handleItemClick);
-                    
-                    magicBoxesContainer.appendChild(box);
-                }
-            });
-        }
+        const effectiveItemWidth = baseItemWidth * scale;
+        const effectiveItemHeight = baseItemHeight * scale;
+
+        // 4. Calcular el espaciado horizontal y el inicio X para centrar la matriz (fila más larga)
+        const itemsInLongestRow = Math.min(totalItems, columns);
+        const totalWidthUsed = itemsInLongestRow * effectiveItemWidth;
+        const offsetX = (areaWidth - totalWidthUsed) / 2 + (effectiveItemWidth / 2) - (30 * scale); 
         
-        function toggleInitialList(forceState = null) {
-            if (forceState === 'minimize') {
-                inventoryList.classList.add('minimized');
-                magicBoxesContainer.style.display = 'flex';
-                toggleListButton.innerHTML = '<i class="fas fa-search-plus"></i>';
-                toggleListButton.title = 'Mostrar Inventario Completo';
-            } else if (forceState === 'expand') {
-                inventoryList.classList.remove('minimized');
-                magicBoxesContainer.style.display = 'none';
-                toggleListButton.innerHTML = '<i class="fas fa-search-minus"></i>';
-                toggleListButton.title = 'Ocultar Inventario Completo';
-            } else { // Toggle
-                const isMinimized = inventoryList.classList.toggle('minimized');
-                magicBoxesContainer.style.display = isMinimized ? 'flex' : 'none';
-                toggleListButton.innerHTML = isMinimized ? '<i class="fas fa-search-plus"></i>' : '<i class="fas fa-search-minus"></i>';
-                toggleListButton.title = isMinimized ? 'Mostrar Inventario Completo' : 'Ocultar Inventario Completo';
+        // 5. Calcular el espaciado vertical y el inicio Y para centrar la matriz
+        const totalHeightUsed = rows * effectiveItemHeight;
+        const offsetY = (areaHeight - totalHeightUsed) / 2;
+        
+        // 6. Aplicar posiciones a cada elemento
+        floatingElementsArray.forEach((el, index) => {
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+            
+            // Posición en X: Offset + (Columna * Ancho_Efectivo)
+            const targetLeft = offsetX + (col * effectiveItemWidth);
+
+            // Posición en Y: Posición_Inicial_Zona_Top + Offset_Vertical_Centrado + (Fila * Alto_Efectivo) + Jitter
+            const targetTop = areaTop + offsetY + (row * effectiveItemHeight) + (Math.random() * 10 - 5); 
+            
+            el.style.left = `${targetLeft}px`;
+            el.style.top = `${targetTop}px`;
+            el.style.transform = `scale(${scale})`; 
+
+            if (el.dataset.state !== 'floating') {
+                el.style.opacity = '1';
+                el.dataset.state = 'floating';
+            }
+        });
+        
+        // Mensaje de la zona de flotación
+        floatingAreaMessage.style.display = totalItems > 0 ? 'none' : 'block';
+    }
+
+
+    // ===============================================
+    // LÓGICA DE SELECCIÓN MÁGICA
+    // ===============================================
+
+    function handleSelection(ingName) {
+        const isSelected = selectedItems.has(ingName);
+        const ingData = inventoryDetailsMap.get(ingName);
+        
+        if (!ingData) return;
+
+        const boxSlot = document.querySelector(`.ing-slot[data-name="${ingName}"]`);
+        
+        if (isSelected) {
+            selectedItems.delete(ingName);
+            removeFloatingElement(ingName);
+            if (boxSlot) boxSlot.style.visibility = 'visible';
+        } else {
+            selectedItems.add(ingName);
+            
+            if (boxSlot) {
+                boxSlot.style.visibility = 'hidden';
+                createFloatingElement(ingData, boxSlot); 
             }
         }
-
-        // =======================================================================
-        // LÓGICA DE RECETAS (COPIADO DE PANTALLA7)
-        // =======================================================================
         
-        function renderRecipes() {
-            recipesList.innerHTML = ''; // Limpiar lista
-            recipes.forEach((recipe) => {
-                const card = document.createElement('div');
-                card.className = 'recipe-card';
+        saveSelectionToStorage();
+        const checklistCheckbox = document.querySelector(`#checklist-${ingName.replace(/\s/g, '_')}`);
+        if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
+    }
+    
+    function createFloatingElement(ingData, sourceElement) {
+        if (floatingElements.has(ingData.nombre)) return;
 
-                const title = document.createElement('h3');
-                title.textContent = recipe.nombre;
-                card.appendChild(title);
+        const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingData.nombre}"]`);
+        if (!targetSlot) return; 
 
-                const ingredientsDiv = document.createElement('div');
-                ingredientsDiv.className = 'recipe-ingredients';
+        const rect = targetSlot.getBoundingClientRect();
+        const galleryRect = magicBoxesGallery.getBoundingClientRect();
+        
+        const floatingEl = document.createElement('div');
+        floatingEl.classList.add('floating-ingredient');
+        floatingEl.setAttribute('data-name', ingData.nombre);
+        floatingEl.dataset.state = 'initial'; // Estado inicial
 
-                recipe.ingredientes.forEach(ing => {
-                    const p = document.createElement('p');
-                    p.innerHTML = `<span class="ingredient-name">${ing.nombre}</span>: <span class="ingredient-quantity">${ing.cantidad}</span> unidad(es)`;
-                    ingredientsDiv.appendChild(p);
-                });
-                card.appendChild(ingredientsDiv);
-                
-                // Botón de acción (para seleccionar la receta)
-                const actionButton = document.createElement('button');
-                actionButton.className = 'recipe-action-button';
-                actionButton.textContent = 'Seleccionar Receta';
-                // Usamos un closure para pasar el objeto 'recipe' a la función
-                actionButton.onclick = () => selectRecipe(recipe); 
-                card.appendChild(actionButton);
+        floatingEl.innerHTML = `
+            <div class="ing-bubble-wrapper">
+                <div class="ing-bubble">
+                    <div class="ing-emoji">${ingData.emoji}</div>
+                </div>
+            </div>
+            <div class="ing-name">${ingData.nombre}</div>
+        `;
 
+        document.body.appendChild(floatingEl);
+        
+        const bubbleSizeOffset = 30; // La burbuja mide 60px. Offset = 30px.
 
-                recipesList.appendChild(card);
-            });
-        }
+        const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
+        const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset; 
+        const initialLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
+        const initialTop = rect.top + window.scrollY - bubbleSizeOffset; 
+        
+        floatingEl.style.left = `${initialLeft}px`;
+        floatingEl.style.top = `${initialTop}px`; 
 
-        function showRecipesPopup() {
-            renderRecipes(); // Renderizar las recetas antes de mostrar
-            recipePopup.classList.add('visible');
-            recipePopup.style.display = 'flex';
-        }
-
-        function hideRecipesPopup() {
-            recipePopup.classList.remove('visible');
-            // Usamos un pequeño delay para que la transición de CSS se vea
-            setTimeout(() => {
-                if (!recipePopup.classList.contains('visible')) {
-                    recipePopup.style.display = 'none';
-                }
-            }, 300); 
-        }
-
-        // Función de Placeholder para la acción del botón de Receta
-        function selectRecipe(recipe) {
-            showMessage(`¡Receta seleccionada: ${recipe.nombre}! Carga de ingredientes no implementada.`, 'default');
-            // Nota: Aquí iría la lógica para limpiar la selección actual y añadir los ingredientes
-            // de la receta a 'selectedIngredients' y actualizar el inventario.
-            // Por ejemplo:
-            // selectedIngredients.clear();
-            // recipe.ingredientes.forEach(ing => {
-            //     // Verificar si el ingrediente existe y tiene la cantidad necesaria
-            //     // Si es así, se añade a selectedIngredients y se resta del inventario.
-            // });
-            hideRecipesPopup();
-            // Volver a renderizar todo
-            // renderMagicBoxes();
-            // renderInitialList();
-            // updateAcceptButton();
-            // saveSelectionToStorage();
-        }
-
-        // =======================================================================
-        // LÓGICA DE ALMACENAMIENTO LOCAL
-        // =======================================================================
-
-        function saveSelectionToStorage() {
-            const selectionArray = Array.from(selectedIngredients.keys());
-            localStorage.setItem('pantalla5Selection', JSON.stringify(selectionArray));
-        }
-
-        function loadSelectionFromStorage() {
-            const savedSelection = localStorage.getItem('pantalla5Selection');
-            if (savedSelection) {
-                try {
-                    const selectionArray = JSON.parse(savedSelection);
-                    
-                    // Restablecer el inventario para simular un "reset" del estado.
-                    // (Asumiendo que el inventario original está en "dataLoaded" antes de cargarse)
-                    // ... [La lógica de reset de cantidades iría aquí si se usara `dataLoaded` directamente] ...
-
-                    // Cargar la selección guardada
-                    selectionArray.forEach(name => {
-                        const detail = inventoryDetailsMap.get(name);
-                        if (detail && detail.cantidad > 0) {
-                            addItemToSelection(name);
-                            detail.cantidad--; // Restar del inventario
-                        }
-                    });
-                } catch (e) {
-                    console.error("Error al parsear pantalla5Selection de localStorage:", e);
-                }
-            }
-        }
-
-        // =======================================================================
-        // INICIALIZACIÓN
-        // =======================================================================
-
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // 1. Manejo del botón de Volver
-            goToPantalla2Button.addEventListener('click', () => {
-                // Guarda la selección antes de salir
-                saveSelectionToStorage();
-                
-                // ASUNCIÓN: Se utiliza una función global 'loadScreen' para el cambio de pantalla.
-                if (window.parent && typeof window.parent.loadScreen === 'function') {
-                    window.parent.loadScreen('pantalla2');
-                } else if (typeof window.loadScreen === 'function') {
-                    window.loadScreen('pantalla2');
-                } else {
-                    console.warn("La función loadScreen('pantalla2') no está definida.");
-                }
-            });
-            
-            // 2. Manejo del botón de Aceptar
-            acceptButton.addEventListener('click', () => {
-                if (selectedIngredients.size > 0) {
-                    const selectedNames = Array.from(selectedIngredients.keys());
-                    localStorage.setItem('ingredientesSeleccionados', JSON.stringify(selectedNames));
-                    showMessage(`¡Selección de ${selectedNames.length} ingredientes guardada! Procediendo al siguiente paso.`, 'success');
-
-                    // ASUNCIÓN: Ir a pantalla 6 (por ejemplo)
-                    if (window.parent && typeof window.parent.loadScreen === 'function') {
-                        window.parent.loadScreen('pantalla6');
-                    } else if (typeof window.loadScreen === 'function') {
-                        window.loadScreen('pantalla6');
-                    } else {
-                        console.warn("La función loadScreen('pantalla6') no está definida.");
-                    }
-
-                } else {
-                    showMessage("Por favor, selecciona al menos un ingrediente.", 'error');
-                }
-            });
-
-            // 3. Manejo del botón de alternar vista
-            toggleListButton.addEventListener('click', () => {
-                toggleInitialList();
-            });
-
-            // 4. Carga de datos de inventario e inicialización de vistas
-            loadMenuData();
-            
-            // 5. LISTENERS PARA RECETAS (COPIADO DE PANTALLA7)
-            showRecipesButton.addEventListener('click', showRecipesPopup);
-            closeRecipesButton.addEventListener('click', hideRecipesPopup);
-
-            window.addEventListener('click', (event) => {
-                if (event.target === recipePopup) { hideRecipesPopup(); }
-            });
+        requestAnimationFrame(() => {
+            floatingEl.style.opacity = '1';
+            updateFloatingArea(); 
         });
 
-        // Función de Carga de datos simulada
-        async function loadMenuData() {
-            let dataLoaded = null;
+        floatingEl.addEventListener('click', () => {
+            handleSelection(ingData.nombre);
+        });
+
+        floatingElements.set(ingData.nombre, floatingEl);
+    }
+    
+    function removeFloatingElement(ingName) {
+        const el = floatingElements.get(ingName);
+        if (el) {
+            el.classList.add('falling');
+            el.dataset.state = 'falling';
             
-            try {
-                const GRIMORIO_DATA_KEY = 'inventarioData';
+            setTimeout(() => {
+                el.remove();
+                floatingElements.delete(ingName);
+                updateFloatingArea(); 
+            }, 500); 
+        }
+    }
+
+    // ===============================================
+    // LÓGICA DE NAVEGACIÓN HORIZONTAL (Scroll)
+    // ===============================================
+    
+    function scrollGallery(direction) {
+        const scrollAmount = magicBoxesGallery.clientWidth * 0.8; 
+        
+        if (direction === 1) {
+            magicBoxesGallery.scrollLeft += scrollAmount;
+        } else {
+            magicBoxesGallery.scrollLeft -= scrollAmount;
+        }
+    }
+
+
+    // ===============================================
+    // ANIMACIÓN FINAL Y NAVEGACIÓN
+    // ===============================================
+
+    async function handleFinalAnimation() {
+        if (selectedItems.size === 0) return;
+        
+        acceptButton.disabled = true;
+        const toggleListButton = document.getElementById('toggle-list-button');
+        toggleListButton.disabled = true;
+
+        const vortexContainer = document.getElementById('vortex-container');
+        vortexContainer.style.display = 'flex';
+        
+        const vortexRect = vortexContainer.getBoundingClientRect();
+        const centerVortexX = vortexRect.left + vortexRect.width / 2;
+        const centerVortexY = vortexRect.top + vortexRect.height / 2;
+
+        const vortexDuration = 1500; 
+        const totalItems = floatingElements.size;
+        let index = 0;
+
+        floatingElements.forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            
+            const startX = rect.left + rect.width / 2;
+            const startY = rect.top + rect.height / 2;
+            
+            const translateX = centerVortexX - startX;
+            const translateY = centerVortexY - startY;
+            
+            const angleOffset = (index * 360 / totalItems) * 2; 
+            const rotation = 720 + angleOffset; 
+            const delay = index * 50; 
+
+            el.style.transition = 'none'; 
+            el.style.animation = 'none'; 
+            
+            setTimeout(() => {
+                // Aplicar transición de espiral
+                el.style.transition = `transform ${vortexDuration}ms cubic-bezier(0.6, 0.0, 0.4, 1.0), opacity ${vortexDuration}ms`; 
                 
-                // ASUNCIÓN: Carga de datos desde localStorage (simulando la carga de pantalla2/grimorio)
-                const localData = localStorage.getItem(GRIMORIO_DATA_KEY);
+                el.style.transform = `
+                    translate(${translateX}px, ${translateY}px) 
+                    scale(0.01) 
+                    rotate(${rotation}deg)
+                `;
+                el.style.opacity = '0'; 
+            }, delay);
+
+            index++;
+        });
+
+        const totalAnimationTime = vortexDuration + ((totalItems > 0 ? totalItems - 1 : 0) * 50);
+        await new Promise(resolve => setTimeout(resolve, totalAnimationTime + 100)); 
+
+        floatingElements.forEach(el => el.remove());
+        vortexContainer.style.display = 'none';
+
+        saveSelectionToStorage();
+
+        if (window.parent && typeof window.parent.loadContent === 'function') {
+            window.parent.loadContent('pantalla4.html');
+        } else {
+            window.loadContent('pantalla4.html');
+        } 
+    }
+    
+    // Escuchar el evento de redimensionamiento de la ventana para recalcular la posición de los flotantes
+    window.addEventListener('resize', updateFloatingArea);
+
+
+    // ===============================================
+    // RENDERIZADO Y UTILIDADES 
+    // ===============================================
+
+    function groupIngredients(ingredients) {
+        const groups = [];
+        for (let i = 0; i < ingredients.length; i += 5) {
+            groups.push(ingredients.slice(i, i + 5));
+        }
+        return groups;
+    }
+
+    function renderMagicBoxes() {
+        magicBoxesGallery.innerHTML = '';
+        
+        floatingElements.forEach(el => el.remove());
+        floatingElements.clear();
+
+        const ingredientGroups = groupIngredients(filteredInventory);
+        
+        ingredientGroups.forEach((group, index) => {
+            const box = document.createElement('div');
+            box.classList.add('magic-box');
+            box.innerHTML = `<div class="box-title">Caja Mágica ${index + 1}</div>`;
+            
+            group.forEach(ingData => {
+                const isSelected = selectedItems.has(ingData.nombre);
+                
+                const slot = document.createElement('div');
+                slot.classList.add('ing-slot');
+                slot.setAttribute('data-name', ingData.nombre);
+                slot.innerHTML = ingData.emoji;
+                
+                if (isSelected) {
+                    slot.style.visibility = 'hidden';
+                }
+                
+                slot.addEventListener('click', () => {
+                    handleSelection(ingData.nombre);
+                });
+                
+                box.appendChild(slot);
+            });
+            
+            magicBoxesGallery.appendChild(box);
+        });
+        
+        filteredInventory.forEach(ingData => {
+            if (selectedItems.has(ingData.nombre)) {
+                const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
+                if (sourceSlot) {
+                    setTimeout(() => createFloatingElement(ingData, sourceSlot), 10); 
+                }
+            }
+        });
+        
+        setTimeout(updateFloatingArea, 100); 
+    }
+
+    function renderInitialList() {
+        const listContainer = document.getElementById('initial-selection-list');
+        listContainer.innerHTML = '';
+
+        filteredInventory.forEach(ingData => {
+            const isSelected = selectedItems.has(ingData.nombre);
+            const item = document.createElement('div');
+            item.classList.add('initial-item');
+            
+            item.innerHTML = `
+                <input type="checkbox" id="checklist-${ingData.nombre.replace(/\s/g, '_')}" ${isSelected ? 'checked' : ''} data-name="${ingData.nombre}">
+                <label for="checklist-${ingData.nombre.replace(/\s/g, '_')}">${ingData.emoji} ${ingData.nombre} (${ingData.cantidad_disponible || 'N/A'})</label>
+            `;
+            
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', () => {
+                handleSelection(ingData.nombre); 
+            });
+
+            listContainer.appendChild(item);
+        });
+    }
+    
+    function toggleInitialList(action) {
+        if (action === 'minimize') {
+            initialListContainer.classList.add('minimized');
+        } else {
+            initialListContainer.classList.remove('minimized');
+        }
+    }
+    
+    // ===============================================
+    // INICIALIZACIÓN PRINCIPAL
+    // ===============================================
+
+    async function loadMenuData() {
+        try {
+            loadingMessage.textContent = 'Buscando el grimorio de ingredientes en el almacén mágico...';
+            
+            let dataLoaded = null;
+
+            if (window.parent && window.parent.inventarioData) {
+                dataLoaded = window.parent.inventarioData;
+                loadingMessage.textContent = 'Éxito: Datos cargados directamente del padre.';
+            }
+
+            if (!dataLoaded) {
+                 loadingMessage.textContent = 'El grimorio del padre no respondió, intentando leer la copia local...';
+                 const localData = localStorage.getItem('inventarioData');
                  if (localData) {
                     try {
                         dataLoaded = JSON.parse(localData);
@@ -886,8 +793,7 @@
             }
             
             if (dataLoaded && Array.isArray(dataLoaded)) {
-                // Hacemos una COPIA profunda para que la edición de cantidad no afecte el original en localStorage
-                filteredInventory = dataLoaded.map(item => ({...item})); 
+                filteredInventory = dataLoaded.filter(item => item.activo === true);
             } else {
                 throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible.");
             }
