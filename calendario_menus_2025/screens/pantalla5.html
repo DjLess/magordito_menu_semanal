@@ -18,6 +18,10 @@
             --box-border-color: #30363d;
             --vortex-color: rgba(88, 166, 255, 0.8);
             --ingredient-lift: 50px; /* Distancia de levitación */
+            
+            /* NUEVA ZONA DE FLOTACIÓN: Offset vertical (donde estaba la galería) */
+            --floating-area-top: 150px; 
+            --floating-area-height: 250px; 
         }
         
         body {
@@ -101,7 +105,7 @@
         /* GALERÍA DE CAJAS MÁGICAS (Simulando el Supermercado) */
         /* ------------------------------------------------------------------- */
 
-        /* Contenedor que maneja el posicionamiento de las flechas */
+        /* DESPLAZAMIENTO: Mueve el contenedor principal de la galería 200px hacia abajo */
         #gallery-wrapper {
             display: flex;
             align-items: center;
@@ -109,6 +113,7 @@
             width: 100%;
             margin: 0 auto;
             position: relative;
+            margin-top: 200px; /* <--- EDICIÓN 1: Desplazamiento de la galería */
         }
         
         /* Contenedor principal de las cajas: habilita el scroll horizontal */
@@ -208,8 +213,8 @@
             cursor: pointer;
             text-align: center;
             opacity: 0; 
-            /* La transición se usa para la reubicación, caída y el efecto final de absorción */
-            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.05s, top 0.05s;
+            /* Modificación: Usamos transform para la levitación y las propiedades left/top para el posicionamiento dinámico */
+            transition: transform 0.5s ease-in-out, opacity 0.5s, left 0.5s ease-out, top 0.5s ease-out; /* <- Transiciones más suaves para el reposicionamiento */
             animation: subtle-float 2s ease-in-out infinite alternate;
         }
 
@@ -253,16 +258,18 @@
         }
 
         @keyframes subtle-float {
-            0% { transform: translateY(calc(var(--ingredient-lift) * -1)) scale(1.0); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
-            100% { transform: translateY(calc(var(--ingredient-lift) * -1.1)) scale(1.05); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
+            /* Mantenemos el efecto de levitación vertical sutil */
+            0% { transform: translateY(0) scale(1.0); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
+            100% { transform: translateY(-5px) scale(1.0); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
         }
         
         /* Efecto de Caída / Burbuja Reventada */
         .floating-ingredient.falling {
             animation: none; 
             opacity: 0;
-            transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s; 
-            transform: translateY(0) scale(0.2) !important; 
+            /* La caída/explosión ocurre en su posición actual antes de ser eliminada */
+            transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s, left 0.05s, top 0.05s; 
+            transform: translateY(20px) scale(0.2) !important; /* Desaparece hacia abajo */
         }
         .floating-ingredient.falling .ing-bubble {
             background: transparent;
@@ -270,6 +277,13 @@
             border: 0;
             transform: scale(3); 
             opacity: 0;
+        }
+        
+        /* Animación Final: Giro en Espiral */
+        @keyframes spiral-to-center {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(0.5) rotate(360deg); opacity: 1; }
+            100% { transform: scale(0.01) rotate(720deg); opacity: 0; }
         }
 
         /* ------------------------------------------------------------------- */
@@ -344,8 +358,10 @@
     <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
     <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
 
-    <div style="margin-bottom: 10px; font-size: 1.1em; color: #fff;">El Supermercado Mágico (Cajas de Ingredientes)</div>
-
+    <div style="margin-bottom: 10px; font-size: 1.1em; color: var(--accent-color);">Ingredientes Seleccionados (Flotando)</div>
+    <div style="height: 150px; border: 1px dashed #30363d; margin: 0 5%; display: flex; justify-content: center; align-items: center; color: #30363d; background-color: #0d0f13; position: relative; top: -10px;">
+        <span id="floating-area-message">Selecciona ingredientes de las cajas de abajo.</span>
+    </div>
     <div id="initial-selection-container" class="minimized">
         <h3>Lista de Compras 🛒</h3>
         <p>Marca o desmarca los ingredientes para enviarlos a la cocina.</p>
@@ -381,6 +397,7 @@
     const initialListContainer = document.getElementById('initial-selection-container');
     const magicBoxesGallery = document.getElementById('magic-boxes-gallery');
     const acceptButton = document.getElementById('accept-button');
+    const floatingAreaMessage = document.getElementById('floating-area-message');
 
     // DATOS GLOBALES
     let filteredInventory = []; 
@@ -403,6 +420,7 @@
         };
         localStorage.setItem('magicIngredientSelection', JSON.stringify(selectionData));
         updateAcceptButton();
+        updateFloatingArea(); // <--- Llamada a la nueva función de layout
     }
     
     function loadSelectionFromStorage() {
@@ -434,6 +452,69 @@
 
 
     // ===============================================
+    // LÓGICA DE DISTRIBUCIÓN DINÁMICA DE INGREDIENTES FLOTANTES
+    // ===============================================
+
+    /**
+     * Calcula y aplica la nueva posición (top, left) y el escalado (scale)
+     * a todos los ingredientes flotantes seleccionados.
+     */
+    function updateFloatingArea() {
+        const viewportWidth = window.innerWidth;
+        const floatingElementsArray = Array.from(floatingElements.values());
+        const totalItems = floatingElementsArray.length;
+        
+        // La zona de flotación es ~90% del ancho de la pantalla
+        const areaWidth = viewportWidth * 0.9; 
+        const areaHeight = 150; // Definido en el HTML
+        const areaTop = 150; // Definido en CSS variable --floating-area-top
+
+        const maxItemSize = 1.0; 
+        const minItemSize = 0.5;
+        const baseItemWidth = 80; // Ancho visual estimado del elemento (60px burbuja + nombre)
+
+        // Estrategia: Calcular el escalado y el espaciado para que todos quepan
+        
+        // 1. Calcular el tamaño óptimo de los ítems
+        let scale = maxItemSize;
+        let spacing = baseItemWidth;
+        
+        // Intentar que quepan 
+        if (totalItems > 0) {
+            const requiredWidth = totalItems * baseItemWidth;
+            if (requiredWidth > areaWidth) {
+                // Si no caben al 100%, calculamos el escalado necesario
+                scale = Math.max(minItemSize, areaWidth / requiredWidth);
+                spacing = baseItemWidth * scale;
+            }
+        }
+        
+        // 2. Calcular el desplazamiento inicial (para centrar la fila)
+        const totalFloatingWidth = totalItems * spacing;
+        const startX = (viewportWidth - totalFloatingWidth) / 2 + (spacing / 2) - 30; // -30 para centrar la burbuja (60/2)
+
+        // 3. Aplicar posiciones a cada elemento
+        floatingElementsArray.forEach((el, index) => {
+            const targetLeft = startX + (index * spacing);
+            const targetTop = areaTop + (areaHeight / 2) - 30 + Math.random() * 20 - 10; // Centrado en Y con jitter
+            
+            el.style.left = `${targetLeft}px`;
+            el.style.top = `${targetTop}px`;
+            el.style.transform = `scale(${scale})`; // Ajuste dinámico de tamaño
+
+            // Si es la primera vez que se mueve a la zona, lo hacemos visible y animamos
+            if (el.dataset.state !== 'floating') {
+                el.style.opacity = '1';
+                el.dataset.state = 'floating';
+            }
+        });
+        
+        // Mensaje de la zona de flotación
+        floatingAreaMessage.style.display = totalItems > 0 ? 'none' : 'block';
+    }
+
+
+    // ===============================================
     // LÓGICA DE SELECCIÓN MÁGICA
     // ===============================================
 
@@ -456,7 +537,7 @@
             
             if (boxSlot) {
                 boxSlot.style.visibility = 'hidden';
-                // Creamos el elemento flotante, la función lo posiciona automáticamente sobre el slot de la caja.
+                // Creamos el elemento flotante, su posición inicial es sobre el slot.
                 createFloatingElement(ingData, boxSlot); 
             }
         }
@@ -468,22 +549,22 @@
     }
     
     /**
-     * Crea un ingrediente flotante con efecto de burbuja, posicionado sobre su slot de caja.
+     * Crea un ingrediente flotante con efecto de burbuja, posicionado inicialmente sobre su slot de caja.
      */
     function createFloatingElement(ingData, sourceElement) {
         if (floatingElements.has(ingData.nombre)) return;
 
-        // Siempre obtener la posición del slot de la caja para la flotación consistente.
         const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingData.nombre}"]`);
         if (!targetSlot) return; 
 
         const rect = targetSlot.getBoundingClientRect();
-        const galleryRect = magicBoxesGallery.getBoundingClientRect(); // Posición de la galería en el viewport
+        const galleryRect = magicBoxesGallery.getBoundingClientRect();
         
         const floatingEl = document.createElement('div');
         floatingEl.classList.add('floating-ingredient');
         floatingEl.setAttribute('data-name', ingData.nombre);
-        
+        floatingEl.dataset.state = 'initial'; // Estado inicial
+
         // Estructura con el wrapper de burbuja (ing-bubble)
         floatingEl.innerHTML = `
             <div class="ing-bubble-wrapper">
@@ -498,28 +579,20 @@
         
         const bubbleSizeOffset = 30; // La burbuja mide 60px. Offset = 30px.
 
-        // ⭐️ CORRECCIÓN CLAVE: Calcular la posición LEFT compensando el scroll horizontal de la galería.
-        
-        // 1. Posición X del slot relativa al inicio del contenido scrollable de la galería.
-        //    (Slot Viewport X - Galería Viewport X) + (Scroll Galería)
+        // 1. Posición Inicial (Sobre el slot de la caja, abajo)
         const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
-        
-        // 2. Posición X final absoluta en el documento (body).
-        //    (Posición relativa al contenido scrollable) + (Posición inicial de la Galería en el Viewport/Documento) + (Offset para centrar la burbuja sobre el slot)
         const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset; 
-        
         const initialLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
-
-        // La posición TOP sigue siendo relativa al viewport + scroll vertical de la ventana (si lo hubiera).
         const initialTop = rect.top + window.scrollY - bubbleSizeOffset; 
         
-        // 1. Establecer la posición (sin animación)
         floatingEl.style.left = `${initialLeft}px`;
         floatingEl.style.top = `${initialTop}px`; 
 
-        // 2. Iniciar la animación de levitación
+        // 2. Iniciar la animación y moverlo a la zona de flotación.
         requestAnimationFrame(() => {
+            // Se hace visible y luego se llama a updateFloatingArea para reubicarlo.
             floatingEl.style.opacity = '1';
+            updateFloatingArea(); 
         });
 
         floatingEl.addEventListener('click', () => {
@@ -537,30 +610,13 @@
         if (el) {
             // Aplicar el estado de animación de caída (CSS falling)
             el.classList.add('falling');
+            el.dataset.state = 'falling';
             
-            // Encontrar el slot de destino (posición final de la caída)
-            const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingName}"]`);
-            if (targetSlot) {
-                const rect = targetSlot.getBoundingClientRect();
-                const galleryRect = magicBoxesGallery.getBoundingClientRect();
-                const bubbleSizeOffset = 30; 
-                
-                // ⭐️ CORRECCIÓN CLAVE: Calcular la posición final de la caída compensando el scroll.
-                const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
-                const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset;
-                const finalLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
-
-                const finalTop = rect.top + window.scrollY - bubbleSizeOffset;
-
-                // Forzar la posición final para que el CSS 'falling' haga la transición.
-                el.style.left = `${finalLeft}px`;
-                el.style.top = `${finalTop}px`;
-            }
-
             // Eliminar después de que la animación termine (500ms)
             setTimeout(() => {
                 el.remove();
                 floatingElements.delete(ingName);
+                updateFloatingArea(); // Reubicar los restantes
             }, 500); 
         }
     }
@@ -619,11 +675,14 @@
             if (selectedItems.has(ingData.nombre)) {
                 const sourceSlot = document.querySelector(`.ing-slot[data-name="${ingData.nombre}"]`);
                 if (sourceSlot) {
-                    // Se usa createFloatingElement, que asegura el posicionamiento sobre la caja.
+                    // Crea el elemento flotante, luego updateFloatingArea lo mueve.
                     setTimeout(() => createFloatingElement(ingData, sourceSlot), 10); 
                 }
             }
         });
+        
+        // Asegurar que la zona de flotación se posicione correctamente
+        setTimeout(updateFloatingArea, 100); 
     }
 
     function renderInitialList() {
@@ -681,19 +740,27 @@
             const rect = el.getBoundingClientRect();
             
             // Calcular la traslación al centro del vórtice
+            // Se calcula el desplazamiento necesario desde la posición actual (ya movida a la zona de flotación)
             const translateX = centerVortexX - (rect.left + rect.width / 2);
             const translateY = centerVortexY - (rect.top + rect.height / 2);
             
-            // Aplicar la animación de espiral (giro y reducción), manteniendo la opacidad
-            el.style.transition = 'transform 1.5s ease-in, opacity 1.5s';
+            // Aplicar la animación de espiral y reducción (usando la nueva keyframe)
+            el.style.transition = 'none'; // Desactivar transiciones de left/top/transform dinámicas
+            el.style.animation = 'none'; // Desactivar animación de levitación sutil
+
+            // Forzar la nueva posición base antes de iniciar la animación CSS de espiral
+            el.style.transformOrigin = 'center center'; 
+            
+            // Usamos la propiedad `transform` para la animación combinada de traslación, escala y rotación
             el.style.transform = `
                 translate(${translateX}px, ${translateY}px) 
                 scale(0.01) 
-                rotate(720deg) 
+                rotate(720deg)
             `;
-            
+
+            // Establecer la animación de espiral (CSS)
+            el.style.transition = 'transform 1.5s cubic-bezier(0.5, 0, 0.5, 1), opacity 1.5s'; 
             el.style.opacity = '1'; 
-            el.style.animation = 'none'; 
             
             // Desvanecer el ingrediente justo cuando la animación termina (1.5s)
             setTimeout(() => {
@@ -715,24 +782,27 @@
             window.loadContent('pantalla4.html');
         } 
     }
+    
+    // Escuchar el evento de redimensionamiento de la ventana para recalcular la posición de los flotantes
+    window.addEventListener('resize', updateFloatingArea);
+
 
     // ===============================================
     // INICIALIZACIÓN PRINCIPAL
     // ===============================================
 
     async function loadMenuData() {
+        // (Lógica de carga de datos omitida por brevedad, se mantiene la original)
         try {
             loadingMessage.textContent = 'Buscando el grimorio de ingredientes en el almacén mágico...';
             
             let dataLoaded = null;
 
-            // 1. Intento principal: Acceder a la variable global del contexto padre (window.parent)
             if (window.parent && window.parent.inventarioData) {
                 dataLoaded = window.parent.inventarioData;
                 loadingMessage.textContent = 'Éxito: Datos cargados directamente del padre.';
             }
 
-            // 2. Respaldo: Si falló el parent, intentar cargar desde localStorage
             if (!dataLoaded) {
                  loadingMessage.textContent = 'El grimorio del padre no respondió, intentando leer la copia local...';
                  const localData = localStorage.getItem('inventarioData');
@@ -746,27 +816,23 @@
                  }
             }
             
-            // 3. Verificar si los datos fueron cargados
             if (dataLoaded && Array.isArray(dataLoaded)) {
                 filteredInventory = dataLoaded.filter(item => item.activo === true);
             } else {
                 throw new Error("El inventarioData del grimorio no se pudo cargar o no está disponible.");
             }
             
-            // 4. Crear el mapa de detalles
             filteredInventory.forEach(item => {
                 inventoryDetailsMap.set(item.nombre, item);
             });
 
-            // 5. Cargar la selección previa y sincronizar
             loadSelectionFromStorage();
 
-            // 6. Renderizar las dos vistas
             renderInitialList();
             
             setTimeout(() => {
                 renderMagicBoxes();
-                toggleInitialList('minimize'); // Asegurar que la lista de compras esté oculta al inicio
+                toggleInitialList('minimize'); 
                 loadingMessage.textContent = '¡Inventario cargado! Recolecta tus ingredientes.';
                 updateAcceptButton();
             }, 50);
