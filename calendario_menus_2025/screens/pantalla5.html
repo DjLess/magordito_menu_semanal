@@ -19,9 +19,9 @@
             --vortex-color: rgba(88, 166, 255, 0.8);
             --ingredient-lift: 50px; /* Distancia de levitación */
             
-            /* NUEVA ZONA DE FLOTACIÓN: Offset vertical (referencia para JS) */
-            --floating-area-top: 50px; 
-            --floating-area-height: 100px; 
+            /* NUEVA ZONA DE FLOTACIÓN: Offset vertical */
+            --floating-area-top: 70px; /* <--- EDICIÓN: Movido 20px más abajo (70px) */
+            --floating-area-height: 120px; /* Altura ajustada para permitir múltiples filas */
         }
         
         body {
@@ -49,7 +49,6 @@
             border: 1px solid var(--box-border-color);
             border-radius: 8px;
             padding: 15px;
-            /* Posicionamiento Fixed para Overlay */
             position: fixed; 
             top: 50%;
             left: 50%;
@@ -59,13 +58,11 @@
             max-height: 90vh;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             
-            /* Estado inicial Oculto */
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
         }
 
-        /* Estado Visible (Maximizado) */
         #initial-selection-container:not(.minimized) {
             opacity: 1;
             pointer-events: all;
@@ -105,7 +102,6 @@
         /* GALERÍA DE CAJAS MÁGICAS (Simulando el Supermercado) */
         /* ------------------------------------------------------------------- */
 
-        /* DESPLAZAMIENTO: Mueve el contenedor principal de la galería 100px hacia abajo */
         #gallery-wrapper {
             display: flex;
             align-items: center;
@@ -113,10 +109,9 @@
             width: 100%;
             margin: 0 auto;
             position: relative;
-            margin-top: 100px; /* <--- EDICIÓN 1: Cambiado a 100px */
+            margin-top: 130px; /* <--- EDICIÓN: Cambiado a 130px */
         }
         
-        /* Contenedor principal de las cajas: habilita el scroll horizontal */
         #magic-boxes-gallery {
             display: flex;
             flex-wrap: nowrap; 
@@ -129,7 +124,6 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        /* Ocultar la barra de scroll nativa (Opcional, para estética) */
         #magic-boxes-gallery::-webkit-scrollbar {
             display: none;
         }
@@ -183,7 +177,6 @@
             background-color: #30363d;
         }
         
-        /* Flechas de Navegación */
         .scroll-button {
             position: absolute;
             padding: 10px 15px;
@@ -258,17 +251,15 @@
         }
 
         @keyframes subtle-float {
-            /* Mantenemos el efecto de levitación vertical sutil */
             0% { transform: translateY(0) scale(1.0); box-shadow: 0 0 15px rgba(88, 166, 255, 0.6); }
             100% { transform: translateY(-5px) scale(1.0); box-shadow: 0 0 8px rgba(88, 166, 255, 0.3); }
         }
         
-        /* Efecto de Caída / Burbuja Reventada */
         .floating-ingredient.falling {
             animation: none; 
             opacity: 0;
             transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s, left 0.05s, top 0.05s; 
-            transform: translateY(20px) scale(0.2) !important; /* Desaparece hacia abajo */
+            transform: translateY(20px) scale(0.2) !important; 
         }
         .floating-ingredient.falling .ing-bubble {
             background: transparent;
@@ -328,6 +319,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            transform: translateY(-40px); /* <--- EDICIÓN: Subir el vórtice 40px */
         }
         
         .vortex {
@@ -350,7 +342,8 @@
     <h2>El Taller del Mago: Recolección de Ingredientes ✨</h2>
     <div id="loading-message" style="color: var(--accent-color); margin-bottom: 20px;">Cargando inventario mágico desde el grimorio...</div>
 
-    <div id="floating-status-area" style="height: 50px; margin: 20px auto 0; font-size: 1.1em; color: var(--accent-color);">
+    <div style="margin-bottom: 10px; font-size: 1.1em; color: var(--accent-color);">Ingredientes Seleccionados (Flotando)</div>
+    <div id="floating-zone-visual-indicator" style="height: 120px; border: 1px dashed #30363d; margin: 0; display: flex; justify-content: center; align-items: center; color: #30363d; background-color: #0d0f13; position: relative; top: -10px;">
         <span id="floating-area-message">Selecciona ingredientes de las cajas de abajo.</span>
     </div>
     <div id="initial-selection-container" class="minimized">
@@ -428,12 +421,12 @@
     }
 
     // ===============================================
-    // LÓGICA DE DISTRIBUCIÓN DINÁMICA DE INGREDIENTES FLOTANTES
+    // LÓGICA DE DISTRIBUCIÓN DINÁMICA MULTI-COLUMNA (EDICIÓN CLAVE)
     // ===============================================
 
     /**
      * Calcula y aplica la nueva posición (top, left) y el escalado (scale)
-     * a todos los ingredientes flotantes seleccionados en la zona superior.
+     * a todos los ingredientes flotantes seleccionados, permitiendo varias filas.
      */
     function updateFloatingArea() {
         const viewportWidth = window.innerWidth;
@@ -441,43 +434,58 @@
         const totalItems = floatingElementsArray.length;
         
         // ZONA DE FLOTACIÓN (Valores consistentes con el nuevo layout)
-        const areaWidth = viewportWidth * 0.9; 
-        const areaHeight = 100; // Altura de la zona
-        const areaTop = 50; // Posición TOP de la zona (alto en la pantalla)
+        const areaWidth = viewportWidth; // Ahora full width
+        const areaHeight = 120; // Altura del indicador visual
+        const areaTop = 70; // Posición TOP (variable CSS --floating-area-top)
 
-        const maxItemSize = 1.0; 
-        const minItemSize = 0.5;
-        const baseItemWidth = 80; // Ancho visual estimado del elemento (60px burbuja + nombre)
-
-        // 1. Calcular el tamaño óptimo de los ítems
-        let scale = maxItemSize;
-        let spacing = baseItemWidth;
+        const baseItemWidth = 80; // Ancho visual estimado del elemento
+        const baseItemHeight = 90; // Alto visual estimado del elemento (burbuja + nombre)
         
-        if (totalItems > 0) {
-            const requiredWidth = totalItems * baseItemWidth;
-            if (requiredWidth > areaWidth) {
-                // Si no caben al 100%, calculamos el escalado necesario
-                scale = Math.max(minItemSize, areaWidth / requiredWidth);
-                spacing = baseItemWidth * scale;
-            }
+        // 1. Calcular cuántos ítems caben por fila (máx columnas)
+        const maxColumns = Math.floor(areaWidth / baseItemWidth);
+        const columns = Math.max(1, maxColumns); 
+        
+        // 2. Calcular cuántas filas se necesitan
+        const rows = Math.ceil(totalItems / columns);
+        
+        // 3. Calcular el escalado global si el número de filas excede la altura disponible
+        let scale = 1.0;
+        const requiredHeight = rows * baseItemHeight;
+        const maxHeight = areaHeight; 
+        
+        if (requiredHeight > maxHeight) {
+            // Calculamos el escalado necesario para que quepa en la altura máxima
+            scale = Math.max(0.5, maxHeight / requiredHeight); 
         }
         
-        // 2. Calcular el desplazamiento inicial (para centrar la fila)
-        const totalFloatingWidth = totalItems * spacing;
-        // Ajuste: 30px es el centro visual de una burbuja de 60px.
-        const startX = (viewportWidth - totalFloatingWidth) / 2 + (spacing / 2) - 30; 
+        const effectiveItemWidth = baseItemWidth * scale;
+        const effectiveItemHeight = baseItemHeight * scale;
 
-        // 3. Aplicar posiciones a cada elemento
+        // 4. Calcular el espaciado horizontal y el inicio X para centrar la matriz (fila más larga)
+        const itemsInLongestRow = Math.min(totalItems, columns);
+        const totalWidthUsed = itemsInLongestRow * effectiveItemWidth;
+        // Ajuste: 30px es la mitad de la burbuja (60px). Queremos centrar la burbuja.
+        const offsetX = (areaWidth - totalWidthUsed) / 2 + (effectiveItemWidth / 2) - (30 * scale); 
+        
+        // 5. Calcular el espaciado vertical y el inicio Y para centrar la matriz
+        const totalHeightUsed = rows * effectiveItemHeight;
+        const offsetY = (areaHeight - totalHeightUsed) / 2;
+        
+        // 6. Aplicar posiciones a cada elemento
         floatingElementsArray.forEach((el, index) => {
-            const targetLeft = startX + (index * spacing);
-            // Centrado en Y de la zona con un poco de "jitter"
-            const targetTop = areaTop + (areaHeight / 2) - 30 + Math.random() * 20 - 10; 
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+            
+            // Posición en X: Offset + (Columna * Ancho_Efectivo)
+            const targetLeft = offsetX + (col * effectiveItemWidth);
+
+            // Posición en Y: Posición_Inicial_Zona_Top + Offset_Vertical_Centrado + (Fila * Alto_Efectivo) + Jitter
+            const targetTop = areaTop + offsetY + (row * effectiveItemHeight) + (Math.random() * 10 - 5); 
             
             el.style.left = `${targetLeft}px`;
             el.style.top = `${targetTop}px`;
-            el.style.transform = `scale(${scale})`; // Ajuste dinámico de tamaño
+            el.style.transform = `scale(${scale})`; 
 
-            // Si es la primera vez que se mueve a la zona, lo hacemos visible y animamos
             if (el.dataset.state !== 'floating') {
                 el.style.opacity = '1';
                 el.dataset.state = 'floating';
@@ -490,7 +498,7 @@
 
 
     // ===============================================
-    // LÓGICA DE SELECCIÓN MÁGICA (createFloatingElement y removeFloatingElement son las mismas que antes)
+    // LÓGICA DE SELECCIÓN MÁGICA
     // ===============================================
 
     function handleSelection(ingName) {
@@ -519,9 +527,6 @@
         if (checklistCheckbox) checklistCheckbox.checked = selectedItems.has(ingName);
     }
     
-    /**
-     * Crea un ingrediente flotante con efecto de burbuja, posicionado inicialmente sobre su slot de caja.
-     */
     function createFloatingElement(ingData, sourceElement) {
         if (floatingElements.has(ingData.nombre)) return;
 
@@ -549,7 +554,6 @@
         
         const bubbleSizeOffset = 30; // La burbuja mide 60px. Offset = 30px.
 
-        // Cálculo de posición inicial sobre el slot (compensando el scroll)
         const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
         const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset; 
         const initialLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
@@ -558,7 +562,6 @@
         floatingEl.style.left = `${initialLeft}px`;
         floatingEl.style.top = `${initialTop}px`; 
 
-        // 2. Iniciar la animación y moverlo a la zona de flotación.
         requestAnimationFrame(() => {
             floatingEl.style.opacity = '1';
             updateFloatingArea(); 
@@ -571,30 +574,12 @@
         floatingElements.set(ingData.nombre, floatingEl);
     }
     
-    /**
-     * Devuelve el ingrediente al slot con animación de caída/reventón de burbuja.
-     */
     function removeFloatingElement(ingName) {
         const el = floatingElements.get(ingName);
         if (el) {
             el.classList.add('falling');
             el.dataset.state = 'falling';
             
-            const targetSlot = document.querySelector(`.magic-box .ing-slot[data-name="${ingName}"]`);
-            if (targetSlot) {
-                const rect = targetSlot.getBoundingClientRect();
-                const galleryRect = magicBoxesGallery.getBoundingClientRect();
-                const bubbleSizeOffset = 30; 
-                
-                const slotXInScrollContent = (rect.left - galleryRect.left) + magicBoxesGallery.scrollLeft;
-                const offsetXFromSlotCenter = rect.width / 2 - bubbleSizeOffset;
-                const finalLeft = slotXInScrollContent + galleryRect.left + offsetXFromSlotCenter;
-                const finalTop = rect.top + window.scrollY - bubbleSizeOffset;
-
-                el.style.left = `${finalLeft}px`;
-                el.style.top = `${finalTop}px`;
-            }
-
             setTimeout(() => {
                 el.remove();
                 floatingElements.delete(ingName);
@@ -619,7 +604,7 @@
 
 
     // ===============================================
-    // ANIMACIÓN FINAL Y NAVEGACIÓN (Vórtice Espiral Dinámico)
+    // ANIMACIÓN FINAL Y NAVEGACIÓN
     // ===============================================
 
     async function handleFinalAnimation() {
@@ -632,63 +617,54 @@
         const vortexContainer = document.getElementById('vortex-container');
         vortexContainer.style.display = 'flex';
         
-        // Obtener la posición del centro de la pantalla (donde está el vórtice)
         const vortexRect = vortexContainer.getBoundingClientRect();
+        // El vórtice ya está centrado y movido 40px arriba por CSS, usamos su centro de caja
         const centerVortexX = vortexRect.left + vortexRect.width / 2;
         const centerVortexY = vortexRect.top + vortexRect.height / 2;
 
-        const vortexDuration = 1500; // Duración total de la animación en ms
+        const vortexDuration = 1500; 
         const totalItems = floatingElements.size;
         let index = 0;
 
         floatingElements.forEach((el) => {
             const rect = el.getBoundingClientRect();
             
-            // 1. Calcular el punto de partida (centro del ingrediente)
             const startX = rect.left + rect.width / 2;
             const startY = rect.top + rect.height / 2;
             
-            // 2. Calcular la traslación final al centro del vórtice
             const translateX = centerVortexX - startX;
             const translateY = centerVortexY - startY;
             
-            // 3. Parámetros para el efecto espiral escalonado
-            const angleOffset = (index * 360 / totalItems) * 2; // Ángulo de inicio escalonado
-            const rotation = 720 + angleOffset; // Rotación total (2 giros completos + offset)
-            const delay = index * 50; // Retardo de inicio escalonado
+            const angleOffset = (index * 360 / totalItems) * 2; 
+            const rotation = 720 + angleOffset; 
+            const delay = index * 50; 
 
-            // 4. Aplicar estilos de animación
-            el.style.transition = 'none'; // Desactivar transiciones previas
+            el.style.transition = 'none'; 
             el.style.animation = 'none'; 
             
-            // 5. Iniciar la transición después del delay para el efecto escalonado
             setTimeout(() => {
-                // Curva de transición 'cubic-bezier' para un movimiento que empieza lento y acelera (efecto vórtice)
+                // Aplicar transición de espiral
                 el.style.transition = `transform ${vortexDuration}ms cubic-bezier(0.6, 0.0, 0.4, 1.0), opacity ${vortexDuration}ms`; 
                 
-                // Aplicar la transformación de traslación, reducción de escala y rotación
                 el.style.transform = `
                     translate(${translateX}px, ${translateY}px) 
                     scale(0.01) 
                     rotate(${rotation}deg)
                 `;
-                el.style.opacity = '0'; // Desaparecer en el centro
+                el.style.opacity = '0'; 
             }, delay);
 
             index++;
         });
 
-        // Esperar a que la animación termine (Tiempo del ingrediente más tardío + duración)
         const totalAnimationTime = vortexDuration + ((totalItems > 0 ? totalItems - 1 : 0) * 50);
-        await new Promise(resolve => setTimeout(resolve, totalAnimationTime + 100)); // +100ms de margen
+        await new Promise(resolve => setTimeout(resolve, totalAnimationTime + 100)); 
 
-        // Limpieza y navegación
         floatingElements.forEach(el => el.remove());
         vortexContainer.style.display = 'none';
 
         saveSelectionToStorage();
 
-        // Llamar a loadContent en el contexto padre para la navegación
         if (window.parent && typeof window.parent.loadContent === 'function') {
             window.parent.loadContent('pantalla4.html');
         } else {
@@ -701,7 +677,7 @@
 
 
     // ===============================================
-    // RENDERIZADO Y UTILIDADES (Mismo que antes)
+    // RENDERIZADO Y UTILIDADES 
     // ===============================================
 
     function groupIngredients(ingredients) {
